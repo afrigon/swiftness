@@ -44,6 +44,10 @@ struct RegisterSet {
         self.set(Flag.zero, value == 0)
         self.set(Flag.negative, (value & 0b10000000) != 0)
     }
+    
+    func getValue(_ value: Flag) -> UInt8 {
+        return self.p * value.rawValue == 0 ? 0 : 1
+    }
 }
 
 enum Endian {
@@ -177,29 +181,20 @@ struct Opcode {
     let implemented: Bool
     let closure: () -> Void
     
-    init(_ operation: Operation, _ addresingMode: AddressingMode, _ cycles: UInt8, implemented: Bool = true, _ closure: () -> Void) {
+    init(_ operation: Operation, _ addresingMode: AddressingMode, _ cycles: UInt8, implemented: Bool = true, _ closure: @escaping () -> Void) {
         self.operation = operation
         self.addressingMode = addresingMode
         self.cycles = implemented ? cycles : 1
         self.implemented = implemented
+        self.closure = closure
     }
 }
-
-//struct Instruction {
-//    let opcode: Opcode
-//    let operand: Word
-//}
 
 enum InterruptAddress: Word {
     case nmi = 0xFFFA
     case reset = 0xFFFC
     case irq = 0xFFFE
 }
-
-//struct Operand {
-//    let value: Word
-//    let address: Word
-//}
 
 class CoreProcessingUnit {
     private var opcodes: [Byte: Opcode] = [:]
@@ -477,29 +472,44 @@ class CoreProcessingUnit {
         }
     }
     
-    private func brk() {
-        memory.stack.pushWord(data: regs.pc - 1, sp: &regs.sp)
-        memory.stack.pushByte(data: regs.p, sp: &regs.sp)
-        regs.set(.alwaysOne)
-        regs.pc = InterruptAddress.nmi.rawValue
+    // opcodes implementation
+    private func nop () {}
+    
+    // math
+    private func adc() {
+        let result = regs.a + Byte(operand) + regs.getValue(.carry)
+        regs.set(.carry, Word(result) & 0x100 != 0)
+        regs.set(.overflow, (~(regs.a ^ Byte(operand)) & (regs.a ^ result) & 0x80) != 0)
+        regs.a = result & 0xFF
+        regs.setZeroNegative(regs.a)
     }
     
-    private func ora() {
-        regs.a |= Byte(operand)
-        regs.setZeroNegative(Byte(operand))
+    private func sbc() {
+        let result = regs.a - Byte(operand) - (regs.getValue(.carry) == 0 ? 1 : 0)
+        regs.set(.carry, Word(result) & 0x100 != 0)
+        regs.set(.overflow, ((regs.a ^ Byte(operand)) & (regs.a ^ result) & 0x80) != 0)
+        regs.a = result & 0xFF
+        regs.setZeroNegative(regs.a)
     }
+    
+    private func inc() { let result: Byte = Byte(operand) + 1; memory.writeByte(result, at: address); regs.setZeroNegative(result) }
+    private func inx() { regs.x++; regs.setZeroNegative(regs.x) }
+    private func iny() { regs.y++; regs.setZeroNegative(regs.y) }
+    private func dec() { let result: Byte = Byte(operand) - 1; memory.writeByte(result, at: address); regs.setZeroNegative(result) }
+    private func dex() { regs.x--; regs.setZeroNegative(regs.x) }
+    private func dey() { regs.y--; regs.setZeroNegative(regs.y) }
+    
+    // bit manipulation
+    private func bit() { regs.set(.zero, regs.a & Byte(operand) == 0); regs.p = (regs.p & 0x3f) | Byte(0xC0 & operand) }
+    private func and() { regs.a &= Byte(operand); regs.setZeroNegative(regs.a) }
+    private func eor() { regs.a ^= Byte(operand); regs.setZeroNegative(regs.a) }
+    private func ora() { regs.a |= Byte(operand); regs.setZeroNegative(regs.a) }
     
     private func asl() {
         regs.set(.carry, operand & 0b10000000 == 1)
         operand <<= 1
         regs.setZeroNegative(Byte(operand))
         memory.writeByte(Byte(operand), at: address)
-    }
-    
-    private func asla() {
-        regs.set(.carry, regs.a & 0b10000000 == 1)
-        regs.a <<= 1
-        regs.setZeroNegative(regs.a)
     }
     
     private func lsr() {
@@ -509,9 +519,122 @@ class CoreProcessingUnit {
         memory.writeByte(Byte(operand), at: address)
     }
     
+    private func rol() {
+        operand <<= 1
+        operand |= Word(regs.getValue(.carry))
+        regs.set(.carry, operand > 0xFF)
+        operand &= 0xFF
+        memory.writeByte(Byte(operand), at: address)
+        regs.setZeroNegative(Byte(operand))
+    }
+    
+    private func ror() {
+        let carry = regs.getValue(.carry)
+        regs.set(.carry, operand & 0x01 != 0)
+        operand = Word((Byte(operand >> 1) | (carry << 7)) & 0xFF)
+        regs.set(.zero, operand == 0)
+        regs.set(.negative, carry != 0)
+        memory.writeByte(Byte(operand), at: address)
+    }
+    
+    // accumulator
+    private func asla() {
+        regs.set(.carry, regs.a & 0b10000000 == 1)
+        regs.a <<= 1
+        regs.setZeroNegative(regs.a)
+    }
+    
     private func lsra() {
         regs.set(.carry, regs.a & 1 == 1)
         regs.a >>= 1
         regs.setZeroNegative(regs.a)
     }
+    
+    private func rola() {
+        var result = regs.a << 1
+        result |= regs.getValue(.carry)
+        regs.set(.carry, result > 0xFF)
+        regs.a = result & 0xFF
+        regs.setZeroNegative(regs.a)
+    }
+    
+    private func rora() {
+        let carry = regs.getValue(.carry)
+        regs.set(.carry, regs.a & 0x01 != 0)
+        regs.a = (regs.a >> 1) | (carry << 7)
+        regs.set(.zero, operand == 0)
+        regs.set(.negative, carry != 0)
+    }
+    
+    // flags
+    private func clc() { regs.unset(.carry) }
+    private func cld() { regs.unset(.decimal) }
+    private func cli() { regs.unset(.interrupt) }
+    private func clv() { regs.unset(.overflow) }
+    private func sec() { regs.set(.carry) }
+    private func sed() { regs.set(.decimal) }
+    private func sei() { regs.set(.interrupt) }
+    
+    // comparison
+    private func compare(_ register: Byte) {
+        let result = register - Byte(operand)
+        regs.set(.carry, result >= 0)
+        regs.set(.zero, result == 0)
+        regs.set(.negative, (result >> 7) & 1 != 0)
+    }
+    private func cmp() { compare(regs.a) }
+    private func cpx() { compare(regs.x) }
+    private func cpy() { compare(regs.y) }
+    
+    // branches
+    private func branch(_ flag: Bool) { if flag { regs.pc = address } }
+    private func beq() { branch(regs.getValue(.zero) != 0) }
+    private func bmi() { branch(regs.getValue(.negative) != 0) }
+    private func bne() { branch(regs.getValue(.zero) == 0) }
+    private func bpl() { branch(regs.getValue(.negative) == 0) }
+    private func bcc() { branch(regs.getValue(.carry) == 0) }
+    private func bcs() { branch(regs.getValue(.carry) != 0) }
+    private func bvc() { branch(regs.getValue(.overflow) == 0) }
+    private func bvs() { branch(regs.getValue(.overflow) == 0) }
+    
+    // jump
+    private func jmp() { regs.pc = operand }
+    
+    // subroutines
+    private func jsr() { memory.stack.pushWord(data: regs.pc - 1, sp: &regs.sp); regs.pc = address }
+    private func rts() { regs.pc = memory.stack.popWord(sp: &regs.sp) + 1 }
+    
+    // interuptions
+    private func rti() { regs.p = memory.stack.popByte(sp: &regs.sp) | regs.getValue(Flag.alwaysOne); regs.pc = memory.stack.popWord(sp: &regs.sp) }
+    private func brk() {
+        memory.stack.pushWord(data: regs.pc - 1, sp: &regs.sp)
+        memory.stack.pushByte(data: regs.p, sp: &regs.sp)
+        regs.set(.alwaysOne)
+        regs.pc = InterruptAddress.nmi.rawValue
+    }
+    
+    // stack
+    private func pha() { memory.stack.pushByte(data: regs.a, sp: &regs.sp) }
+    private func php() { memory.stack.pushByte(data: regs.p | 0x30, sp: &regs.sp) }
+    private func pla() { regs.a = memory.stack.popByte(sp: &regs.sp); regs.setZeroNegative(regs.a) }
+    private func plp() { regs.p = (memory.stack.popByte(sp: &regs.sp) & 0xEF) | 0x20 }
+    
+    // loading
+    private func lda() { regs.a = Byte(operand); regs.setZeroNegative(regs.a) }
+    private func ldx() { regs.x = Byte(operand); regs.setZeroNegative(regs.x) }
+    private func ldy() { regs.y = Byte(operand); regs.setZeroNegative(regs.y) }
+    
+    // storing
+    private func sta() { memory.writeByte(regs.a, at: address) }
+    private func stx() { memory.writeByte(regs.x, at: address) }
+    private func sty() { memory.writeByte(regs.y, at: address) }
+    
+  
+    // transfering
+    private func tax() { regs.x = regs.a; regs.setZeroNegative(regs.x) }
+    private func tay() { regs.y = regs.a; regs.setZeroNegative(regs.y) }
+    private func tsx() { regs.x = regs.sp; regs.setZeroNegative(regs.x) }
+    private func txa() { regs.a = regs.x; regs.setZeroNegative(regs.a) }
+    private func tya() { regs.a = regs.y; regs.setZeroNegative(regs.a) }
+    private func txs() { regs.sp = regs.x }
 }

@@ -143,7 +143,7 @@ class AttachedMemoryRegion: MemoryRegion {
     
     func readByte(at address: Word) -> Byte {
         guard self.isInRange(address) else { return 0x00 }
-        return self.memoryMap.readByte(at: self.applyMirror(for: address))
+        return Byte(self.memoryMap.readByte(at: self.applyMirror(for: address)))
     }
     
     func writeByte(_ data: Byte, at address: Word) {
@@ -185,9 +185,9 @@ class Stack: AttachedMemoryRegion {
         sp--
     }
     
-    func popByte(data: Byte, sp: inout Byte) -> Byte {
+    func popByte(sp: inout Byte) -> Byte {
         sp++
-        return self.memoryMap.readByte(at: Word(0xFF + sp) + 1)
+        return Byte(self.memoryMap.readByte(at: Word(0xFF + sp) + 1))
     }
     
     func pushWord(data: Word, sp: inout Byte) {
@@ -195,7 +195,7 @@ class Stack: AttachedMemoryRegion {
         sp -= 2
     }
     
-    func popWord(data: Word, sp: inout Byte) -> Word {
+    func popWord(sp: inout Byte) -> Word {
         sp += 2
         return self.memoryMap.readWord(at: Word(0xFF + sp))
     }
