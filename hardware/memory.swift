@@ -20,31 +20,45 @@ struct MirroredAddressRange {
 class Memory {
     private var data: [Byte] = Array(repeating: 0x00, count: 0x10000)
     
-    fileprivate func readByte(at address: Word) -> Byte {
-        return self.data[address]
+    func readByte(at address: Word) -> Word {
+        return Word(self.data[address])
     }
     
-    fileprivate func writeByte(_ data: Byte, at address: Word) {
+    func writeByte(_ data: Byte, at address: Word) {
         self.data[address] = data
     }
     
-    fileprivate func readWord(at address: Word) -> Word {
+    func readWord(at address: Word) -> Word {
         return Word(self.readByte(at: address)) + Word(self.readByte(at: address + 1) << 8)
     }
     
-    fileprivate func writeWord(_ data: Word, at address: Word) {
+    func writeWord(_ data: Word, at address: Word) {
         self.writeByte(Byte(data & 0xFF), at: address)
         self.writeByte(Byte(data >> 8), at: address + 1)
+    }
+    
+    func readWordGlitched(at address: Word) -> Word {
+        // 6502 hardware bug, instead of reading from 0xC0FF/0xC100 it reads from 0xC0FF/0xC000
+        if (address & 0xFF) == 0xFF {
+            return (self.readByte(at: address & 0xFF00) << 8) + self.readByte(at: address)
+        } else {
+            // regular code
+            return self.readWord(at: address)
+        }
     }
 }
 
 class CoreProcesingUnitMemoryMap: Memory {
+    private var _stack: Stack!
     private var _ram: RandomAccessMemory!
     private var _io: InputOutputRegister!
     private var _expansion: ExpansionReadOnlyMemory!
     private var _save: SaveRandomAccessMemory!
     private var _rom: ReadOnlyMemory!
     
+    var stack: Stack {
+        return self._stack
+    }
     var ram: RandomAccessMemory {
         return self._ram
     }
@@ -63,6 +77,7 @@ class CoreProcesingUnitMemoryMap: Memory {
     
     override init() {
         super.init()
+        self._stack = Stack(memoryMap: self)
         self._ram = RandomAccessMemory(memoryMap: self)
         self._io = InputOutputRegister(memoryMap: self)
         self._expansion = ExpansionReadOnlyMemory(memoryMap: self)
@@ -91,13 +106,13 @@ class MemoryRegion {
     fileprivate let range: AddressRange
     fileprivate var mirror: MirroredAddressRange! = nil
     
-    fileprivate init(_ name: String, _ range: AddressRange, _ mirroredRange: MirroredAddressRange? = nil) {
+    init(_ name: String, _ range: AddressRange, _ mirroredRange: MirroredAddressRange? = nil) {
         self.name = name
         self.range = range
         self.mirror = mirroredRange
     }
     
-    fileprivate func applyMirror(for address: Word) -> Word {
+    func applyMirror(for address: Word) -> Word {
         guard self.mirror != nil else {
             return address
         }
@@ -110,11 +125,11 @@ class MemoryRegion {
         return address - offset
     }
     
-    fileprivate func isInRange(_ address: Word) -> Bool {
+    func isInRange(_ address: Word) -> Bool {
         return address >= self.range.start && address <= self.range.end
     }
     
-    fileprivate func isInMirroredRange(_ address: Word) -> Bool {
+    func isInMirroredRange(_ address: Word) -> Bool {
         guard self.mirror != nil else {
             return false
         }
@@ -158,6 +173,34 @@ class ReadOnlyMemoryRegion: AttachedMemoryRegion {
 }
 
 // CPU Memory Map Objects
+class Stack: AttachedMemoryRegion {
+    init(memoryMap: Memory) {
+        let range = AddressRange(start: 0x0100, end: 0x01FF)
+        super.init("Stack", range)
+        self.memoryMap = memoryMap
+    }
+    
+    func pushByte(data: Byte, sp: inout Byte) {
+        self.memoryMap.writeByte(data, at: Word(0xFF + sp) + 1)
+        sp--
+    }
+    
+    func popByte(data: Byte, sp: inout Byte) -> Byte {
+        sp++
+        return self.memoryMap.readByte(at: Word(0xFF + sp) + 1)
+    }
+    
+    func pushWord(data: Word, sp: inout Byte) {
+        self.memoryMap.writeWord(data, at: Word(0xFF + sp))
+        sp -= 2
+    }
+    
+    func popWord(data: Word, sp: inout Byte) -> Word {
+        sp += 2
+        return self.memoryMap.readWord(at: Word(0xFF + sp))
+    }
+}
+
 class RandomAccessMemory: AttachedMemoryRegion {
     init(memoryMap: Memory) {
         let range = AddressRange(start: 0x0000, end: 0x1FFF)
