@@ -201,21 +201,21 @@ struct Operand {
 }
 
 protocol OperandBuilder {
-    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcesingUnitMemory) -> Operand
+    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand
 }
 
 class AlteredOperandBuilder: OperandBuilder {   // Abstract
     let alteration: AddressingMode.Alteration
     init(_ alteration: AddressingMode.Alteration = .none) { self.alteration = alteration }
-    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcesingUnitMemory) -> Operand { return Operand() }
+    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand { return Operand() }
 }
 
 class EmptyOperandBuilder: OperandBuilder {
-    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcesingUnitMemory) -> Operand { return Operand() }
+    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand { return Operand() }
 }
 
 class ZeroPageAddressingOperandBuilder: AlteredOperandBuilder {
-    override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcesingUnitMemory) -> Operand {
+    override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
         let alterationValue: Byte = self.alteration != .none ? (self.alteration == .x ? regs.x : regs.y) : 0
         var operand = Operand()
         operand.address = (memory.readByte(at: regs.pc) + alterationValue).asWord()
@@ -226,7 +226,7 @@ class ZeroPageAddressingOperandBuilder: AlteredOperandBuilder {
 }
 
 class AbsoluteAddressingOperandBuilder: AlteredOperandBuilder {
-    override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcesingUnitMemory) -> Operand {
+    override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
         let alterationValue: Byte = self.alteration != .none ? (self.alteration == .x ? regs.x : regs.y) : 0
         var operand = Operand()
         operand.address = memory.readWord(at: regs.pc) + alterationValue
@@ -238,7 +238,7 @@ class AbsoluteAddressingOperandBuilder: AlteredOperandBuilder {
 }
 
 class RelativeAddressingOperandBuilder: OperandBuilder {
-    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcesingUnitMemory) -> Operand {
+    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
         var operand = Operand(value: 0, address: memory.readByte(at: regs.pc).asWord())
         
         if Bool(operand.address & 0x80) {
@@ -252,7 +252,7 @@ class RelativeAddressingOperandBuilder: OperandBuilder {
 }
 
 class ImmediateAddressingOperandBuilder: OperandBuilder {
-    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcesingUnitMemory) -> Operand {
+    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
         let operand = Operand(value: memory.readByte(at: regs.pc).asWord())
         regs.pc++
         return operand
@@ -260,7 +260,7 @@ class ImmediateAddressingOperandBuilder: OperandBuilder {
 }
 
 class IndirectAddressingMode: AlteredOperandBuilder {
-    override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcesingUnitMemory) -> Operand {
+    override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
         let addressPointer: Word = memory.readWord(at: regs.pc) &+ (self.alteration == .x ? regs.x : 0)
         
         var operand = Operand()
@@ -275,7 +275,7 @@ class IndirectAddressingMode: AlteredOperandBuilder {
 
 class CoreProcessingUnit {
     private var opcodes: [Byte: Opcode] = [:]
-    private let memory = CoreProcesingUnitMemory()
+    private let memory = CoreProcessingUnitMemory()
     private let stack: Stack!
     private var regs = RegisterSet()
     private var totalCycles: UInt64 = 0

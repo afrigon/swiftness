@@ -3,24 +3,17 @@
 //  Copyright © 2018 Alexandre Frigon. All rights reserved.
 //
 
-struct AddressRange {
-    // inclusive
-    let start: Word
-    let end: Word
-}
+typealias AddressRange = Range<Word>
+typealias AddressRangeMirror = (original: Range<Word>, affected: Range<Word>)
 
-struct MirroredAddressRange {
-    let from: AddressRange
-    let to: AddressRange
-}
-
-enum DataUnit: UInt16 {
-    case byte = 1
-    case kilobyte = 1024
-}
+enum DataUnit: UInt16 { case byte = 1, kilobyte = 1024 }
+enum MemoryAccess { case read, write }
+enum CoreProcessingUnitMemorySegment { case ram, stack, rom }
+enum PictureProcessingUnitMemorySegment { }
 
 class Memory {
     private var data: [Byte]
+    fileprivate var mirrors: [AddressRangeMirror] = [AddressRangeMirror]()
     
     init(ofSize size: UInt16 = 64, _ unit: DataUnit = .kilobyte) {
         self.data = Array(repeating: 0x00, count: Int(size * unit.rawValue))
@@ -44,15 +37,12 @@ class Memory {
     }
 }
 
-class CoreProcesingUnitMemory: Memory, StackAccessDelegate {
+class CoreProcessingUnitMemory: Memory, StackAccessDelegate {
     private let stackSize: Word = 0x100
     
-    private var _stack: Stack
     private var rom: ReadOnlyMemory
-    
-    var stack: Stack {
-        return self._stack
-    }
+    private var _stack: Stack
+    var stack: Stack { return self._stack }
     
     convenience init(with rom: ReadOnlyMemory) {
         self.init(ofSize: 64, .kilobyte, with: rom)
@@ -64,6 +54,8 @@ class CoreProcesingUnitMemory: Memory, StackAccessDelegate {
         super.init(ofSize: size, unit)
         
         self._stack.delegate = self
+        self.mirrors.append(AddressRangeMirror(original: 0x0000..<0x0800, affected: 0x0800..<0x2000))
+        self.mirrors.append(AddressRangeMirror(original: 0x2000..<0x2008, affected: 0x2008..<0x4000))
     }
     
     func stack(stack: Stack, didPushByte data: Byte, at address: Word) {
@@ -76,14 +68,42 @@ class CoreProcesingUnitMemory: Memory, StackAccessDelegate {
         return self.readByte(at: absoluteAddress)
     }
     
+    func hasPermission(to right: MemoryAccess = .read, to address: Word, as segment: CoreProcessingUnitMemorySegment = .ram) -> Bool {
+        print("Illegal \(String(describing: right)) to \(address.hex()) as \(String(describing: segment))")
+        return false // TODO: actually check permissions
+    }
+    
+    func normalize(_ address: Word) -> Word {
+        for mirror in self.mirrors {
+            if mirror.affected.contains(address) {
+                return mirror.original.startIndex - address % UInt16(mirror.original.count)
+            }
+        }
+        return address
+    }
+    
+    override func readByte(at address: Word) -> Byte {
+        return super.readByte(at: self.normalize(address))
+    }
+    
+    override func writeByte(_ data: Byte, at address: Word) {
+        super.writeByte(data, at: self.normalize(address))
+    }
+    
+    override func readWord(at address: Word) -> Word {
+        return super.readWord(at: self.normalize(address))
+    }
+    
+    override func writeWord(_ data: Word, at address: Word) {
+        super.writeWord(data, at: self.normalize(address))
+    }
+    
     func readWordGlitched(at address: Word) -> Word {
         // 6502 hardware bug, instead of reading from 0xC0FF/0xC100 it reads from 0xC0FF/0xC000
         if address.rightByte() == 0xFF {
             return self.readByte(at: address & 0xFF00).asWord() << 8 + self.readByte(at: address)
-        } else {
-            // regular code
-            return self.readWord(at: address)
         }
+        return self.readWord(at: address)
     }
 }
 
@@ -117,104 +137,18 @@ class Stack {
 
 
 
-
-
-class PictureProcesingUnitMemory: Memory {
-    
-}
-
-
-// Abstract Memory Region Objects
-class MemoryRegion {
-    fileprivate let name: String
-    fileprivate let range: AddressRange
-    fileprivate var mirror: MirroredAddressRange! = nil
-    
-    init(_ name: String, _ range: AddressRange, _ mirroredRange: MirroredAddressRange? = nil) {
-        self.name = name
-        self.range = range
-        self.mirror = mirroredRange
-    }
-    
-    func applyMirror(for address: Word) -> Word {
-        guard self.mirror != nil else {
-            return address
-        }
-        
-//        if self.isInMirroredRange(address) {
-//            fatalError("Mirrored range not implemented")
-//        }
-        
-        let offset: Word = self.mirror.from.start - self.mirror.to.start
-        return self.mirror.from.start + address % offset
-    }
-    
-    func isInRange(_ address: Word) -> Bool {
-        return address >= self.range.start && address <= self.range.end
-    }
-    
-    func isInMirroredRange(_ address: Word) -> Bool {
-        guard self.mirror != nil else {
-            return false
-        }
-        
-        return address >= self.mirror.from.start && address <= self.mirror.from.end
-    }
-}
-
-class AttachedMemoryRegion: MemoryRegion {
-    var memoryMap: Memory!
-    
-    func readByte(at address: Word) -> Byte {
-        guard self.isInRange(address) else { return 0x00 }
-        return Byte(self.memoryMap.readByte(at: self.applyMirror(for: address)))
-    }
-    
-    func writeByte(_ data: Byte, at address: Word) {
-        guard self.isInRange(address) else { return }
-        self.memoryMap.writeByte(data, at: self.applyMirror(for: address))
-    }
-    
-    func readWord(at address: Word) -> Word {
-        guard self.isInRange(address) else { return 0x00 }
-        return self.memoryMap.readWord(at: self.applyMirror(for: address))
-    }
-    
-    func writeWord(_ data: Word, at address: Word) {
-        guard self.isInRange(address) else { return }
-        self.memoryMap.writeWord(data, at: self.applyMirror(for: address))
-    }
-}
-
-class ReadOnlyMemoryRegion: AttachedMemoryRegion {
-    override func writeByte(_ data: Byte, at address: Word) {
-        return
-    }
-    
-    override func writeWord(_ data: Word, at address: Word) {
-        return
-    }
-}
-
-// CPU Memory Map Objects
-class ReadOnlyMemory: ReadOnlyMemoryRegion {
+class ReadOnlyMemory {
     init() {
         fatalError("ROM not implemented")
-//        let range = AddressRange(start: 0x2000, end: 0x4020)
-//        let mirror = MirroredAddressRange(from: AddressRange(start: 0x2008, end: 0x4000),
-//                                          to: AddressRange(start: 0x2000, end: 0x2008))
-//        super.init("PGR-ROM", range, mirror)
-//        self.memoryMap = memoryMap
     }
 }
 
-// PPU Memory Mapper Objects
-class PictureProcessingUnitRandomAccessMemory: AttachedMemoryRegion {
-    init(memoryMap: Memory) {
-        let range = AddressRange(start: 0x0000, end: 0xFFFF)
-        let mirror = MirroredAddressRange(from: AddressRange(start: 0x4000, end: 0xFFFF),
-                                          to: AddressRange(start: 0x0000, end: 0x3FFF))
-        super.init("PPU RAM", range, mirror)
-        self.memoryMap = memoryMap
-    }
+
+
+class PictureProcessingUnitMemory: Memory {
+    
 }
+
+
+
+

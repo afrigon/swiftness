@@ -16,6 +16,8 @@
 		FEA27421217C91710072530A /* ppu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27420217C91710072530A /* ppu.swift */; };
 		FEA27426217D1D8A0072530A /* file.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27425217D1D8A0072530A /* file.swift */; };
 		FEA27428217DED280072530A /* color.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27427217DED280072530A /* color.swift */; };
+		FEA2742A21806D9B0072530A /* MetalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2742921806D9B0072530A /* MetalViewController.swift */; };
+		FEA2742C21806E880072530A /* DisplayLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2742B21806E880072530A /* DisplayLink.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +34,8 @@
 		FEA27424217C954F0072530A /* specs.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = specs.md; sourceTree = "<group>"; };
 		FEA27425217D1D8A0072530A /* file.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = file.swift; sourceTree = "<group>"; };
 		FEA27427217DED280072530A /* color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = color.swift; sourceTree = "<group>"; };
+		FEA2742921806D9B0072530A /* MetalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalViewController.swift; sourceTree = "<group>"; };
+		FEA2742B21806E880072530A /* DisplayLink.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DisplayLink.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,6 +70,8 @@
 			isa = PBXGroup;
 			children = (
 				FEA2740B217C45F70072530A /* AppDelegate.swift */,
+				FEA2742921806D9B0072530A /* MetalViewController.swift */,
+				FEA2742B21806E880072530A /* DisplayLink.swift */,
 				FEA27427217DED280072530A /* color.swift */,
 				FEA27425217D1D8A0072530A /* file.swift */,
 				FEA2741C217C546E0072530A /* integer.swift */,
@@ -159,11 +165,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				FEA27428217DED280072530A /* color.swift in Sources */,
+				FEA2742C21806E880072530A /* DisplayLink.swift in Sources */,
 				FEA2741F217C8F990072530A /* memory.swift in Sources */,
 				FEA27426217D1D8A0072530A /* file.swift in Sources */,
 				FEA2741B217C47B50072530A /* cpu.swift in Sources */,
 				FEA2741D217C546E0072530A /* integer.swift in Sources */,
 				FEA27421217C91710072530A /* ppu.swift in Sources */,
+				FEA2742A21806D9B0072530A /* MetalViewController.swift in Sources */,
 				FEA2740C217C45F70072530A /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

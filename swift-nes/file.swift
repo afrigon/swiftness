@@ -5,27 +5,17 @@
 
 import Foundation
 
+// not tested
 class File {
-    static func test() {
-        guard let stream = InputStream(fileAtPath: "~/Desktop/zelda.nes") else {
-            fatalError("Could not open this file")
-        }
+    static func readBytes(from filePath: String) -> [UInt8]? {
+        guard let data = NSData(contentsOfFile: filePath) else { return nil }
+        
+        var buffer = Array(repeating: UInt8(0x00), count: data.length)
+        data.getBytes(&buffer, length: data.length)
+        return buffer
+    }
+    
+    static func writeBytes(_ buffer: inout [UInt8], to filepath: String) -> Bool {
+        return (try? NSData(bytes: &buffer, length: buffer.count).write(toFile: filepath, options: [])) != nil
     }
 }
-
-
-//if let stream:InputStream = InputStream(fileAtPath: "/Users/pebble8888/hoge.txt") {
-//    var buf:[UInt8] = [UInt8](repeating: 0, count: 16)
-//    stream.open()
-//    while true {
-//        let len = stream.read(&buf, maxLength: buf.count)
-//        print("len \(len)")
-//        for i in 0..<len {
-//            print(String(format:"%02x ", buf[i]), terminator: "")
-//        }
-//        if len < buf.count {
-//            break
-//        }
-//    }
-//    stream.close()
-//}

@@ -4,5 +4,5 @@
 //
 
 class PictureProcessingUnit {
-    private let memory = PictureProcesingUnitMemory()
+    private let memory = PictureProcessingUnitMemory()
 }

@@ -95,6 +95,8 @@ extension UInt16 {
     static func & (left: UInt16, right: UInt8) -> UInt8 { return left.rightByte() & right }
     static func | (left: UInt16, right: UInt8) -> UInt16 { return left & right.asWord() }
     
+    func hex() -> String { return String(self, radix: 16) }
+    func bin() -> String { return String(self, radix: 2) }
     func leftByte() -> UInt8 { return UInt8(self >> 2) }
     func rightByte() -> UInt8 { return UInt8(self & 0xFF) }
     func overflowsByte() -> Bool { return Bool(self & 0xFF00) }
