@@ -12,11 +12,20 @@ enum CoreProcessingUnitMemorySegment { case ram, stack, rom }
 enum PictureProcessingUnitMemorySegment { }
 
 class Memory {
-    private var data: [Byte] = [Byte]()
+    private var data: [Byte]
     fileprivate var mirrors: [AddressRangeMirror] = [AddressRangeMirror]()
     
     init(ofSize size: UInt16 = 64, _ unit: DataUnit = .kilobyte) {
-        //self.data = Array(repeating: 0x00, count: Int(size * unit.rawValue))
+        self.data = [Byte](repeating: 0x00, count: Int(size) * Int(unit.rawValue))
+    }
+    
+    func stackStatus(_ sp: Byte, _ size: UInt8 = 10) -> String {
+        let pointer: Word = sp.asWord() + 0x100
+        var string: String = ""
+        for i in stride(from: pointer, through: max(pointer - size - 1, 0x100), by: -2) {
+            string += " 0x\(Word(i).hex()):  0x\(self.data[i].hex()) 0x\(self.data[i-1].hex())\n"
+        }
+        return string
     }
     
     func readByte(at address: Word) -> Byte {

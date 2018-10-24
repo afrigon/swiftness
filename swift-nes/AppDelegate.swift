@@ -26,5 +26,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         NSApplication.shared.mainMenu = Menu()
         self.window.makeKeyAndOrderFront(nil)
+        self.window.makeFirstResponder(self.viewController)
     }
 }

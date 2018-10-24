@@ -25,6 +25,14 @@ extension Array {
     }
 }
 
+extension String {
+    public func pad(with padding: Character, toLength length: Int) -> String {
+        let paddingWidth = length - self.count
+        guard paddingWidth >= 0 else { return self }
+        return String(repeating: padding, count: paddingWidth) + self
+    }
+}
+
 extension Bool {
     init<AnyInt: BinaryInteger>(_ number: AnyInt) {
         self.init(number != 0)
@@ -78,6 +86,8 @@ extension UInt8 {
     static func |= (left: inout UInt8, right: UInt16) { left |= right.rightByte() }
     static func ^= (left: inout UInt8, right: UInt16) { left ^= right.rightByte() }
     
+    func hex() -> String { return String(format:"%02X", self) }
+    func bin() -> String { return String(self, radix: 2).pad(with: "0", toLength: 8) }
     func asWord() -> UInt16 { return UInt16(self) }
     func isZero() -> Bool { return self == 0 }
     func isSignBitOn() -> Bool { return Bool(self & 0b10000000) }
@@ -95,8 +105,8 @@ extension UInt16 {
     static func & (left: UInt16, right: UInt8) -> UInt8 { return left.rightByte() & right }
     static func | (left: UInt16, right: UInt8) -> UInt16 { return left & right.asWord() }
     
-    func hex() -> String { return String(self, radix: 16) }
-    func bin() -> String { return String(self, radix: 2) }
+    func hex() -> String { return String(format:"%04X", self) }
+    func bin() -> String { return String(self, radix: 2).pad(with: "0", toLength: 16) }
     func leftByte() -> UInt8 { return UInt8(self >> 2) }
     func rightByte() -> UInt8 { return UInt8(self & 0xFF) }
     func overflowsByte() -> Bool { return Bool(self & 0xFF00) }

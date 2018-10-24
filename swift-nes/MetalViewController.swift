@@ -8,6 +8,7 @@ import Cocoa
 import CoreText
 
 class MetalViewController: NSViewController {
+    override var acceptsFirstResponder: Bool { return true }
     private var device: MTLDevice!
     private var metalLayer: CAMetalLayer!
     private var pipelineState: MTLRenderPipelineState!
@@ -17,6 +18,7 @@ class MetalViewController: NSViewController {
     private var fps: UInt32 = 0
     private let overlay = OverlayLayer()
     private let nes = NintendoEntertainmentSystem()
+    private var displayOverlay = false
     
     override func loadView() {
         let view = NSView()
@@ -35,7 +37,7 @@ class MetalViewController: NSViewController {
         self.view.layer?.addSublayer(self.metalLayer)
         
         self.overlay.fontSize = 14
-        self.overlay.backgroundColor = CGColor.init(red: 1, green: 0, blue: 0, alpha: 1)
+        self.overlay.font = NSFont(name: "Menlo", size: 14)
         self.view.layer?.addSublayer(self.overlay)
         
         self.pipelineState = self.compilePipeline()
@@ -43,6 +45,24 @@ class MetalViewController: NSViewController {
         self.displayLink = DisplayLink(onQueue: DispatchQueue.main)
         self.displayLink.callback = self.gameloop
         self.displayLink.start()
+    }
+    
+    func toggleOverlay() {
+        self.displayOverlay = !self.displayOverlay
+        if self.displayOverlay {
+            self.view.layer?.addSublayer(self.overlay)
+        } else {
+            self.overlay.removeFromSuperlayer()
+        }
+    }
+    
+    override func keyDown(with event: NSEvent) {
+        switch event.keyCode {
+        case 99: // F3
+            self.toggleOverlay()
+        default:
+            print(event.keyCode)
+        }
     }
     
     override func viewDidLayout() {
@@ -79,10 +99,14 @@ class MetalViewController: NSViewController {
         let newTimestamp = CACurrentMediaTime()
         let deltaTime = newTimestamp - self.timestamp
         self.timestamp = newTimestamp
-        
         self.fps = UInt32((1 / deltaTime))
+        
         self.update(deltaTime)
-        self.overlay.update(items: OverlayItems(fps: self.fps), deltaTime)
+        
+        if self.displayOverlay {
+            self.overlay.update(items: OverlayItems(fps: self.fps, nes: self.nes), deltaTime)
+        }
+        
         autoreleasepool {
             self.render()
         }
