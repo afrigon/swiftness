@@ -1,1 +1,1 @@
-![](https://raw.githubusercontent.com/afrigon/ubeat/master/static/img/banner.jpg)
+![](https://raw.githubusercontent.com/afrigon/swiftness/master/banner.jpg)
