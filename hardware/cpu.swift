@@ -274,11 +274,11 @@ class IndirectAddressingMode: AlteredOperandBuilder {
 }
 
 class CoreProcessingUnit {
-    private var opcodes: [Byte: Opcode] = [:]
+    private let frequency: UInt32 = 1789773
     private let memory = CoreProcessingUnitMemory()
     private let stack: Stack!
+    private var opcodes: [Byte: Opcode] = [:]
     private var regs = RegisterSet()
-    private var totalCycles: UInt64 = 0
     
     init() {
         self.stack = memory.stack
@@ -451,7 +451,6 @@ class CoreProcessingUnit {
             opcode.closure(operand.value, operand.address)
             
             cycles -= UInt64(opcode.cycles + operand.additionalCycles);
-            self.totalCycles -= UInt64(opcode.cycles + operand.additionalCycles);
         }
     }
     

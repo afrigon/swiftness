@@ -1,2 +1,1 @@
-# Swiftness
-A small NES emulator built with Swift.
+![](https://raw.githubusercontent.com/afrigon/ubeat/master/static/img/banner.jpg)

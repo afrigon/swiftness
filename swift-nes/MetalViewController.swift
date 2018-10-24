@@ -5,6 +5,7 @@
 
 import Metal
 import Cocoa
+import CoreText
 
 class MetalViewController: NSViewController {
     private var device: MTLDevice!
@@ -12,6 +13,16 @@ class MetalViewController: NSViewController {
     private var pipelineState: MTLRenderPipelineState!
     private var commandQueue: MTLCommandQueue!
     private var displayLink: DisplayLink!
+    private var timestamp: CFTimeInterval = 0.0
+    private var fps: UInt32 = 0
+    private let overlay = OverlayLayer()
+    private let nes = NintendoEntertainmentSystem()
+    
+    override func loadView() {
+        let view = NSView()
+        view.wantsLayer = true
+        self.view = view
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -21,16 +32,23 @@ class MetalViewController: NSViewController {
         self.metalLayer.device = self.device
         self.metalLayer.pixelFormat = .bgra8Unorm
         self.metalLayer.framebufferOnly = true
-        self.metalLayer.frame = self.view.layer!.frame
         self.view.layer?.addSublayer(self.metalLayer)
         
-        //self.initializeData(width: Float(self.view.layer!.frame.width), height: Float(self.view.layer!.frame.height))
+        self.overlay.fontSize = 14
+        self.overlay.backgroundColor = CGColor.init(red: 1, green: 0, blue: 0, alpha: 1)
+        self.view.layer?.addSublayer(self.overlay)
         
         self.pipelineState = self.compilePipeline()
         self.commandQueue = self.device.makeCommandQueue()
         self.displayLink = DisplayLink(onQueue: DispatchQueue.main)
         self.displayLink.callback = self.gameloop
         self.displayLink.start()
+    }
+    
+    override func viewDidLayout() {
+        super.viewDidLayout()
+        self.overlay.frame = CGRect(x: 10, y: 5, width: self.view.layer!.frame.width - 20, height: self.view.layer!.frame.height - 10)
+        self.metalLayer.frame = self.view.layer!.frame
     }
     
     override func viewWillDisappear() {
@@ -56,14 +74,21 @@ class MetalViewController: NSViewController {
     }
     
     private func gameloop() {
-        self.update()
+        if self.timestamp == 0.0 { self.timestamp = CACurrentMediaTime() }
+        
+        let newTimestamp = CACurrentMediaTime()
+        let deltaTime = newTimestamp - self.timestamp
+        self.timestamp = newTimestamp
+        
+        self.fps = UInt32((1 / deltaTime))
+        self.update(deltaTime)
+        self.overlay.update(items: OverlayItems(fps: self.fps), deltaTime)
         autoreleasepool {
             self.render()
         }
     }
     
-    private func update() {
-        
+    private func update(_ deltaTime: CFTimeInterval) {
     }
     
     private func render() {
@@ -73,17 +98,13 @@ class MetalViewController: NSViewController {
         let renderPassDescriptor = MTLRenderPassDescriptor()
         renderPassDescriptor.colorAttachments[0].texture = drawable.texture
         renderPassDescriptor.colorAttachments[0].loadAction = .clear
-        renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 0.0, green: 100.0, blue: 100.0, alpha: 1.0)
+        renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)
         
         let encoder = commandBuffer?.makeRenderCommandEncoder(descriptor: renderPassDescriptor)
         encoder?.setRenderPipelineState(pipelineState)
         
-//        for row in self.cells {
-//            for cell in row {
-//                cell.draw(encoder)
-//            }
-//        }
-        
+        encoder?.setVertexBytes([0.0, -1.0, -1.0, 1.0, 1.0, 1.0], length: 6 * MemoryLayout<Float>.size, index: 0)
+        encoder?.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
         encoder?.endEncoding()
         
         commandBuffer?.present(drawable)

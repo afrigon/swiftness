@@ -12,11 +12,11 @@ enum CoreProcessingUnitMemorySegment { case ram, stack, rom }
 enum PictureProcessingUnitMemorySegment { }
 
 class Memory {
-    private var data: [Byte]
+    private var data: [Byte] = [Byte]()
     fileprivate var mirrors: [AddressRangeMirror] = [AddressRangeMirror]()
     
     init(ofSize size: UInt16 = 64, _ unit: DataUnit = .kilobyte) {
-        self.data = Array(repeating: 0x00, count: Int(size * unit.rawValue))
+        //self.data = Array(repeating: 0x00, count: Int(size * unit.rawValue))
     }
     
     func readByte(at address: Word) -> Byte {
@@ -139,7 +139,7 @@ class Stack {
 
 class ReadOnlyMemory {
     init() {
-        fatalError("ROM not implemented")
+        
     }
 }
 
