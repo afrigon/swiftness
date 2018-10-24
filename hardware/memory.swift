@@ -1,9 +1,6 @@
 //
-//  memory.swift
-//  swift-nes
-//
 //  Created by Alexandre Frigon on 2018-10-21.
-//  Copyright © 2018 Frigstudio. All rights reserved.
+//  Copyright © 2018 Alexandre Frigon. All rights reserved.
 //
 
 struct AddressRange {
@@ -17,11 +14,20 @@ struct MirroredAddressRange {
     let to: AddressRange
 }
 
+enum DataUnit: UInt16 {
+    case byte = 1
+    case kilobyte = 1024
+}
+
 class Memory {
-    private var data: [Byte] = Array(repeating: 0x00, count: 0x10000)
+    private var data: [Byte]
     
-    func readByte(at address: Word) -> Word {
-        return Word(self.data[address])
+    init(ofSize size: UInt16 = 64, _ unit: DataUnit = .kilobyte) {
+        self.data = Array(repeating: 0x00, count: Int(size * unit.rawValue))
+    }
+    
+    func readByte(at address: Word) -> Byte {
+        return self.data[address]
     }
     
     func writeByte(_ data: Byte, at address: Word) {
@@ -29,18 +35,51 @@ class Memory {
     }
     
     func readWord(at address: Word) -> Word {
-        return Word(self.readByte(at: address)) + Word(self.readByte(at: address + 1) << 8)
+        return self.readByte(at: address).asWord() + self.readByte(at: address + 1).asWord() << 8
     }
     
     func writeWord(_ data: Word, at address: Word) {
-        self.writeByte(Byte(data & 0xFF), at: address)
-        self.writeByte(Byte(data >> 8), at: address + 1)
+        self.writeByte(data.rightByte(), at: address)
+        self.writeByte(data.leftByte(), at: address + 1)
+    }
+}
+
+class CoreProcesingUnitMemory: Memory, StackAccessDelegate {
+    private let stackSize: Word = 0x100
+    
+    private var _stack: Stack
+    private var rom: ReadOnlyMemory
+    
+    var stack: Stack {
+        return self._stack
+    }
+    
+    convenience init(with rom: ReadOnlyMemory) {
+        self.init(ofSize: 64, .kilobyte, with: rom)
+    }
+    
+    init(ofSize size: UInt16 = 64, _ unit: DataUnit = .kilobyte, with rom: ReadOnlyMemory? = nil) {
+        self.rom = rom ?? ReadOnlyMemory()
+        self._stack = Stack()
+        super.init(ofSize: size, unit)
+        
+        self._stack.delegate = self
+    }
+    
+    func stack(stack: Stack, didPushByte data: Byte, at address: Word) {
+        let absoluteAddress = address + stackSize
+        self.writeByte(data, at: absoluteAddress)
+    }
+    
+    func stack(stack: Stack, didPopByteAt address: Word) -> Byte {
+        let absoluteAddress = address + stackSize
+        return self.readByte(at: absoluteAddress)
     }
     
     func readWordGlitched(at address: Word) -> Word {
         // 6502 hardware bug, instead of reading from 0xC0FF/0xC100 it reads from 0xC0FF/0xC000
-        if (address & 0xFF) == 0xFF {
-            return (self.readByte(at: address & 0xFF00) << 8) + self.readByte(at: address)
+        if address.rightByte() == 0xFF {
+            return self.readByte(at: address & 0xFF00).asWord() << 8 + self.readByte(at: address)
         } else {
             // regular code
             return self.readWord(at: address)
@@ -48,55 +87,40 @@ class Memory {
     }
 }
 
-class CoreProcesingUnitMemoryMap: Memory {
-    private var _stack: Stack!
-    private var _ram: RandomAccessMemory!
-    private var _io: InputOutputRegister!
-    private var _expansion: ExpansionReadOnlyMemory!
-    private var _save: SaveRandomAccessMemory!
-    private var _rom: ReadOnlyMemory!
+protocol StackAccessDelegate {
+    func stack(stack: Stack, didPushByte data: Byte, at address: Word)
+    func stack(stack: Stack, didPopByteAt address: Word) -> Byte
+}
+
+class Stack {
+    var delegate: StackAccessDelegate?
     
-    var stack: Stack {
-        return self._stack
-    }
-    var ram: RandomAccessMemory {
-        return self._ram
-    }
-    var io: InputOutputRegister {
-        return self._io
-    }
-    var epansion: ExpansionReadOnlyMemory {
-        return self._expansion
-    }
-    var save: SaveRandomAccessMemory {
-        return self._save
-    }
-    var rom: ReadOnlyMemory {
-        return self._rom
+    func pushByte(data: Byte, sp: inout Byte) {
+        self.delegate?.stack(stack: self, didPushByte: data, at: sp.asWord())
+        sp--
     }
     
-    override init() {
-        super.init()
-        self._stack = Stack(memoryMap: self)
-        self._ram = RandomAccessMemory(memoryMap: self)
-        self._io = InputOutputRegister(memoryMap: self)
-        self._expansion = ExpansionReadOnlyMemory(memoryMap: self)
-        self._save = SaveRandomAccessMemory(memoryMap: self)
-        self._rom = ReadOnlyMemory(memoryMap: self)
+    func popByte(sp: inout Byte) -> Byte {
+        sp++
+        return self.delegate?.stack(stack: self, didPopByteAt: sp.asWord()) ?? 0x00
+    }
+    
+    func pushWord(data: Word, sp: inout Byte) {
+        self.pushByte(data: data.leftByte(), sp: &sp)
+        self.pushByte(data: data.rightByte(), sp: &sp)
+    }
+    
+    func popWord(sp: inout Byte) -> Word {
+        return self.popByte(sp: &sp).asWord() + self.popByte(sp: &sp).asWord() << 8
     }
 }
 
-class PictureProcesingUnitMemoryMap: Memory {
-    private var _ppuMemory: PictureProcessingUnitRandomAccessMemory!
+
+
+
+
+class PictureProcesingUnitMemory: Memory {
     
-    var ppuMemory: PictureProcessingUnitRandomAccessMemory {
-        return self._ppuMemory
-    }
-    
-    override init() {
-        super.init()
-        self._ppuMemory = PictureProcessingUnitRandomAccessMemory(memoryMap: self)
-    }
 }
 
 
@@ -117,12 +141,12 @@ class MemoryRegion {
             return address
         }
         
-        if self.isInMirroredRange(address) {
-            fatalError("Mirrored range not implemented")
-        }
+//        if self.isInMirroredRange(address) {
+//            fatalError("Mirrored range not implemented")
+//        }
         
         let offset: Word = self.mirror.from.start - self.mirror.to.start
-        return address - offset
+        return self.mirror.from.start + address % offset
     }
     
     func isInRange(_ address: Word) -> Bool {
@@ -173,84 +197,14 @@ class ReadOnlyMemoryRegion: AttachedMemoryRegion {
 }
 
 // CPU Memory Map Objects
-class Stack: AttachedMemoryRegion {
-    init(memoryMap: Memory) {
-        let range = AddressRange(start: 0x0100, end: 0x01FF)
-        super.init("Stack", range)
-        self.memoryMap = memoryMap
-    }
-    
-    func pushByte(data: Byte, sp: inout Byte) {
-        self.memoryMap.writeByte(data, at: Word(0xFF + sp) + 1)
-        sp--
-    }
-    
-    func popByte(sp: inout Byte) -> Byte {
-        sp++
-        return Byte(self.memoryMap.readByte(at: Word(0xFF + sp) + 1))
-    }
-    
-    func pushWord(data: Word, sp: inout Byte) {
-        self.memoryMap.writeWord(data, at: Word(0xFF + sp))
-        sp -= 2
-    }
-    
-    func popWord(sp: inout Byte) -> Word {
-        sp += 2
-        return self.memoryMap.readWord(at: Word(0xFF + sp))
-    }
-}
-
-class RandomAccessMemory: AttachedMemoryRegion {
-    init(memoryMap: Memory) {
-        let range = AddressRange(start: 0x0000, end: 0x1FFF)
-        let mirror = MirroredAddressRange(from: AddressRange(start: 0x0800, end: 0x1FFF),
-                                          to: AddressRange(start: 0x0000, end: 0x07FF))
-        super.init("RAM", range, mirror)
-        self.memoryMap = memoryMap
-    }
-}
-
-class InputOutputRegister: AttachedMemoryRegion {
-    init(memoryMap: Memory) {
-        let range = AddressRange(start: 0x2000, end: 0x401F)
-        let mirror = MirroredAddressRange(from: AddressRange(start: 0x2008, end: 0x3FFF),
-                                          to: AddressRange(start: 0x2000, end: 0x2007))
-        super.init("IO Registers", range, mirror)
-        self.memoryMap = memoryMap
-    }
-}
-
-class ExpansionReadOnlyMemory: AttachedMemoryRegion {
-    init(memoryMap: Memory) {
-        fatalError("Expansion ROM not implemented")
-        let range = AddressRange(start: 0x2000, end: 0x4020)
-        let mirror = MirroredAddressRange(from: AddressRange(start: 0x2008, end: 0x4000),
-                                          to: AddressRange(start: 0x2000, end: 0x2008))
-        super.init("Expansion ROM", range, mirror)
-        self.memoryMap = memoryMap
-    }
-}
-
-class SaveRandomAccessMemory: AttachedMemoryRegion {
-    init(memoryMap: Memory) {
-        fatalError("SRAM not implemented")
-        let range = AddressRange(start: 0x2000, end: 0x4020)
-        let mirror = MirroredAddressRange(from: AddressRange(start: 0x2008, end: 0x4000),
-                                          to: AddressRange(start: 0x2000, end: 0x2008))
-        super.init("Save RAM", range, mirror)
-        self.memoryMap = memoryMap
-    }
-}
-
 class ReadOnlyMemory: ReadOnlyMemoryRegion {
-    init(memoryMap: Memory) {
+    init() {
         fatalError("ROM not implemented")
-        let range = AddressRange(start: 0x2000, end: 0x4020)
-        let mirror = MirroredAddressRange(from: AddressRange(start: 0x2008, end: 0x4000),
-                                          to: AddressRange(start: 0x2000, end: 0x2008))
-        super.init("PGR-ROM", range, mirror)
-        self.memoryMap = memoryMap
+//        let range = AddressRange(start: 0x2000, end: 0x4020)
+//        let mirror = MirroredAddressRange(from: AddressRange(start: 0x2008, end: 0x4000),
+//                                          to: AddressRange(start: 0x2000, end: 0x2008))
+//        super.init("PGR-ROM", range, mirror)
+//        self.memoryMap = memoryMap
     }
 }
 

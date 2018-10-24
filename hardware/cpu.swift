@@ -1,9 +1,6 @@
 //
-//  cpu.swift
-//  swift-nes
-//
 //  Created by Alexandre Frigon on 2018-10-21.
-//  Copyright © 2018 Frigstudio. All rights reserved.
+//  Copyright © 2018 Alexandre Frigon. All rights reserved.
 //
 
 typealias Byte = UInt8
@@ -14,72 +11,65 @@ typealias QWord = UInt64
 typealias AccumulatorRegister = Byte
 typealias XIndexRegister = Byte
 typealias YIndexRegister = Byte
-typealias ProcessorStatusRegister = Byte
 typealias StackPointerRegister = Byte
 typealias ProgramCounterRegister = Word
+
+enum InterruptAddress: Word { case nmi = 0xFFFA, reset = 0xFFFC, irq = 0xFFFE }
+
+class ProcessorStatusRegister {
+    private var _value: Byte
+    var value: Byte { return self._value }
+    
+    init(_ value: Byte) { self._value = value }
+    static func &= (left: inout ProcessorStatusRegister, right: Byte) { left._value = right }
+    
+    func set(_ flags: Byte, if condition: Bool? = nil) {
+        if let condition = condition {
+            return condition ? self.set(flags) : self.unset(flags)
+        }
+        
+        self._value |= flags
+    }
+    
+    func set(_ flag: Flag, if condition: Bool? = nil) { self.set(flag.rawValue, if: condition) }
+    func unset(_ flags: Byte) { self._value &= ~flags }
+    func unset(_ flag: Flag) { self.unset(flag.rawValue) }
+    func isSet(_ flag: Flag) -> Bool { return Bool(self.value & flag.rawValue) }
+    func valueOf(_ flag: Flag) -> UInt8 { return self.isSet(flag) ? 1 : 0 }
+    
+    func updateFor(_ value: Word) { self.updateFor(value.rightByte()) }
+    func updateFor(_ value: Byte) {
+        self.set(.zero, if: value.isZero())
+        self.set(.negative, if: value.isSignBitOn())
+    }
+}
+
+enum Flag: UInt8 {
+    case carry      = 1     // 0b00000001   C
+    case zero       = 2     // 0b00000010   Z
+    case interrupt  = 4     // 0b00000100   I
+    case decimal    = 8     // 0b00001000   D
+    case breaks     = 16    // 0b00010000   B
+    case alwaysOne  = 32    // 0b00100000
+    case overflow   = 64    // 0b01000000   V
+    case negative   = 128   // 0b10000000   N
+    
+    static func | (left: Flag, right: Flag) -> UInt8 { return left.rawValue | right.rawValue }
+    static func & (left: Flag, right: Flag) -> UInt8 { return left.rawValue & right.rawValue }
+    static prefix func ~ (value: Flag) -> UInt8 { return ~value.rawValue }
+}
 
 struct RegisterSet {
     var a: AccumulatorRegister      = 0x00
     var x: XIndexRegister           = 0x00
     var y: YIndexRegister           = 0x00
-    var p: ProcessorStatusRegister  = 0x00
-    var sp: StackPointerRegister     = 0x00
+    var p: ProcessorStatusRegister  = ProcessorStatusRegister(0x34)
+    var sp: StackPointerRegister    = 0xFD
     var pc: ProgramCounterRegister  = 0x0000
     
-    mutating func set(_ flag: Flag, _ value: Bool? = nil) {
-        if value == nil {
-            return self.p |= flag.rawValue
-        }
-        
-        self.p = value! ?
-            self.p | flag.rawValue :
-            self.p & ~flag.rawValue
+    func isAtSamePage(than address: Word) -> Bool {
+        return self.pc >> 8 != address >> 8
     }
-    
-    mutating func unset(_ flag: Flag) {
-        self.p &= ~flag.rawValue
-    }
-    
-    mutating func setZeroNegative(_ value: Byte) {
-        self.set(Flag.zero, value == 0)
-        self.set(Flag.negative, (value & 0b10000000) != 0)
-    }
-    
-    func getValue(_ value: Flag) -> UInt8 {
-        return self.p * value.rawValue == 0 ? 0 : 1
-    }
-}
-
-enum Endian {
-    case little
-    case big
-}
-
-enum Flag: UInt8 {
-    case carry = 1
-    case zero = 2
-    case interrupt = 4
-    case decimal = 8
-    case breaks = 16
-    case alwaysOne = 32
-    case overflow = 64
-    case negative = 128
-}
-
-enum AddressingMode {
-    case accumulator
-    case implied
-    case immediate
-    case zeroPage
-    case zeroPageX
-    case zeroPageY
-    case relative
-    case absolute
-    case absoluteX
-    case absoluteY
-    case indirect
-    case indirectX
-    case indirectY
 }
 
 typealias Operation = InstructionSet
@@ -89,18 +79,18 @@ enum InstructionSet {
     // math
     case adc    // addition
     case sbc    // substraction
-    case inc    // increment
+    case inc    // increment a
     case inx    // increment x
     case iny    // increment y
-    case dec    // decrement
+    case dec    // decrement a
     case dex    // decrement x
     case dey    // decrement y
     
     // bit manipulation
+    case bit
     case and    // and
-    case bit    // research needed !
-    case eor    // xor
     case ora    // or
+    case eor    // xor
     case asl    // left shift by 1
     case lsr    // right shift by 1
     case rol    // rotate left by 1
@@ -176,465 +166,493 @@ enum InstructionSet {
 
 struct Opcode {
     let operation: Operation
-    let addressingMode: AddressingMode
     let cycles: UInt8
-    let implemented: Bool
-    let closure: () -> Void
+    let closure: (_ value: Word, _ address: Word) -> Void
+    let addressingMode: AddressingMode
     
-    init(_ operation: Operation, _ addresingMode: AddressingMode, _ cycles: UInt8, implemented: Bool = true, _ closure: @escaping () -> Void) {
+    init(_ operation: Operation, _ cycles: UInt8, _ closure: @escaping (_ value: Word, _ address: Word) -> Void,  _ addressingMode: AddressingMode) {
         self.operation = operation
-        self.addressingMode = addresingMode
-        self.cycles = implemented ? cycles : 1
-        self.implemented = implemented
+        self.cycles = cycles
         self.closure = closure
+        self.addressingMode = addressingMode
     }
 }
 
-enum InterruptAddress: Word {
-    case nmi = 0xFFFA
-    case reset = 0xFFFC
-    case irq = 0xFFFE
+enum AddressingMode {
+    case immediate
+    case relative
+    case implied, accumulator
+    case zeroPage(Alteration)
+    case absolute(Alteration)
+    case indirect(Alteration)
+    enum Alteration: UInt8 { case none = 0, x = 1, y = 2 }
+}
+
+struct Operand {
+    var value: Word
+    var address: Word
+    var additionalCycles: UInt8
+    
+    init(value: Word = 0, address: Word = 0, _ additionalCycles: UInt8 = 0) {
+        self.value = value
+        self.address = address
+        self.additionalCycles = additionalCycles
+    }
+}
+
+protocol OperandBuilder {
+    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcesingUnitMemory) -> Operand
+}
+
+class AlteredOperandBuilder: OperandBuilder {   // Abstract
+    let alteration: AddressingMode.Alteration
+    init(_ alteration: AddressingMode.Alteration = .none) { self.alteration = alteration }
+    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcesingUnitMemory) -> Operand { return Operand() }
+}
+
+class EmptyOperandBuilder: OperandBuilder {
+    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcesingUnitMemory) -> Operand { return Operand() }
+}
+
+class ZeroPageAddressingOperandBuilder: AlteredOperandBuilder {
+    override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcesingUnitMemory) -> Operand {
+        let alterationValue: Byte = self.alteration != .none ? (self.alteration == .x ? regs.x : regs.y) : 0
+        var operand = Operand()
+        operand.address = (memory.readByte(at: regs.pc) + alterationValue).asWord()
+        operand.value = memory.readByte(at: operand.address).asWord()
+        regs.pc++
+        return operand
+    }
+}
+
+class AbsoluteAddressingOperandBuilder: AlteredOperandBuilder {
+    override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcesingUnitMemory) -> Operand {
+        let alterationValue: Byte = self.alteration != .none ? (self.alteration == .x ? regs.x : regs.y) : 0
+        var operand = Operand()
+        operand.address = memory.readWord(at: regs.pc) + alterationValue
+        operand.value = memory.readByte(at: operand.address).asWord()
+        regs.pc += 2
+        operand.additionalCycles = self.alteration != .none ? UInt8(regs.isAtSamePage(than: operand.address)) : 0
+        return operand
+    }
+}
+
+class RelativeAddressingOperandBuilder: OperandBuilder {
+    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcesingUnitMemory) -> Operand {
+        var operand = Operand(value: 0, address: memory.readByte(at: regs.pc).asWord())
+        
+        if Bool(operand.address & 0x80) {
+            operand.address -= 0x100 + regs.pc
+        }
+        
+        regs.pc++
+        operand.additionalCycles = UInt8(regs.isAtSamePage(than: operand.address))
+        return operand
+    }
+}
+
+class ImmediateAddressingOperandBuilder: OperandBuilder {
+    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcesingUnitMemory) -> Operand {
+        let operand = Operand(value: memory.readByte(at: regs.pc).asWord())
+        regs.pc++
+        return operand
+    }
+}
+
+class IndirectAddressingMode: AlteredOperandBuilder {
+    override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcesingUnitMemory) -> Operand {
+        let addressPointer: Word = memory.readWord(at: regs.pc) &+ (self.alteration == .x ? regs.x : 0)
+        
+        var operand = Operand()
+        operand.address = memory.readWordGlitched(at: addressPointer) &+ (self.alteration == .y ? regs.y : 0)
+        operand.value = memory.readByte(at: operand.address).asWord()
+        
+        regs.pc += self.alteration == .none ? 2 : 1
+        operand.additionalCycles = self.alteration == .y ? UInt8(regs.isAtSamePage(than: operand.address)) : 0
+        return operand
+    }
 }
 
 class CoreProcessingUnit {
     private var opcodes: [Byte: Opcode] = [:]
-    private let endian: Endian = .little
-    private let memory = CoreProcesingUnitMemoryMap()
+    private let memory = CoreProcesingUnitMemory()
+    private let stack: Stack!
     private var regs = RegisterSet()
     private var totalCycles: UInt64 = 0
     
-    // arguments
-    private var operand: Word = 0x0000
-    private var address: Word = 0x0000
-    
-    private var additionalCycles: UInt8 = 0
-    
     init() {
+        self.stack = memory.stack
         self.opcodes = [
-            0x00: Opcode(.brk, .implied, 7, brk),
-            0x01: Opcode(.ora, .indirectX, 6, ora),
-            0x05: Opcode(.ora, .zeroPage, 3, ora),
-            0x06: Opcode(.asl, .zeroPage, 5, asl),
-            0x08: Opcode(.php, .implied, 3, brk),
-            0x09: Opcode(.ora, .immediate, 2, ora),
-            0x0A: Opcode(.asla, .accumulator, 2, brk),
-            0x0D: Opcode(.ora, .absolute, 4, ora),
-            0x0E: Opcode(.asl, .absolute, 6, asl),
-            0x10: Opcode(.bpl, .implied, 2, bpl),
-            0x11: Opcode(.ora, .indirectY, 5, ora),
-            0x15: Opcode(.ora, .zeroPageX, 4, ora),
-            0x16: Opcode(.asl, .zeroPageX, 6, asl),
-            0x18: Opcode(.clc, .implied, 2, clc),
-            0x19: Opcode(.ora, .absoluteY, 4, ora),
-            0x1D: Opcode(.ora, .absoluteX, 4, ora),
-            0x1E: Opcode(.asl, .absoluteX, 7, asl),
-            0x20: Opcode(.jsr, .implied, 6, jsr),
-            0x21: Opcode(.and, .indirectX, 6, and),
-            0x24: Opcode(.bit, .zeroPage, 3, bit),
-            0x25: Opcode(.and, .zeroPage, 3, and),
-            0x26: Opcode(.rol, .zeroPage, 5, rol),
-            0x28: Opcode(.plp, .implied, 4, plp),
-            0x29: Opcode(.and, .immediate, 2, and),
-            0x2A: Opcode(.rola, .accumulator, 2, rola),
-            0x2C: Opcode(.bit, .absolute, 4, bit),
-            0x2D: Opcode(.and, .absolute, 2, and),
-            0x2E: Opcode(.rol, .absolute, 6, rol),
-            0x30: Opcode(.bmi, .implied, 2, bmi),
-            0x31: Opcode(.and, .indirectY, 5, and),
-            0x35: Opcode(.and, .zeroPageX, 4, and),
-            0x36: Opcode(.rol, .zeroPageX, 6, rol),
-            0x38: Opcode(.sec, .implied, 2, sec),
-            0x39: Opcode(.and, .absoluteY, 4, and),
-            0x3D: Opcode(.and, .absoluteX, 4, and),
-            0x3E: Opcode(.rol, .absoluteX, 7, rol),
-            0x40: Opcode(.rti, .implied, 6, rti),
-            0x41: Opcode(.eor, .indirectX, 6, eor),
-            0x45: Opcode(.eor, .zeroPage, 3, eor),
-            0x46: Opcode(.lsr, .zeroPage, 5, lsr),
-            0x48: Opcode(.pha, .implied, 3, pha),
-            0x49: Opcode(.eor, .immediate, 2, eor),
-            0x4A: Opcode(.lsra, .accumulator, 2, lsra),
-            0x4C: Opcode(.jmp, .absolute, 3, jmp),
-            0x4D: Opcode(.eor, .absolute, 4, eor),
-            0x4E: Opcode(.lsr, .absolute, 6, lsr),
-            0x50: Opcode(.bvc, .implied, 2, bvc),
-            0x51: Opcode(.eor, .indirectY, 5, eor),
-            0x55: Opcode(.eor, .zeroPageX, 4, eor),
-            0x56: Opcode(.lsr, .zeroPageX, 6, lsr),
-            0x58: Opcode(.cli, .implied, 2, cli),
-            0x59: Opcode(.eor, .absoluteY, 4, eor),
-            0x5D: Opcode(.eor, .absoluteX, 4, eor),
-            0x5E: Opcode(.lsr, .absoluteX, 7, lsr),
-            0x60: Opcode(.rts, .implied, 6, rts),
-            0x61: Opcode(.adc, .indirectX, 6, adc),
-            0x65: Opcode(.adc, .zeroPage, 3, adc),
-            0x66: Opcode(.ror, .zeroPage, 5, ror),
-            0x68: Opcode(.pla, .implied, 4, pla),
-            0x69: Opcode(.adc, .immediate, 2, adc),
-            0x6A: Opcode(.rora, .accumulator, 2, rora),
-            0x6C: Opcode(.jmp, .indirect, 5, jmp),
-            0x6D: Opcode(.adc, .absolute, 4, adc),
-            0x6E: Opcode(.ror, .absolute, 6, ror),
-            0x70: Opcode(.bvs, .implied, 2, bvs),
-            0x71: Opcode(.adc, .indirectY, 5, adc),
-            0x75: Opcode(.adc, .zeroPageX, 4, adc),
-            0x76: Opcode(.ror, .zeroPageX, 6, ror),
-            0x78: Opcode(.sei, .implied, 2, sei),
-            0x79: Opcode(.adc, .absoluteY, 4, adc),
-            0x7D: Opcode(.adc, .absoluteX, 4, adc),
-            0x7E: Opcode(.ror, .absoluteX, 7, ror),
-            0x81: Opcode(.sta, .indirectX, 6, sta),
-            0x84: Opcode(.sty, .zeroPage, 3, sty),
-            0x85: Opcode(.sta, .zeroPage, 3, sta),
-            0x86: Opcode(.stx, .zeroPage, 3, stx),
-            0x88: Opcode(.dey, .implied, 2, dey),
-            0x8A: Opcode(.txa, .implied, 2, txa),
-            0x8C: Opcode(.sty, .absolute, 4, sty),
-            0x8D: Opcode(.sta, .absolute, 4, sta),
-            0x8E: Opcode(.stx, .absolute, 4, stx),
-            0x90: Opcode(.bcc, .implied, 2, bcc),
-            0x91: Opcode(.sta, .indirectY, 6, sta),
-            0x94: Opcode(.sty, .zeroPageX, 4, sty),
-            0x95: Opcode(.sta, .zeroPageX, 4, sta),
-            0x96: Opcode(.stx, .zeroPageY, 4, stx),
-            0x98: Opcode(.tya, .implied, 2, tya),
-            0x99: Opcode(.sta, .absoluteY, 5, sta),
-            0x9A: Opcode(.txs, .implied, 2, txs),
-            0x9D: Opcode(.sta, .absoluteX, 5, sta),
-            0xA0: Opcode(.ldy, .immediate, 2, ldy),
-            0xA1: Opcode(.lda, .indirectX, 6, lda),
-            0xA2: Opcode(.ldx, .immediate, 2, ldx),
-            0xA4: Opcode(.ldy, .zeroPage, 3, ldy),
-            0xA5: Opcode(.lda, .zeroPage, 3, lda),
-            0xA6: Opcode(.ldx, .zeroPage, 3, ldx),
-            0xA8: Opcode(.tay, .implied, 2, tay),
-            0xA9: Opcode(.lda, .immediate, 2, lda),
-            0xAA: Opcode(.tax, .implied, 2, tax),
-            0xAC: Opcode(.ldy, .absolute, 4, ldy),
-            0xAD: Opcode(.lda, .absolute, 4, lda),
-            0xAE: Opcode(.ldx, .absolute, 4, ldx),
-            0xB0: Opcode(.bcs, .implied, 2, bcs),
-            0xB1: Opcode(.lda, .indirectY, 5, lda),
-            0xB4: Opcode(.ldy, .zeroPageX, 4, ldy),
-            0xB5: Opcode(.lda, .zeroPageX, 4, lda),
-            0xB6: Opcode(.ldx, .zeroPageY, 4, ldx),
-            0xB8: Opcode(.clv, .implied, 2, clv),
-            0xB9: Opcode(.lda, .absoluteY, 4, lda),
-            0xBA: Opcode(.tsx, .implied, 2, tsx),
-            0xBC: Opcode(.ldy, .absoluteX, 4, ldy),
-            0xBD: Opcode(.lda, .absoluteX, 4, lda),
-            0xBE: Opcode(.ldx, .absoluteY, 4, ldx),
-            0xC0: Opcode(.cpy, .immediate, 2, cpy),
-            0xC1: Opcode(.cmp, .indirectX, 6, cmp),
-            0xC4: Opcode(.cpy, .zeroPage, 3, cpy),
-            0xC5: Opcode(.cmp, .zeroPage, 3, cmp),
-            0xC6: Opcode(.dec, .zeroPage, 5, dec),
-            0xC8: Opcode(.iny, .implied, 2, iny),
-            0xC9: Opcode(.cmp, .immediate, 2, cmp),
-            0xCA: Opcode(.dex, .implied, 2, dex),
-            0xCC: Opcode(.cpy, .absolute, 4, cpy),
-            0xCD: Opcode(.cmp, .absolute, 4, cmp),
-            0xCE: Opcode(.dec, .absolute, 6, dec),
-            0xD0: Opcode(.bne, .implied, 2, bne),
-            0xD1: Opcode(.cmp, .indirectY, 5, cmp),
-            0xD5: Opcode(.cmp, .zeroPageX, 4, cmp),
-            0xD6: Opcode(.dec, .zeroPageX, 6, dec),
-            0xD8: Opcode(.cld, .implied, 2, cld),
-            0xD9: Opcode(.cmp, .absoluteY, 4, cmp),
-            0xDD: Opcode(.cmp, .absoluteX, 4, cmp),
-            0xDE: Opcode(.dec, .absoluteX, 7, dec),
-            0xE0: Opcode(.cpx, .immediate, 2, cpx),
-            0xE1: Opcode(.sbc, .indirectX, 6, sbc),
-            0xE4: Opcode(.cpx, .zeroPage, 3, cpx),
-            0xE5: Opcode(.sbc, .zeroPage, 3, sbc),
-            0xE6: Opcode(.inc, .zeroPage, 5, inc),
-            0xE8: Opcode(.inx, .implied, 2, inx),
-            0xE9: Opcode(.sbc, .immediate, 2, sbc),
-            0xEA: Opcode(.nop, .implied, 2, nop),
-            0xEC: Opcode(.cpx, .absolute, 4, cpx),
-            0xED: Opcode(.sbc, .absolute, 4, sbc),
-            0xEE: Opcode(.inc, .absolute, 6, inc),
-            0xF0: Opcode(.beq, .implied, 2, beq),
-            0xF1: Opcode(.sbc, .indirectY, 5, sbc),
-            0xF5: Opcode(.sbc, .zeroPageX, 4, sbc),
-            0xF6: Opcode(.inc, .zeroPageX, 6, inc),
-            0xF8: Opcode(.sed, .implied, 2, sed),
-            0xF9: Opcode(.sbc, .absoluteY, 4, sbc),
-            0xFD: Opcode(.sbc, .absoluteX, 4, sbc),
-            0xFE: Opcode(.inc, .absoluteX, 7, inc)
+            0x00: Opcode(.brk, 7, self.brk, .implied),
+            0x01: Opcode(.ora, 6, self.ora, .indirect(.x)),
+            0x05: Opcode(.ora, 3, self.ora, .zeroPage(.none)),
+            0x06: Opcode(.asl, 5, self.asl, .zeroPage(.none)),
+            0x08: Opcode(.php, 3, self.brk, .implied),
+            0x09: Opcode(.ora, 2, self.ora, .immediate),
+            0x0A: Opcode(.asla, 2, self.brk, .accumulator),
+            0x0D: Opcode(.ora, 4, self.ora, .absolute(.none)),
+            0x0E: Opcode(.asl, 6, self.asl, .absolute(.none)),
+            0x10: Opcode(.bpl, 2, self.bpl, .implied),
+            0x11: Opcode(.ora, 5, self.ora, .indirect(.y)),
+            0x15: Opcode(.ora, 4, self.ora, .zeroPage(.x)),
+            0x16: Opcode(.asl, 6, self.asl, .zeroPage(.x)),
+            0x18: Opcode(.clc, 2, self.clc, .implied),
+            0x19: Opcode(.ora, 4, self.ora, .absolute(.y)),
+            0x1D: Opcode(.ora, 4, self.ora, .absolute(.x)),
+            0x1E: Opcode(.asl, 7, self.asl, .absolute(.x)),
+            0x20: Opcode(.jsr, 6, self.jsr, .implied),
+            0x21: Opcode(.and, 6, self.and, .indirect(.x)),
+            0x24: Opcode(.bit, 3, self.bit, .zeroPage(.none)),
+            0x25: Opcode(.and, 3, self.and, .zeroPage(.none)),
+            0x26: Opcode(.rol, 5, self.rol, .zeroPage(.none)),
+            0x28: Opcode(.plp, 4, self.plp, .implied),
+            0x29: Opcode(.and, 2, self.and, .immediate),
+            0x2A: Opcode(.rola, 2, self.rola, .accumulator),
+            0x2C: Opcode(.bit, 4, self.bit, .absolute(.none)),
+            0x2D: Opcode(.and, 2, self.and, .absolute(.none)),
+            0x2E: Opcode(.rol, 6, self.rol, .absolute(.none)),
+            0x30: Opcode(.bmi, 2, self.bmi, .implied),
+            0x31: Opcode(.and, 5, self.and, .indirect(.y)),
+            0x35: Opcode(.and, 4, self.and, .zeroPage(.x)),
+            0x36: Opcode(.rol, 6, self.rol, .zeroPage(.x)),
+            0x38: Opcode(.sec, 2, self.sec, .implied),
+            0x39: Opcode(.and, 4, self.and, .absolute(.y)),
+            0x3D: Opcode(.and, 4, self.and, .absolute(.x)),
+            0x3E: Opcode(.rol, 7, self.rol, .absolute(.x)),
+            0x40: Opcode(.rti, 6, self.rti, .implied),
+            0x41: Opcode(.eor, 6, self.eor, .indirect(.x)),
+            0x45: Opcode(.eor, 3, self.eor, .zeroPage(.none)),
+            0x46: Opcode(.lsr, 5, self.lsr, .zeroPage(.none)),
+            0x48: Opcode(.pha, 3, self.pha, .implied),
+            0x49: Opcode(.eor, 2, self.eor, .immediate),
+            0x4A: Opcode(.lsra, 2, self.lsra, .accumulator),
+            0x4C: Opcode(.jmp, 3, self.jmp, .absolute(.none)),
+            0x4D: Opcode(.eor, 4, self.eor, .absolute(.none)),
+            0x4E: Opcode(.lsr, 6, self.lsr, .absolute(.none)),
+            0x50: Opcode(.bvc, 2, self.bvc, .implied),
+            0x51: Opcode(.eor, 5, self.eor, .indirect(.y)),
+            0x55: Opcode(.eor, 4, self.eor, .zeroPage(.x)),
+            0x56: Opcode(.lsr, 6, self.lsr, .zeroPage(.x)),
+            0x58: Opcode(.cli, 2, self.cli, .implied),
+            0x59: Opcode(.eor, 4, self.eor, .absolute(.y)),
+            0x5D: Opcode(.eor, 4, self.eor, .absolute(.x)),
+            0x5E: Opcode(.lsr, 7, self.lsr, .absolute(.x)),
+            0x60: Opcode(.rts, 6, self.rts, .implied),
+            0x61: Opcode(.adc, 6, self.adc, .indirect(.x)),
+            0x65: Opcode(.adc, 3, self.adc, .zeroPage(.none)),
+            0x66: Opcode(.ror, 5, self.ror, .zeroPage(.none)),
+            0x68: Opcode(.pla, 4, self.pla, .implied),
+            0x69: Opcode(.adc, 2, self.adc, .immediate),
+            0x6A: Opcode(.rora, 2, self.rora, .accumulator),
+            0x6C: Opcode(.jmp, 5, self.jmp, .indirect(.none)),
+            0x6D: Opcode(.adc, 4, self.adc, .absolute(.none)),
+            0x6E: Opcode(.ror, 6, self.ror, .absolute(.none)),
+            0x70: Opcode(.bvs, 2, self.bvs, .implied),
+            0x71: Opcode(.adc, 5, self.adc, .indirect(.y)),
+            0x75: Opcode(.adc, 4, self.adc, .zeroPage(.x)),
+            0x76: Opcode(.ror, 6, self.ror, .zeroPage(.x)),
+            0x78: Opcode(.sei, 2, self.sei, .implied),
+            0x79: Opcode(.adc, 4, self.adc, .absolute(.y)),
+            0x7D: Opcode(.adc, 4, self.adc, .absolute(.x)),
+            0x7E: Opcode(.ror, 7, self.ror, .absolute(.x)),
+            0x81: Opcode(.sta, 6, self.sta, .indirect(.x)),
+            0x84: Opcode(.sty, 3, self.sty, .zeroPage(.none)),
+            0x85: Opcode(.sta, 3, self.sta, .zeroPage(.none)),
+            0x86: Opcode(.stx, 3, self.stx, .zeroPage(.none)),
+            0x88: Opcode(.dey, 2, self.dey, .implied),
+            0x8A: Opcode(.txa, 2, self.txa, .implied),
+            0x8C: Opcode(.sty, 4, self.sty, .absolute(.none)),
+            0x8D: Opcode(.sta, 4, self.sta, .absolute(.none)),
+            0x8E: Opcode(.stx, 4, self.stx, .absolute(.none)),
+            0x90: Opcode(.bcc, 2, self.bcc, .implied),
+            0x91: Opcode(.sta, 6, self.sta, .indirect(.y)),
+            0x94: Opcode(.sty, 4, self.sty, .zeroPage(.x)),
+            0x95: Opcode(.sta, 4, self.sta, .zeroPage(.x)),
+            0x96: Opcode(.stx, 4, self.stx, .zeroPage(.y)),
+            0x98: Opcode(.tya, 2, self.tya, .implied),
+            0x99: Opcode(.sta, 5, self.sta, .absolute(.y)),
+            0x9A: Opcode(.txs, 2, self.txs, .implied),
+            0x9D: Opcode(.sta, 5, self.sta, .absolute(.x)),
+            0xA0: Opcode(.ldy, 2, self.ldy, .immediate),
+            0xA1: Opcode(.lda, 6, self.lda, .indirect(.x)),
+            0xA2: Opcode(.ldx, 2, self.ldx, .immediate),
+            0xA4: Opcode(.ldy, 3, self.ldy, .zeroPage(.none)),
+            0xA5: Opcode(.lda, 3, self.lda, .zeroPage(.none)),
+            0xA6: Opcode(.ldx, 3, self.ldx, .zeroPage(.none)),
+            0xA8: Opcode(.tay, 2, self.tay, .implied),
+            0xA9: Opcode(.lda, 2, self.lda, .immediate),
+            0xAA: Opcode(.tax, 2, self.tax, .implied),
+            0xAC: Opcode(.ldy, 4, self.ldy, .absolute(.none)),
+            0xAD: Opcode(.lda, 4, self.lda, .absolute(.none)),
+            0xAE: Opcode(.ldx, 4, self.ldx, .absolute(.none)),
+            0xB0: Opcode(.bcs, 2, self.bcs, .implied),
+            0xB1: Opcode(.lda, 5, self.lda, .indirect(.y)),
+            0xB4: Opcode(.ldy, 4, self.ldy, .zeroPage(.x)),
+            0xB5: Opcode(.lda, 4, self.lda, .zeroPage(.x)),
+            0xB6: Opcode(.ldx, 4, self.ldx, .zeroPage(.y)),
+            0xB8: Opcode(.clv, 2, self.clv, .implied),
+            0xB9: Opcode(.lda, 4, self.lda, .absolute(.y)),
+            0xBA: Opcode(.tsx, 2, self.tsx, .implied),
+            0xBC: Opcode(.ldy, 4, self.ldy, .absolute(.x)),
+            0xBD: Opcode(.lda, 4, self.lda, .absolute(.x)),
+            0xBE: Opcode(.ldx, 4, self.ldx, .absolute(.y)),
+            0xC0: Opcode(.cpy, 2, self.cpy, .immediate),
+            0xC1: Opcode(.cmp, 6, self.cmp, .indirect(.x)),
+            0xC4: Opcode(.cpy, 3, self.cpy, .zeroPage(.none)),
+            0xC5: Opcode(.cmp, 3, self.cmp, .zeroPage(.none)),
+            0xC6: Opcode(.dec, 5, self.dec, .zeroPage(.none)),
+            0xC8: Opcode(.iny, 2, self.iny, .implied),
+            0xC9: Opcode(.cmp, 2, self.cmp, .immediate),
+            0xCA: Opcode(.dex, 2, self.dex, .implied),
+            0xCC: Opcode(.cpy, 4, self.cpy, .absolute(.none)),
+            0xCD: Opcode(.cmp, 4, self.cmp, .absolute(.none)),
+            0xCE: Opcode(.dec, 6, self.dec, .absolute(.none)),
+            0xD0: Opcode(.bne, 2, self.bne, .implied),
+            0xD1: Opcode(.cmp, 5, self.cmp, .indirect(.y)),
+            0xD5: Opcode(.cmp, 4, self.cmp, .zeroPage(.x)),
+            0xD6: Opcode(.dec, 6, self.dec, .zeroPage(.x)),
+            0xD8: Opcode(.cld, 2, self.cld, .implied),
+            0xD9: Opcode(.cmp, 4, self.cmp, .absolute(.y)),
+            0xDD: Opcode(.cmp, 4, self.cmp, .absolute(.x)),
+            0xDE: Opcode(.dec, 7, self.dec, .absolute(.x)),
+            0xE0: Opcode(.cpx, 2, self.cpx, .immediate),
+            0xE1: Opcode(.sbc, 6, self.sbc, .indirect(.x)),
+            0xE4: Opcode(.cpx, 3, self.cpx, .zeroPage(.none)),
+            0xE5: Opcode(.sbc, 3, self.sbc, .zeroPage(.none)),
+            0xE6: Opcode(.inc, 5, self.inc, .zeroPage(.none)),
+            0xE8: Opcode(.inx, 2, self.inx, .implied),
+            0xE9: Opcode(.sbc, 2, self.sbc, .immediate),
+            0xEA: Opcode(.nop, 2, self.nop, .implied),
+            0xEC: Opcode(.cpx, 4, self.cpx, .absolute(.none)),
+            0xED: Opcode(.sbc, 4, self.sbc, .absolute(.none)),
+            0xEE: Opcode(.inc, 6, self.inc, .absolute(.none)),
+            0xF0: Opcode(.beq, 2, self.beq, .implied),
+            0xF1: Opcode(.sbc, 5, self.sbc, .indirect(.y)),
+            0xF5: Opcode(.sbc, 4, self.sbc, .zeroPage(.x)),
+            0xF6: Opcode(.inc, 6, self.inc, .zeroPage(.x)),
+            0xF8: Opcode(.sed, 2, self.sed, .implied),
+            0xF9: Opcode(.sbc, 4, self.sbc, .absolute(.y)),
+            0xFD: Opcode(.sbc, 4, self.sbc, .absolute(.x)),
+            0xFE: Opcode(.inc, 7, self.inc, .absolute(.x))
         ]
     }
     
     func run(cycles: inout UInt64) {
+        // TODO: remove this inout atrocity
         while (cycles > 0) {
-            let opcodeHex = Byte(self.memory.readByte(at: regs.pc))
+            let opcodeHex: Byte = self.memory.readByte(at: regs.pc)
             regs.pc++
             
             guard let opcode: Opcode = self.opcodes[opcodeHex] else {
                 fatalError("Unknown opcode used (outside of the 151 available)")
             }
             
-            self.getOperands(using: opcode.addressingMode)
-            opcode.closure()
+            let operand: Operand = self.buildOperand(using: opcode.addressingMode)
+            opcode.closure(operand.value, operand.address)
             
-            cycles -= UInt64(opcode.cycles + self.additionalCycles);
-            //self.totalcpu_cycles -= self.cycles;
-            self.additionalCycles = 0
+            cycles -= UInt64(opcode.cycles + operand.additionalCycles);
+            self.totalCycles -= UInt64(opcode.cycles + operand.additionalCycles);
         }
     }
     
     func interrupt() {
-        
+        stack.pushWord(data: regs.pc, sp: &regs.sp)
+        stack.pushByte(data: regs.p.value | Flag.alwaysOne.rawValue, sp: &regs.sp)
+        regs.p.set(.interrupt)
+        regs.pc = memory.readWord(at: InterruptAddress.nmi.rawValue)
+        // cycles += 7 ?
     }
     
     func reset() {
-        self.regs.pc = InterruptAddress.reset.rawValue
-        self.regs.sp -= 3
-        self.regs.set(Flag.interrupt)
+        regs.pc = memory.readWord(at: InterruptAddress.reset.rawValue)
+        regs.sp = 0xFD
+        regs.p.set(.interrupt)
     }
     
-    private func getOperands(using addressingMode: AddressingMode = .implied) {
-        self.operand = 0x0000
+    private func buildOperand(using addressingMode: AddressingMode) -> Operand {
         switch addressingMode {
-        case .zeroPage: // pc* is the address to operand
-            address = memory.readByte(at: regs.pc)
-            operand = memory.readByte(at: address)
-            regs.pc++
-            break
-        case .zeroPageX: // pc* + x is the address to operand
-            address = (memory.readByte(at: regs.pc) + regs.x) & 0xff
-            operand = memory.readByte(at: address)
-            regs.pc++
-            break
-        case .zeroPageY: // pc* + y is the address to operand
-            address = (memory.readByte(at: regs.pc) + regs.y) & 0xff
-            operand = memory.readByte(at: address)
-            regs.pc++
-            break
-        case .absolute: // word pc* is the address to operand
-            address = memory.readWord(at: regs.pc)
-            operand = memory.readByte(at: address)
-            regs.pc += 2
-            break
-        case .absoluteX: // word pc* + x is the address to operand
-            address = memory.readWord(at: regs.pc) + regs.x
-            operand = memory.readByte(at: address)
-            regs.pc += 2
-            self.checkPages()
-            break
-        case .absoluteY: // word pc* + y is the address to operand
-            address = memory.readWord(at: regs.pc) + regs.y
-            operand = memory.readByte(at: address)
-            regs.pc += 2
-            self.checkPages()
-            break
-        case .relative:
-            address = memory.readByte(at: regs.pc)
-            regs.pc++
-            
-            if address & 0x80 != 0 {
-                address -= 0x100 + regs.pc
-            }
-            
-            self.checkPages()
-        case .indirect:
-            let target: Word = memory.readWord(at: regs.pc)
-            address = memory.readWordGlitched(at: target)
-            regs.pc += 2
-            break
-        case .indirectX:
-            let target: Word = memory.readByte(at: regs.pc)
-            address = (memory.readByte(at: (target + regs.x + 1) & 0xFF) << 8) | memory.readByte(at: (target + regs.x) & 0xFF)
-            operand = memory.readByte(at: address)
-            regs.pc++
-            break
-        case .indirectY:
-            let target: Word = memory.readByte(at: regs.pc)
-            address = (((memory.readByte(at: (target + 1) & 0xFF) << 8) | memory.readByte(at: target)) + regs.y) & 0xFFFF
-            operand = memory.readByte(at: address)
-            regs.pc++
-            self.checkPages()
-            break
-        case .immediate:
-            self.operand = Word(self.memory.readByte(at: regs.pc))
-            regs.pc++
-            break
-        case .accumulator: fallthrough
-        case .implied: fallthrough
-        default:
-            return
+        case .zeroPage(let alteration): return ZeroPageAddressingOperandBuilder(alteration).evaluate(&regs, memory)
+        case .absolute(let alteration): return AbsoluteAddressingOperandBuilder(alteration).evaluate(&regs, memory)
+        case .relative: return RelativeAddressingOperandBuilder().evaluate(&regs, memory)
+        case .indirect(let alteration): return IndirectAddressingMode(alteration).evaluate(&regs, memory)
+        case .immediate: return ImmediateAddressingOperandBuilder().evaluate(&regs, memory)
+        case .implied, .accumulator: fallthrough
+        default: return EmptyOperandBuilder().evaluate(&regs, memory)
         }
     }
     
-    private func checkPages() {
-        if (regs.pc >> 8 != self.address >> 8) {
-            self.additionalCycles++
-        }
+    // OPCODES IMPLEMENTATION
+    private func nop (_ value: Word, _ address: Word) {}
+    
+    private func adc(_ value: Word, _ address: Word) {
+        let result = regs.a &+ value &+ regs.p.valueOf(.carry)
+        regs.p.set(.carry, if: result.overflowsByte())
+        regs.p.set(.overflow, if: Bool(~(regs.a ^ value) & (regs.a ^ result) & Flag.negative.rawValue))
+        regs.a = result.rightByte()
+        regs.p.updateFor(regs.a)
     }
     
-    // opcodes implementation
-    private func nop () {}
-    
-    // math
-    private func adc() {
-        let result = regs.a + Byte(operand) + regs.getValue(.carry)
-        regs.set(.carry, Word(result) & 0x100 != 0)
-        regs.set(.overflow, (~(regs.a ^ Byte(operand)) & (regs.a ^ result) & 0x80) != 0)
-        regs.a = result & 0xFF
-        regs.setZeroNegative(regs.a)
+    private func sbc(_ value: Word, _ address: Word) {
+        let result = regs.a &- value &- (1 - regs.p.valueOf(.carry))
+        regs.p.set(.carry, if: !result.overflowsByte())
+        regs.p.set(.overflow, if: Bool((regs.a ^ value) & (regs.a ^ result) & Flag.negative.rawValue))
+        regs.a = result.rightByte()
+        regs.p.updateFor(regs.a)
     }
     
-    private func sbc() {
-        let result = regs.a - Byte(operand) - (regs.getValue(.carry) == 0 ? 1 : 0)
-        regs.set(.carry, Word(result) & 0x100 != 0)
-        regs.set(.overflow, ((regs.a ^ Byte(operand)) & (regs.a ^ result) & 0x80) != 0)
-        regs.a = result & 0xFF
-        regs.setZeroNegative(regs.a)
+    private func inc(_ value: Word, _ address: Word) {
+        let result: Byte = value.rightByte() &+ 1
+        memory.writeByte(result, at: address)
+        regs.p.updateFor(result)
     }
     
-    private func inc() { let result: Byte = Byte(operand) + 1; memory.writeByte(result, at: address); regs.setZeroNegative(result) }
-    private func inx() { regs.x++; regs.setZeroNegative(regs.x) }
-    private func iny() { regs.y++; regs.setZeroNegative(regs.y) }
-    private func dec() { let result: Byte = Byte(operand) - 1; memory.writeByte(result, at: address); regs.setZeroNegative(result) }
-    private func dex() { regs.x--; regs.setZeroNegative(regs.x) }
-    private func dey() { regs.y--; regs.setZeroNegative(regs.y) }
-    
-    // bit manipulation
-    private func bit() { regs.set(.zero, regs.a & Byte(operand) == 0); regs.p = (regs.p & 0x3f) | Byte(0xC0 & operand) }
-    private func and() { regs.a &= Byte(operand); regs.setZeroNegative(regs.a) }
-    private func eor() { regs.a ^= Byte(operand); regs.setZeroNegative(regs.a) }
-    private func ora() { regs.a |= Byte(operand); regs.setZeroNegative(regs.a) }
-    
-    private func asl() {
-        regs.set(.carry, operand & 0b10000000 == 1)
-        operand <<= 1
-        regs.setZeroNegative(Byte(operand))
-        memory.writeByte(Byte(operand), at: address)
+    private func dec(_ value: Word, _ address: Word) {
+        let result: Byte = value.rightByte() &- 1
+        memory.writeByte(result, at: address)
+        regs.p.updateFor(result)
     }
     
-    private func lsr() {
-        regs.set(.carry, operand & 1 == 1)
-        operand >>= 1
-        regs.setZeroNegative(Byte(operand))
-        memory.writeByte(Byte(operand), at: address)
+    private func inx(_ value: Word, _ address: Word) { regs.x++; regs.p.updateFor(regs.x) }
+    private func iny(_ value: Word, _ address: Word) { regs.y++; regs.p.updateFor(regs.y) }
+    private func dex(_ value: Word, _ address: Word) { regs.x--; regs.p.updateFor(regs.x) }
+    private func dey(_ value: Word, _ address: Word) { regs.y--; regs.p.updateFor(regs.y) }
+    
+    private func bit(_ value: Word, _ address: Word) {
+        regs.p.set(.zero, if: Bool(regs.a & value))
+        regs.p.set((.overflow | .negative) & value)
     }
     
-    private func rol() {
-        operand <<= 1
-        operand |= Word(regs.getValue(.carry))
-        regs.set(.carry, operand > 0xFF)
-        operand &= 0xFF
-        memory.writeByte(Byte(operand), at: address)
-        regs.setZeroNegative(Byte(operand))
+    private func and(_ value: Word, _ address: Word) { regs.a &= value; regs.p.updateFor(regs.a) }
+    private func eor(_ value: Word, _ address: Word) { regs.a ^= value; regs.p.updateFor(regs.a) }
+    private func ora(_ value: Word, _ address: Word) { regs.a |= value; regs.p.updateFor(regs.a) }
+    
+    private func asl(_ value: Word, _ address: Word) {
+        regs.p.set(.carry, if: value.rightByte().isMostSignificantBitOn())
+        let result: Byte = value.rightByte() << 1
+        regs.p.updateFor(result)
+        memory.writeByte(result, at: address)
     }
     
-    private func ror() {
-        let carry = regs.getValue(.carry)
-        regs.set(.carry, operand & 0x01 != 0)
-        operand = Word((Byte(operand >> 1) | (carry << 7)) & 0xFF)
-        regs.set(.zero, operand == 0)
-        regs.set(.negative, carry != 0)
-        memory.writeByte(Byte(operand), at: address)
+    private func lsr(_ value: Word, _ address: Word) {
+        regs.p.set(.carry, if: value.rightByte().isLeastSignificantBitOn())
+        let result: Byte = value.rightByte() >> 1
+        regs.p.updateFor(result)
+        memory.writeByte(result, at: address)
     }
     
-    // accumulator
-    private func asla() {
-        regs.set(.carry, regs.a & 0b10000000 == 1)
+    private func rol(_ value: Word, _ address: Word) {
+        let result: Word = value << 1 | regs.p.valueOf(.carry)
+        regs.p.set(.carry, if: result.overflowsByteByOne())
+        memory.writeByte(result.rightByte(), at: address)
+        regs.p.updateFor(result)
+    }
+    
+    private func ror(_ value: Word, _ address: Word) {
+        let carry: Byte = regs.p.valueOf(.carry)
+        regs.p.set(.carry, if: value.isLeastSignificantBitOn())
+        let result: Byte = value.rightByte() >> 1 | carry << 7
+        regs.p.updateFor(result)
+        memory.writeByte(result, at: address)
+    }
+    
+    private func asla(_ value: Word, _ address: Word) {
+        regs.p.set(.carry, if: regs.a.isMostSignificantBitOn())
         regs.a <<= 1
-        regs.setZeroNegative(regs.a)
+        regs.p.updateFor(regs.a)
     }
     
-    private func lsra() {
-        regs.set(.carry, regs.a & 1 == 1)
+    private func lsra(_ value: Word, _ address: Word) {
+        regs.p.set(.carry, if: regs.a.isLeastSignificantBitOn())
         regs.a >>= 1
-        regs.setZeroNegative(regs.a)
+        regs.p.updateFor(regs.a)
     }
     
-    private func rola() {
-        var result = regs.a << 1
-        result |= regs.getValue(.carry)
-        regs.set(.carry, result > 0xFF)
-        regs.a = result & 0xFF
-        regs.setZeroNegative(regs.a)
+    private func rola(_ value: Word, _ address: Word) {
+        let result: Word = regs.a.asWord() << 1 | regs.p.valueOf(.carry)
+        regs.p.set(.carry, if: result.overflowsByteByOne())
+        regs.a = result.rightByte()
+        regs.p.updateFor(regs.a)
     }
     
-    private func rora() {
-        let carry = regs.getValue(.carry)
-        regs.set(.carry, regs.a & 0x01 != 0)
-        regs.a = (regs.a >> 1) | (carry << 7)
-        regs.set(.zero, operand == 0)
-        regs.set(.negative, carry != 0)
+    private func rora(_ value: Word, _ address: Word) {
+        let carry = regs.p.valueOf(.carry)
+        regs.p.set(.carry, if: regs.a.isLeastSignificantBitOn())
+        regs.a = regs.a >> 1 | carry << 7
+        regs.p.updateFor(regs.a)
     }
     
     // flags
-    private func clc() { regs.unset(.carry) }
-    private func cld() { regs.unset(.decimal) }
-    private func cli() { regs.unset(.interrupt) }
-    private func clv() { regs.unset(.overflow) }
-    private func sec() { regs.set(.carry) }
-    private func sed() { regs.set(.decimal) }
-    private func sei() { regs.set(.interrupt) }
+    private func clc(_ value: Word, _ address: Word) { regs.p.unset(.carry) }
+    private func cld(_ value: Word, _ address: Word) { regs.p.unset(.decimal) }
+    private func cli(_ value: Word, _ address: Word) { regs.p.unset(.interrupt) }
+    private func clv(_ value: Word, _ address: Word) { regs.p.unset(.overflow) }
+    private func sec(_ value: Word, _ address: Word) { regs.p.set(.carry) }
+    private func sed(_ value: Word, _ address: Word) { regs.p.set(.decimal) }
+    private func sei(_ value: Word, _ address: Word) { regs.p.set(.interrupt) }
     
     // comparison
-    private func compare(_ register: Byte) {
-        let result = register - Byte(operand)
-        regs.set(.carry, result >= 0)
-        regs.set(.zero, result == 0)
-        regs.set(.negative, (result >> 7) & 1 != 0)
+    private func compare(_ a: Byte, _ value: Word) {
+        regs.p.updateFor(a - value.rightByte())
+        regs.p.set(.carry, if: regs.a >= value)
     }
-    private func cmp() { compare(regs.a) }
-    private func cpx() { compare(regs.x) }
-    private func cpy() { compare(regs.y) }
+    private func cmp(_ value: Word, _ address: Word) { compare(regs.a, value) }
+    private func cpx(_ value: Word, _ address: Word) { compare(regs.x, value) }
+    private func cpy(_ value: Word, _ address: Word) { compare(regs.y, value) }
     
     // branches
-    private func branch(_ flag: Bool) { if flag { regs.pc = address } }
-    private func beq() { branch(regs.getValue(.zero) != 0) }
-    private func bmi() { branch(regs.getValue(.negative) != 0) }
-    private func bne() { branch(regs.getValue(.zero) == 0) }
-    private func bpl() { branch(regs.getValue(.negative) == 0) }
-    private func bcc() { branch(regs.getValue(.carry) == 0) }
-    private func bcs() { branch(regs.getValue(.carry) != 0) }
-    private func bvc() { branch(regs.getValue(.overflow) == 0) }
-    private func bvs() { branch(regs.getValue(.overflow) == 0) }
+    private func branch(to address: Word, if condition: Bool) { if condition { regs.pc = address } }
+    private func beq(_ value: Word, _ address: Word) { branch(to: address, if: regs.p.isSet(.zero)) }
+    private func bne(_ value: Word, _ address: Word) { branch(to: address, if: !regs.p.isSet(.zero)) }
+    private func bmi(_ value: Word, _ address: Word) { branch(to: address, if: regs.p.isSet(.negative)) }
+    private func bpl(_ value: Word, _ address: Word) { branch(to: address, if: !regs.p.isSet(.negative)) }
+    private func bcs(_ value: Word, _ address: Word) { branch(to: address, if: regs.p.isSet(.carry)) }
+    private func bcc(_ value: Word, _ address: Word) { branch(to: address, if: !regs.p.isSet(.carry)) }
+    private func bvs(_ value: Word, _ address: Word) { branch(to: address, if: regs.p.isSet(.overflow)) }
+    private func bvc(_ value: Word, _ address: Word) { branch(to: address, if: !regs.p.isSet(.overflow)) }
     
     // jump
-    private func jmp() { regs.pc = operand }
+    private func jmp(_ value: Word, _ address: Word) { regs.pc = value }
     
     // subroutines
-    private func jsr() { memory.stack.pushWord(data: regs.pc - 1, sp: &regs.sp); regs.pc = address }
-    private func rts() { regs.pc = memory.stack.popWord(sp: &regs.sp) + 1 }
+    private func jsr(_ value: Word, _ address: Word) { stack.pushWord(data: regs.pc &- 1, sp: &regs.sp); regs.pc = address }
+    private func rts(_ value: Word, _ address: Word) { regs.pc = stack.popWord(sp: &regs.sp) &+ 1 }
     
     // interuptions
-    private func rti() { regs.p = memory.stack.popByte(sp: &regs.sp) | regs.getValue(Flag.alwaysOne); regs.pc = memory.stack.popWord(sp: &regs.sp) }
-    private func brk() {
-        memory.stack.pushWord(data: regs.pc - 1, sp: &regs.sp)
-        memory.stack.pushByte(data: regs.p, sp: &regs.sp)
-        regs.set(.alwaysOne)
-        regs.pc = InterruptAddress.nmi.rawValue
+    private func rti(_ value: Word, _ address: Word) {
+        regs.p &= stack.popByte(sp: &regs.sp) | Flag.alwaysOne.rawValue
+        regs.pc = stack.popWord(sp: &regs.sp)
+    }
+    
+    private func brk(_ value: Word, _ address: Word) {
+        regs.p.set(.alwaysOne | .breaks)
+        stack.pushWord(data: regs.pc &+ 1, sp: &regs.sp) // TODO: make sure pc is handled correctly
+        stack.pushByte(data: regs.p.value, sp: &regs.sp)
+        regs.pc = memory.readWord(at: InterruptAddress.nmi.rawValue)
     }
     
     // stack
-    private func pha() { memory.stack.pushByte(data: regs.a, sp: &regs.sp) }
-    private func php() { memory.stack.pushByte(data: regs.p | 0x30, sp: &regs.sp) }
-    private func pla() { regs.a = memory.stack.popByte(sp: &regs.sp); regs.setZeroNegative(regs.a) }
-    private func plp() { regs.p = (memory.stack.popByte(sp: &regs.sp) & 0xEF) | 0x20 }
+    private func pha(_ value: Word, _ address: Word) { stack.pushByte(data: regs.a, sp: &regs.sp) }
+    private func php(_ value: Word, _ address: Word) { stack.pushByte(data: regs.p.value | (.alwaysOne | .breaks), sp: &regs.sp) }
+    private func pla(_ value: Word, _ address: Word) { regs.a = stack.popByte(sp: &regs.sp); regs.p.updateFor(regs.a) }
+    private func plp(_ value: Word, _ address: Word) { regs.p &= stack.popByte(sp: &regs.sp) & ~Flag.breaks.rawValue | Flag.alwaysOne.rawValue }
     
     // loading
-    private func lda() { regs.a = Byte(operand); regs.setZeroNegative(regs.a) }
-    private func ldx() { regs.x = Byte(operand); regs.setZeroNegative(regs.x) }
-    private func ldy() { regs.y = Byte(operand); regs.setZeroNegative(regs.y) }
+    private func load(_ a: inout Byte, _ operand: Word) { a = operand.rightByte(); regs.p.updateFor(a) }
+    private func lda(_ value: Word, _ address: Word) { self.load(&regs.a, value) }
+    private func ldx(_ value: Word, _ address: Word) { self.load(&regs.x, value) }
+    private func ldy(_ value: Word, _ address: Word) { self.load(&regs.y, value) }
     
     // storing
-    private func sta() { memory.writeByte(regs.a, at: address) }
-    private func stx() { memory.writeByte(regs.x, at: address) }
-    private func sty() { memory.writeByte(regs.y, at: address) }
+    private func sta(_ value: Word, _ address: Word) { memory.writeByte(regs.a, at: address) }
+    private func stx(_ value: Word, _ address: Word) { memory.writeByte(regs.x, at: address) }
+    private func sty(_ value: Word, _ address: Word) { memory.writeByte(regs.y, at: address) }
     
-  
     // transfering
-    private func tax() { regs.x = regs.a; regs.setZeroNegative(regs.x) }
-    private func tay() { regs.y = regs.a; regs.setZeroNegative(regs.y) }
-    private func tsx() { regs.x = regs.sp; regs.setZeroNegative(regs.x) }
-    private func txa() { regs.a = regs.x; regs.setZeroNegative(regs.a) }
-    private func tya() { regs.a = regs.y; regs.setZeroNegative(regs.a) }
-    private func txs() { regs.sp = regs.x }
+    private func transfer(_ a: inout Byte, _ b: Byte) { a = b; regs.p.updateFor(a) }
+    private func tax(_ value: Word, _ address: Word) { self.transfer(&regs.x, regs.a) }
+    private func txa(_ value: Word, _ address: Word) { self.transfer(&regs.a, regs.x) }
+    private func tay(_ value: Word, _ address: Word) { self.transfer(&regs.y, regs.a) }
+    private func tya(_ value: Word, _ address: Word) { self.transfer(&regs.a, regs.y) }
+    private func tsx(_ value: Word, _ address: Word) { self.transfer(&regs.x, regs.sp) }
+    private func txs(_ value: Word, _ address: Word) { regs.sp = regs.x }
 }

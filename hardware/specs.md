@@ -28,3 +28,11 @@
 
 
 ## Audio Processing Unit (apu)
+
+
+## To watch out
+- Make sure the stack offset is good
+- Make sure every operation can't overflow it's integer
+- Make sure the cycles are synced
+- Make sure the mirrors work
+- Make sure the cpu addressing is working (mostly indirect)

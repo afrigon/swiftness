@@ -14,6 +14,8 @@
 		FEA2741D217C546E0072530A /* integer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741C217C546E0072530A /* integer.swift */; };
 		FEA2741F217C8F990072530A /* memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741E217C8F990072530A /* memory.swift */; };
 		FEA27421217C91710072530A /* ppu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27420217C91710072530A /* ppu.swift */; };
+		FEA27426217D1D8A0072530A /* file.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27425217D1D8A0072530A /* file.swift */; };
+		FEA27428217DED280072530A /* color.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27427217DED280072530A /* color.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +30,8 @@
 		FEA2741E217C8F990072530A /* memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = memory.swift; sourceTree = "<group>"; };
 		FEA27420217C91710072530A /* ppu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ppu.swift; sourceTree = "<group>"; };
 		FEA27424217C954F0072530A /* specs.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = specs.md; sourceTree = "<group>"; };
+		FEA27425217D1D8A0072530A /* file.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = file.swift; sourceTree = "<group>"; };
+		FEA27427217DED280072530A /* color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = color.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +66,8 @@
 			isa = PBXGroup;
 			children = (
 				FEA2740B217C45F70072530A /* AppDelegate.swift */,
+				FEA27427217DED280072530A /* color.swift */,
+				FEA27425217D1D8A0072530A /* file.swift */,
 				FEA2741C217C546E0072530A /* integer.swift */,
 				FEA2740D217C45F90072530A /* Assets.xcassets */,
 				FEA2740F217C45F90072530A /* MainMenu.xib */,
@@ -152,7 +158,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FEA27428217DED280072530A /* color.swift in Sources */,
 				FEA2741F217C8F990072530A /* memory.swift in Sources */,
+				FEA27426217D1D8A0072530A /* file.swift in Sources */,
 				FEA2741B217C47B50072530A /* cpu.swift in Sources */,
 				FEA2741D217C546E0072530A /* integer.swift in Sources */,
 				FEA27421217C91710072530A /* ppu.swift in Sources */,
