@@ -3,9 +3,15 @@
 //  Copyright © 2018 Frigstudio. All rights reserved.
 //
 
-import Metal
+import MetalKit
 import Cocoa
 import CoreText
+import simd
+
+struct Vertex {
+    let position: vector_float2
+    let textureCoordinate: vector_float2
+}
 
 class MetalViewController: NSViewController {
     override var acceptsFirstResponder: Bool { return true }
@@ -13,6 +19,9 @@ class MetalViewController: NSViewController {
     private var metalLayer: CAMetalLayer!
     private var pipelineState: MTLRenderPipelineState!
     private var commandQueue: MTLCommandQueue!
+    private var texture: MTLTexture!
+    private var samplerState: MTLSamplerState!
+    private var vbo: MTLBuffer!
     private var displayLink: DisplayLink!
     private var timestamp: CFTimeInterval = 0.0
     private var fps: UInt32 = 0
@@ -35,6 +44,33 @@ class MetalViewController: NSViewController {
         self.metalLayer.pixelFormat = .bgra8Unorm
         self.metalLayer.framebufferOnly = true
         self.view.layer?.addSublayer(self.metalLayer)
+        
+        let vao: [Vertex] = [
+            Vertex(position: vector_float2(1, -1), textureCoordinate: vector_float2(1, 1)),
+            Vertex(position: vector_float2(-1,  -1), textureCoordinate: vector_float2(0, 1)),
+            Vertex(position: vector_float2(-1, 1), textureCoordinate: vector_float2(0, 0)),
+            Vertex(position: vector_float2(1, -1), textureCoordinate: vector_float2(1, 1)),
+            Vertex(position: vector_float2(-1, 1), textureCoordinate: vector_float2(0, 0)),
+            Vertex(position: vector_float2(1, 1), textureCoordinate: vector_float2(1, 0))
+        ]
+        self.vbo = self.device.makeBuffer(bytes: vao, length: MemoryLayout<Vertex>.size * vao.count, options: [.storageModeShared])
+        
+        let url = Bundle.main.url(forResource: "000", withExtension: "png")!
+        let loader = MTKTextureLoader(device: self.device)
+        do {
+            self.texture = try loader.newTexture(URL: url, options: nil)
+        } catch {
+            print(error)
+        }
+        
+        let samplerDescriptor = MTLSamplerDescriptor()
+        samplerDescriptor.sAddressMode = .clampToEdge
+        samplerDescriptor.tAddressMode = .clampToEdge
+        samplerDescriptor.minFilter = .nearest
+        samplerDescriptor.magFilter = .linear
+        samplerDescriptor.mipFilter = .linear
+        self.samplerState = self.device.makeSamplerState(descriptor: samplerDescriptor)
+        
         
         self.overlay.fontSize = 14
         self.overlay.font = NSFont(name: "Menlo", size: 14)
@@ -78,8 +114,8 @@ class MetalViewController: NSViewController {
     
     private func compilePipeline() -> MTLRenderPipelineState {
         let defaultLibrary = self.device.makeDefaultLibrary()
-        let vertexProgram = defaultLibrary?.makeFunction(name: "static_vertex")
-        let fragmentProgram = defaultLibrary?.makeFunction(name: "static_fragment")
+        let vertexProgram = defaultLibrary?.makeFunction(name: "textured_vertex")
+        let fragmentProgram = defaultLibrary?.makeFunction(name: "textured_fragment")
         
         let pipelineDescriptor = MTLRenderPipelineDescriptor()
         pipelineDescriptor.vertexFunction = vertexProgram
@@ -122,49 +158,18 @@ class MetalViewController: NSViewController {
         let renderPassDescriptor = MTLRenderPassDescriptor()
         renderPassDescriptor.colorAttachments[0].texture = drawable.texture
         renderPassDescriptor.colorAttachments[0].loadAction = .clear
-        renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)
+        renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 1.0, green: 1.0, blue: 0.0, alpha: 1.0)
         
         let encoder = commandBuffer?.makeRenderCommandEncoder(descriptor: renderPassDescriptor)
         encoder?.setRenderPipelineState(pipelineState)
         
-        encoder?.setVertexBytes([0.0, -1.0, -1.0, 1.0, 1.0, 1.0], length: 6 * MemoryLayout<Float>.size, index: 0)
-        encoder?.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
+        encoder?.setVertexBuffer(self.vbo, offset: 0, index: 0)
+        encoder?.setFragmentTexture(self.texture, index: 0)
+        encoder?.setFragmentSamplerState(self.samplerState, index: 0)
+        encoder?.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6)
         encoder?.endEncoding()
         
         commandBuffer?.present(drawable)
         commandBuffer?.commit()
-    }
-}
-
-class Quad {
-    private var vbo: MTLBuffer?
-    
-    init(x: Float, y: Float, width: Float, height: Float, _ device: MTLDevice) {
-        var vao = [Float]()
-        vao.append(x)
-        vao.append(y)
-        
-        vao.append(x + width)
-        vao.append(y)
-        
-        vao.append(x + width)
-        vao.append(y + height)
-        
-        vao.append(x)
-        vao.append(y)
-        
-        vao.append(x + width)
-        vao.append(y + height)
-        
-        vao.append(x)
-        vao.append(y + height)
-        
-        self.vbo = device.makeBuffer(bytes: vao, length: vao.count * MemoryLayout<Float>.size, options: [])
-    }
-    
-    public func draw(_ color: Float, _ encoder: MTLRenderCommandEncoder?) {
-        encoder?.setVertexBuffer(self.vbo, offset: 0, index: 0)
-        encoder?.setFragmentBytes([color], length: 32, index: 0)
-        encoder?.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6)
     }
 }

@@ -22,6 +22,10 @@
 		FEA274322180B3A00072530A /* OverlayLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA274312180B3A00072530A /* OverlayLayer.swift */; };
 		FEA274342180CB970072530A /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA274332180CB970072530A /* main.swift */; };
 		FEA274362180D0EB0072530A /* Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA274352180D0EA0072530A /* Menu.swift */; };
+		FEA27439218143F40072530A /* 000.png in Resources */ = {isa = PBXBuildFile; fileRef = FEA27438218143F30072530A /* 000.png */; };
+		FEA2743B2181FC860072530A /* Conductor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743A2181FC860072530A /* Conductor.swift */; };
+		FEA2743D2181FCCA0072530A /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743C2181FCCA0072530A /* Renderer.swift */; };
+		FEA2743F2182014E0072530A /* LogicLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743E2182014E0072530A /* LogicLoop.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,6 +48,10 @@
 		FEA274312180B3A00072530A /* OverlayLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayLayer.swift; sourceTree = "<group>"; };
 		FEA274332180CB970072530A /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		FEA274352180D0EA0072530A /* Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Menu.swift; sourceTree = "<group>"; };
+		FEA27438218143F30072530A /* 000.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 000.png; sourceTree = "<group>"; };
+		FEA2743A2181FC860072530A /* Conductor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conductor.swift; sourceTree = "<group>"; };
+		FEA2743C2181FCCA0072530A /* Renderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Renderer.swift; sourceTree = "<group>"; };
+		FEA2743E2182014E0072530A /* LogicLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogicLoop.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,6 +68,7 @@
 		FEA273FF217C45F70072530A = {
 			isa = PBXGroup;
 			children = (
+				FEA27438218143F30072530A /* 000.png */,
 				FEA27419217C46530072530A /* hardware */,
 				FEA2740A217C45F70072530A /* swift-nes */,
 				FEA27409217C45F70072530A /* Products */,
@@ -77,6 +86,9 @@
 		FEA2740A217C45F70072530A /* swift-nes */ = {
 			isa = PBXGroup;
 			children = (
+				FEA2743A2181FC860072530A /* Conductor.swift */,
+				FEA2743C2181FCCA0072530A /* Renderer.swift */,
+				FEA2743E2182014E0072530A /* LogicLoop.swift */,
 				FEA274332180CB970072530A /* main.swift */,
 				FEA2740B217C45F70072530A /* AppDelegate.swift */,
 				FEA274352180D0EA0072530A /* Menu.swift */,
@@ -164,6 +176,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FEA27439218143F40072530A /* 000.png in Resources */,
 				FEA2740E217C45F90072530A /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -175,13 +188,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FEA2743D2181FCCA0072530A /* Renderer.swift in Sources */,
 				FEA27428217DED280072530A /* color.swift in Sources */,
 				FEA274342180CB970072530A /* main.swift in Sources */,
 				FEA274362180D0EB0072530A /* Menu.swift in Sources */,
+				FEA2743F2182014E0072530A /* LogicLoop.swift in Sources */,
 				FEA2742C21806E880072530A /* DisplayLink.swift in Sources */,
 				FEA2741F217C8F990072530A /* memory.swift in Sources */,
 				FEA27426217D1D8A0072530A /* file.swift in Sources */,
 				FEA27430218085510072530A /* Shader.metal in Sources */,
+				FEA2743B2181FC860072530A /* Conductor.swift in Sources */,
 				FEA2742E218076150072530A /* nes.swift in Sources */,
 				FEA2741B217C47B50072530A /* cpu.swift in Sources */,
 				FEA2741D217C546E0072530A /* integer.swift in Sources */,
