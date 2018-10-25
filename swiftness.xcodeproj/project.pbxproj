@@ -22,15 +22,30 @@
 		FEA274322180B3A00072530A /* OverlayLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA274312180B3A00072530A /* OverlayLayer.swift */; };
 		FEA274342180CB970072530A /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA274332180CB970072530A /* main.swift */; };
 		FEA274362180D0EB0072530A /* Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA274352180D0EA0072530A /* Menu.swift */; };
-		FEA27439218143F40072530A /* 000.png in Resources */ = {isa = PBXBuildFile; fileRef = FEA27438218143F30072530A /* 000.png */; };
 		FEA2743B2181FC860072530A /* Conductor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743A2181FC860072530A /* Conductor.swift */; };
 		FEA2743D2181FCCA0072530A /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743C2181FCCA0072530A /* Renderer.swift */; };
 		FEA2743F2182014E0072530A /* LogicLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743E2182014E0072530A /* LogicLoop.swift */; };
 		FEA27452218208D30072530A /* ImageGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27451218208D30072530A /* ImageGenerator.swift */; };
+		FEBA1F3F21820D610044DC8B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEBA1F3E21820D610044DC8B /* AppDelegate.swift */; };
+		FEBA1F4121820D610044DC8B /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEBA1F4021820D610044DC8B /* ViewController.swift */; };
+		FEBA1F4421820D610044DC8B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FEBA1F4221820D610044DC8B /* Main.storyboard */; };
+		FEBA1F4621820D620044DC8B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FEBA1F4521820D620044DC8B /* Assets.xcassets */; };
+		FEBA1F4921820D620044DC8B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FEBA1F4721820D620044DC8B /* LaunchScreen.storyboard */; };
+		FEBA1F4F21820E8E0044DC8B /* Conductor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743A2181FC860072530A /* Conductor.swift */; };
+		FEBA1F5021820E8E0044DC8B /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743C2181FCCA0072530A /* Renderer.swift */; };
+		FEBA1F5121820E8E0044DC8B /* LogicLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743E2182014E0072530A /* LogicLoop.swift */; };
+		FEBA1F5221820E8E0044DC8B /* ImageGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27451218208D30072530A /* ImageGenerator.swift */; };
+		FEBA1F5321820E8E0044DC8B /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27425217D1D8A0072530A /* File.swift */; };
+		FEBA1F5421820E8E0044DC8B /* Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27427217DED280072530A /* Color.swift */; };
+		FEBA1F5521820E8E0044DC8B /* IntegerExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741C217C546E0072530A /* IntegerExtensions.swift */; };
+		FEBA1F5621820E920044DC8B /* cpu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741A217C47B50072530A /* cpu.swift */; };
+		FEBA1F5721820E920044DC8B /* memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741E217C8F990072530A /* memory.swift */; };
+		FEBA1F5821820E920044DC8B /* ppu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27420217C91710072530A /* ppu.swift */; };
+		FEBA1F5921820E920044DC8B /* nes.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2742D218076150072530A /* nes.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		FEA27408217C45F70072530A /* swiftness.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = swiftness.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FEA27408217C45F70072530A /* swiftness-osx.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "swiftness-osx.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FEA2740B217C45F70072530A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FEA2740D217C45F90072530A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FEA27412217C45F90072530A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -49,15 +64,28 @@
 		FEA274312180B3A00072530A /* OverlayLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayLayer.swift; sourceTree = "<group>"; };
 		FEA274332180CB970072530A /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		FEA274352180D0EA0072530A /* Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Menu.swift; sourceTree = "<group>"; };
-		FEA27438218143F30072530A /* 000.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 000.png; sourceTree = "<group>"; };
 		FEA2743A2181FC860072530A /* Conductor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conductor.swift; sourceTree = "<group>"; };
 		FEA2743C2181FCCA0072530A /* Renderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Renderer.swift; sourceTree = "<group>"; };
 		FEA2743E2182014E0072530A /* LogicLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogicLoop.swift; sourceTree = "<group>"; };
 		FEA27451218208D30072530A /* ImageGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageGenerator.swift; sourceTree = "<group>"; };
+		FEBA1F3C21820D610044DC8B /* swiftness-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "swiftness-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FEBA1F3E21820D610044DC8B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		FEBA1F4021820D610044DC8B /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		FEBA1F4321820D610044DC8B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		FEBA1F4521820D620044DC8B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FEBA1F4821820D620044DC8B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		FEBA1F4A21820D620044DC8B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		FEA27405217C45F70072530A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FEBA1F3921820D610044DC8B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -70,9 +98,10 @@
 		FEA273FF217C45F70072530A = {
 			isa = PBXGroup;
 			children = (
-				FEA27438218143F30072530A /* 000.png */,
 				FEA27419217C46530072530A /* hardware */,
-				FEA2740A217C45F70072530A /* swiftness */,
+				FEBA1F4E21820E760044DC8B /* swiftness */,
+				FEA2740A217C45F70072530A /* swiftness-osx */,
+				FEBA1F3D21820D610044DC8B /* swiftness-ios */,
 				FEA27409217C45F70072530A /* Products */,
 			);
 			sourceTree = "<group>";
@@ -80,21 +109,15 @@
 		FEA27409217C45F70072530A /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FEA27408217C45F70072530A /* swiftness.app */,
+				FEA27408217C45F70072530A /* swiftness-osx.app */,
+				FEBA1F3C21820D610044DC8B /* swiftness-ios.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		FEA2740A217C45F70072530A /* swiftness */ = {
+		FEA2740A217C45F70072530A /* swiftness-osx */ = {
 			isa = PBXGroup;
 			children = (
-				FEA2743A2181FC860072530A /* Conductor.swift */,
-				FEA2743C2181FCCA0072530A /* Renderer.swift */,
-				FEA2743E2182014E0072530A /* LogicLoop.swift */,
-				FEA27451218208D30072530A /* ImageGenerator.swift */,
-				FEA27425217D1D8A0072530A /* File.swift */,
-				FEA27427217DED280072530A /* Color.swift */,
-				FEA2741C217C546E0072530A /* IntegerExtensions.swift */,
 				FEA274332180CB970072530A /* main.swift */,
 				FEA2740B217C45F70072530A /* AppDelegate.swift */,
 				FEA274352180D0EA0072530A /* Menu.swift */,
@@ -106,7 +129,7 @@
 				FEA27412217C45F90072530A /* Info.plist */,
 				FEA27413217C45F90072530A /* swiftness.entitlements */,
 			);
-			path = swiftness;
+			path = "swiftness-osx";
 			sourceTree = "<group>";
 		};
 		FEA27419217C46530072530A /* hardware */ = {
@@ -121,12 +144,39 @@
 			path = hardware;
 			sourceTree = "<group>";
 		};
+		FEBA1F3D21820D610044DC8B /* swiftness-ios */ = {
+			isa = PBXGroup;
+			children = (
+				FEBA1F3E21820D610044DC8B /* AppDelegate.swift */,
+				FEBA1F4021820D610044DC8B /* ViewController.swift */,
+				FEBA1F4221820D610044DC8B /* Main.storyboard */,
+				FEBA1F4521820D620044DC8B /* Assets.xcassets */,
+				FEBA1F4721820D620044DC8B /* LaunchScreen.storyboard */,
+				FEBA1F4A21820D620044DC8B /* Info.plist */,
+			);
+			path = "swiftness-ios";
+			sourceTree = "<group>";
+		};
+		FEBA1F4E21820E760044DC8B /* swiftness */ = {
+			isa = PBXGroup;
+			children = (
+				FEA2743A2181FC860072530A /* Conductor.swift */,
+				FEA2743C2181FCCA0072530A /* Renderer.swift */,
+				FEA2743E2182014E0072530A /* LogicLoop.swift */,
+				FEA27451218208D30072530A /* ImageGenerator.swift */,
+				FEA27425217D1D8A0072530A /* File.swift */,
+				FEA27427217DED280072530A /* Color.swift */,
+				FEA2741C217C546E0072530A /* IntegerExtensions.swift */,
+			);
+			path = swiftness;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		FEA27407217C45F70072530A /* swiftness */ = {
+		FEA27407217C45F70072530A /* swiftness-osx */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FEA27416217C45F90072530A /* Build configuration list for PBXNativeTarget "swiftness" */;
+			buildConfigurationList = FEA27416217C45F90072530A /* Build configuration list for PBXNativeTarget "swiftness-osx" */;
 			buildPhases = (
 				FEA27404217C45F70072530A /* Sources */,
 				FEA27405217C45F70072530A /* Frameworks */,
@@ -136,9 +186,26 @@
 			);
 			dependencies = (
 			);
-			name = swiftness;
+			name = "swiftness-osx";
 			productName = "swift-nes";
-			productReference = FEA27408217C45F70072530A /* swiftness.app */;
+			productReference = FEA27408217C45F70072530A /* swiftness-osx.app */;
+			productType = "com.apple.product-type.application";
+		};
+		FEBA1F3B21820D610044DC8B /* swiftness-ios */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FEBA1F4B21820D620044DC8B /* Build configuration list for PBXNativeTarget "swiftness-ios" */;
+			buildPhases = (
+				FEBA1F3821820D610044DC8B /* Sources */,
+				FEBA1F3921820D610044DC8B /* Frameworks */,
+				FEBA1F3A21820D610044DC8B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "swiftness-ios";
+			productName = "swiftness-ios";
+			productReference = FEBA1F3C21820D610044DC8B /* swiftness-ios.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -152,6 +219,9 @@
 				ORGANIZATIONNAME = Frigstudio;
 				TargetAttributes = {
 					FEA27407217C45F70072530A = {
+						CreatedOnToolsVersion = 10.0;
+					};
+					FEBA1F3B21820D610044DC8B = {
 						CreatedOnToolsVersion = 10.0;
 					};
 				};
@@ -169,7 +239,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				FEA27407217C45F70072530A /* swiftness */,
+				FEA27407217C45F70072530A /* swiftness-osx */,
+				FEBA1F3B21820D610044DC8B /* swiftness-ios */,
 			);
 		};
 /* End PBXProject section */
@@ -179,8 +250,17 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FEA27439218143F40072530A /* 000.png in Resources */,
 				FEA2740E217C45F90072530A /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FEBA1F3A21820D610044DC8B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FEBA1F4921820D620044DC8B /* LaunchScreen.storyboard in Resources */,
+				FEBA1F4621820D620044DC8B /* Assets.xcassets in Resources */,
+				FEBA1F4421820D610044DC8B /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -212,7 +292,46 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FEBA1F3821820D610044DC8B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FEBA1F5021820E8E0044DC8B /* Renderer.swift in Sources */,
+				FEBA1F5221820E8E0044DC8B /* ImageGenerator.swift in Sources */,
+				FEBA1F5321820E8E0044DC8B /* File.swift in Sources */,
+				FEBA1F4121820D610044DC8B /* ViewController.swift in Sources */,
+				FEBA1F5721820E920044DC8B /* memory.swift in Sources */,
+				FEBA1F5821820E920044DC8B /* ppu.swift in Sources */,
+				FEBA1F5621820E920044DC8B /* cpu.swift in Sources */,
+				FEBA1F5121820E8E0044DC8B /* LogicLoop.swift in Sources */,
+				FEBA1F5421820E8E0044DC8B /* Color.swift in Sources */,
+				FEBA1F4F21820E8E0044DC8B /* Conductor.swift in Sources */,
+				FEBA1F5921820E920044DC8B /* nes.swift in Sources */,
+				FEBA1F5521820E8E0044DC8B /* IntegerExtensions.swift in Sources */,
+				FEBA1F3F21820D610044DC8B /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		FEBA1F4221820D610044DC8B /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				FEBA1F4321820D610044DC8B /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		FEBA1F4721820D620044DC8B /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				FEBA1F4821820D620044DC8B /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		FEA27414217C45F90072530A /* Debug */ = {
@@ -266,7 +385,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -321,7 +441,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
@@ -334,16 +455,16 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = swiftness/swiftness.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "swiftness-osx/swiftness.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = 7LYG6KRX2T;
-				INFOPLIST_FILE = "swift-nes/Info.plist";
+				INFOPLIST_FILE = "swiftness-osx/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swift-nes";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swiftness-osx";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
 			};
@@ -353,18 +474,61 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = swiftness/swiftness.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "swiftness-osx/swiftness.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = 7LYG6KRX2T;
-				INFOPLIST_FILE = "swift-nes/Info.plist";
+				INFOPLIST_FILE = "swiftness-osx/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swift-nes";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swiftness-osx";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
+			};
+			name = Release;
+		};
+		FEBA1F4C21820D620044DC8B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7LYG6KRX2T;
+				INFOPLIST_FILE = "swiftness-ios/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swiftness-ios";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		FEBA1F4D21820D620044DC8B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7LYG6KRX2T;
+				INFOPLIST_FILE = "swiftness-ios/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swiftness-ios";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
@@ -380,11 +544,20 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FEA27416217C45F90072530A /* Build configuration list for PBXNativeTarget "swiftness" */ = {
+		FEA27416217C45F90072530A /* Build configuration list for PBXNativeTarget "swiftness-osx" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FEA27417217C45F90072530A /* Debug */,
 				FEA27418217C45F90072530A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FEBA1F4B21820D620044DC8B /* Build configuration list for PBXNativeTarget "swiftness-ios" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FEBA1F4C21820D620044DC8B /* Debug */,
+				FEBA1F4D21820D620044DC8B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
