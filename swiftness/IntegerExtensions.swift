@@ -3,6 +3,11 @@
 //  Copyright © 2018 Alexandre Frigon. All rights reserved.
 //
 
+typealias Byte = UInt8
+typealias Word = UInt16
+typealias DWord = UInt32
+typealias QWord = UInt64
+
 extension Array {
     subscript(index: UInt8) -> Element {
         get { return self[Int(index)] }

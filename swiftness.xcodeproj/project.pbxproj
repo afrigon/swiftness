@@ -10,11 +10,11 @@
 		FEA2740C217C45F70072530A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2740B217C45F70072530A /* AppDelegate.swift */; };
 		FEA2740E217C45F90072530A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FEA2740D217C45F90072530A /* Assets.xcassets */; };
 		FEA2741B217C47B50072530A /* cpu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741A217C47B50072530A /* cpu.swift */; };
-		FEA2741D217C546E0072530A /* integer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741C217C546E0072530A /* integer.swift */; };
+		FEA2741D217C546E0072530A /* IntegerExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741C217C546E0072530A /* IntegerExtensions.swift */; };
 		FEA2741F217C8F990072530A /* memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741E217C8F990072530A /* memory.swift */; };
 		FEA27421217C91710072530A /* ppu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27420217C91710072530A /* ppu.swift */; };
-		FEA27426217D1D8A0072530A /* file.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27425217D1D8A0072530A /* file.swift */; };
-		FEA27428217DED280072530A /* color.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27427217DED280072530A /* color.swift */; };
+		FEA27426217D1D8A0072530A /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27425217D1D8A0072530A /* File.swift */; };
+		FEA27428217DED280072530A /* Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27427217DED280072530A /* Color.swift */; };
 		FEA2742A21806D9B0072530A /* MetalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2742921806D9B0072530A /* MetalViewController.swift */; };
 		FEA2742C21806E880072530A /* DisplayLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2742B21806E880072530A /* DisplayLink.swift */; };
 		FEA2742E218076150072530A /* nes.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2742D218076150072530A /* nes.swift */; };
@@ -26,21 +26,22 @@
 		FEA2743B2181FC860072530A /* Conductor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743A2181FC860072530A /* Conductor.swift */; };
 		FEA2743D2181FCCA0072530A /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743C2181FCCA0072530A /* Renderer.swift */; };
 		FEA2743F2182014E0072530A /* LogicLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743E2182014E0072530A /* LogicLoop.swift */; };
+		FEA27452218208D30072530A /* ImageGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27451218208D30072530A /* ImageGenerator.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		FEA27408217C45F70072530A /* swift-nes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "swift-nes.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FEA27408217C45F70072530A /* swiftness.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = swiftness.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FEA2740B217C45F70072530A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FEA2740D217C45F90072530A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FEA27412217C45F90072530A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		FEA27413217C45F90072530A /* swift_nes.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = swift_nes.entitlements; sourceTree = "<group>"; };
+		FEA27413217C45F90072530A /* swiftness.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = swiftness.entitlements; sourceTree = "<group>"; };
 		FEA2741A217C47B50072530A /* cpu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = cpu.swift; sourceTree = "<group>"; };
-		FEA2741C217C546E0072530A /* integer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = integer.swift; sourceTree = "<group>"; };
+		FEA2741C217C546E0072530A /* IntegerExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegerExtensions.swift; sourceTree = "<group>"; };
 		FEA2741E217C8F990072530A /* memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = memory.swift; sourceTree = "<group>"; };
 		FEA27420217C91710072530A /* ppu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ppu.swift; sourceTree = "<group>"; };
 		FEA27424217C954F0072530A /* specs.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = specs.md; sourceTree = "<group>"; };
-		FEA27425217D1D8A0072530A /* file.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = file.swift; sourceTree = "<group>"; };
-		FEA27427217DED280072530A /* color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = color.swift; sourceTree = "<group>"; };
+		FEA27425217D1D8A0072530A /* File.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = File.swift; sourceTree = "<group>"; };
+		FEA27427217DED280072530A /* Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Color.swift; sourceTree = "<group>"; };
 		FEA2742921806D9B0072530A /* MetalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalViewController.swift; sourceTree = "<group>"; };
 		FEA2742B21806E880072530A /* DisplayLink.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DisplayLink.swift; sourceTree = "<group>"; };
 		FEA2742D218076150072530A /* nes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = nes.swift; sourceTree = "<group>"; };
@@ -52,6 +53,7 @@
 		FEA2743A2181FC860072530A /* Conductor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conductor.swift; sourceTree = "<group>"; };
 		FEA2743C2181FCCA0072530A /* Renderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Renderer.swift; sourceTree = "<group>"; };
 		FEA2743E2182014E0072530A /* LogicLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogicLoop.swift; sourceTree = "<group>"; };
+		FEA27451218208D30072530A /* ImageGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageGenerator.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,7 +72,7 @@
 			children = (
 				FEA27438218143F30072530A /* 000.png */,
 				FEA27419217C46530072530A /* hardware */,
-				FEA2740A217C45F70072530A /* swift-nes */,
+				FEA2740A217C45F70072530A /* swiftness */,
 				FEA27409217C45F70072530A /* Products */,
 			);
 			sourceTree = "<group>";
@@ -78,32 +80,33 @@
 		FEA27409217C45F70072530A /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FEA27408217C45F70072530A /* swift-nes.app */,
+				FEA27408217C45F70072530A /* swiftness.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		FEA2740A217C45F70072530A /* swift-nes */ = {
+		FEA2740A217C45F70072530A /* swiftness */ = {
 			isa = PBXGroup;
 			children = (
 				FEA2743A2181FC860072530A /* Conductor.swift */,
 				FEA2743C2181FCCA0072530A /* Renderer.swift */,
 				FEA2743E2182014E0072530A /* LogicLoop.swift */,
+				FEA27451218208D30072530A /* ImageGenerator.swift */,
+				FEA27425217D1D8A0072530A /* File.swift */,
+				FEA27427217DED280072530A /* Color.swift */,
+				FEA2741C217C546E0072530A /* IntegerExtensions.swift */,
 				FEA274332180CB970072530A /* main.swift */,
 				FEA2740B217C45F70072530A /* AppDelegate.swift */,
 				FEA274352180D0EA0072530A /* Menu.swift */,
 				FEA2742921806D9B0072530A /* MetalViewController.swift */,
-				FEA274312180B3A00072530A /* OverlayLayer.swift */,
 				FEA2742F218085510072530A /* Shader.metal */,
 				FEA2742B21806E880072530A /* DisplayLink.swift */,
-				FEA27427217DED280072530A /* color.swift */,
-				FEA27425217D1D8A0072530A /* file.swift */,
-				FEA2741C217C546E0072530A /* integer.swift */,
+				FEA274312180B3A00072530A /* OverlayLayer.swift */,
 				FEA2740D217C45F90072530A /* Assets.xcassets */,
 				FEA27412217C45F90072530A /* Info.plist */,
-				FEA27413217C45F90072530A /* swift_nes.entitlements */,
+				FEA27413217C45F90072530A /* swiftness.entitlements */,
 			);
-			path = "swift-nes";
+			path = swiftness;
 			sourceTree = "<group>";
 		};
 		FEA27419217C46530072530A /* hardware */ = {
@@ -121,9 +124,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		FEA27407217C45F70072530A /* swift-nes */ = {
+		FEA27407217C45F70072530A /* swiftness */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FEA27416217C45F90072530A /* Build configuration list for PBXNativeTarget "swift-nes" */;
+			buildConfigurationList = FEA27416217C45F90072530A /* Build configuration list for PBXNativeTarget "swiftness" */;
 			buildPhases = (
 				FEA27404217C45F70072530A /* Sources */,
 				FEA27405217C45F70072530A /* Frameworks */,
@@ -133,9 +136,9 @@
 			);
 			dependencies = (
 			);
-			name = "swift-nes";
+			name = swiftness;
 			productName = "swift-nes";
-			productReference = FEA27408217C45F70072530A /* swift-nes.app */;
+			productReference = FEA27408217C45F70072530A /* swiftness.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -153,7 +156,7 @@
 					};
 				};
 			};
-			buildConfigurationList = FEA27403217C45F70072530A /* Build configuration list for PBXProject "swift-nes" */;
+			buildConfigurationList = FEA27403217C45F70072530A /* Build configuration list for PBXProject "swiftness" */;
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -166,7 +169,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				FEA27407217C45F70072530A /* swift-nes */,
+				FEA27407217C45F70072530A /* swiftness */,
 			);
 		};
 /* End PBXProject section */
@@ -189,18 +192,19 @@
 			buildActionMask = 2147483647;
 			files = (
 				FEA2743D2181FCCA0072530A /* Renderer.swift in Sources */,
-				FEA27428217DED280072530A /* color.swift in Sources */,
+				FEA27452218208D30072530A /* ImageGenerator.swift in Sources */,
+				FEA27428217DED280072530A /* Color.swift in Sources */,
 				FEA274342180CB970072530A /* main.swift in Sources */,
 				FEA274362180D0EB0072530A /* Menu.swift in Sources */,
 				FEA2743F2182014E0072530A /* LogicLoop.swift in Sources */,
 				FEA2742C21806E880072530A /* DisplayLink.swift in Sources */,
 				FEA2741F217C8F990072530A /* memory.swift in Sources */,
-				FEA27426217D1D8A0072530A /* file.swift in Sources */,
+				FEA27426217D1D8A0072530A /* File.swift in Sources */,
 				FEA27430218085510072530A /* Shader.metal in Sources */,
 				FEA2743B2181FC860072530A /* Conductor.swift in Sources */,
 				FEA2742E218076150072530A /* nes.swift in Sources */,
 				FEA2741B217C47B50072530A /* cpu.swift in Sources */,
-				FEA2741D217C546E0072530A /* integer.swift in Sources */,
+				FEA2741D217C546E0072530A /* IntegerExtensions.swift in Sources */,
 				FEA27421217C91710072530A /* ppu.swift in Sources */,
 				FEA2742A21806D9B0072530A /* MetalViewController.swift in Sources */,
 				FEA274322180B3A00072530A /* OverlayLayer.swift in Sources */,
@@ -330,7 +334,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = "swift-nes/swift_nes.entitlements";
+				CODE_SIGN_ENTITLEMENTS = swiftness/swiftness.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = 7LYG6KRX2T;
@@ -349,7 +353,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = "swift-nes/swift_nes.entitlements";
+				CODE_SIGN_ENTITLEMENTS = swiftness/swiftness.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = 7LYG6KRX2T;
@@ -367,7 +371,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		FEA27403217C45F70072530A /* Build configuration list for PBXProject "swift-nes" */ = {
+		FEA27403217C45F70072530A /* Build configuration list for PBXProject "swiftness" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FEA27414217C45F90072530A /* Debug */,
@@ -376,7 +380,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FEA27416217C45F90072530A /* Build configuration list for PBXNativeTarget "swift-nes" */ = {
+		FEA27416217C45F90072530A /* Build configuration list for PBXNativeTarget "swiftness" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FEA27417217C45F90072530A /* Debug */,
