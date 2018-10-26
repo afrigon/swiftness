@@ -28,8 +28,6 @@ typealias YIndexRegister = Byte
 typealias StackPointerRegister = Byte
 typealias ProgramCounterRegister = Word
 
-enum InterruptAddress: Word { case nmi = 0xFFFA, reset = 0xFFFC, irq = 0xFFFE }
-
 class ProcessorStatusRegister {
     private var _value: Byte
     var value: Byte { return self._value }
@@ -104,8 +102,10 @@ struct Operand {
     var additionalCycles: UInt8 = 0
 }
 
+enum InterruptAddress: Word { case nmi = 0xFFFA, reset = 0xFFFC, irq = 0xFFFE }
+
 class CoreProcessingUnit {
-    private let frequency: UInt32 = 1789773
+    let frequency: Double = 1.789773    // MHz
     private let memory: CoreProcessingUnitMemory
     private let stack: Stack
     private let bus: Bus
@@ -285,21 +285,18 @@ class CoreProcessingUnit {
         ]
     }
     
-    func run(cycles: inout UInt64) {
-        // TODO: remove this inout atrocity
-        while (cycles > 0) {
-            let opcodeHex: Byte = self.memory.readByte(at: regs.pc)
-            regs.pc++
-            
-            guard let opcode: Opcode = self.opcodes[opcodeHex] else {
-                fatalError("Unknown opcode used (outside of the 151 available)")
-            }
-            
-            let operand: Operand = self.buildOperand(using: opcode.addressingMode)
-            opcode.closure(operand.value, operand.address)
-            
-            cycles -= UInt64(opcode.cycles + operand.additionalCycles);
+    func step() -> UInt8 {
+        let opcodeHex: Byte = self.memory.readByte(at: regs.pc)
+        regs.pc++
+        
+        guard let opcode: Opcode = self.opcodes[opcodeHex] else {
+            fatalError("Unknown opcode used (outside of the 151 available)")
         }
+        
+        let operand: Operand = self.buildOperand(using: opcode.addressingMode)
+        opcode.closure(operand.value, operand.address)
+        
+        return opcode.cycles + operand.additionalCycles
     }
     
     func interrupt() {

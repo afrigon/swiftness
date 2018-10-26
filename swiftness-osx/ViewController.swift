@@ -34,6 +34,11 @@ class ViewController: NSViewController {
         self.view.layer?.addSublayer(self.renderer.layer)
     }
     
+    override func viewDidLayout() {
+        super.viewDidLayout()
+        //self.renderer.layer.frame = self.view.frame
+    }
+    
     override func viewDidLoad() {
         self.conductor = Conductor(with: self.renderer, drivenBy: self.loop)
     }

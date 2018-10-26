@@ -194,8 +194,8 @@
 			isa = PBXGroup;
 			children = (
 				FE53C809218225C4002BD71F /* CVDisplayLinkLoop.swift */,
-				FEA2742F218085510072530A /* Shader.metal */,
 				FE53C807218224C5002BD71F /* MetalRenderer.swift */,
+				FEA2742F218085510072530A /* Shader.metal */,
 				FE53C80521822458002BD71F /* ViewController.swift */,
 				FEA274352180D0EA0072530A /* Menu.swift */,
 				FEA2740B217C45F70072530A /* AppDelegate.swift */,

@@ -34,6 +34,9 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     private let controller2 = Controller()
     private let cartridge = Cartridge()
     private let bus = Bus()
+    private let frequency: Double
+    
+    private var deficitCycles: Int64 = 0
     
     var status: String {
         return """
@@ -49,7 +52,31 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     
     init() {
         self.cpu = CoreProcessingUnit(using: self.bus)
+        self.frequency = self.cpu.frequency * 1000000   // MHz * 1e+6 == Hz
         self.bus.delegate = self
+    }
+    
+    func step() -> UInt8 {
+        let cpuCycle: UInt8 = self.cpu.step()
+        
+        for _ in 0..<cpuCycle * 3 {
+            self.ppu.step()
+        }
+        
+        self.apu.step()
+        
+        return cpuCycle
+    }
+    
+    // TODO: what to do when the emulation is running behind
+    func run(for deltaTime: Double) {
+        var cycles: Int64 = Int64(self.frequency * deltaTime) + self.deficitCycles
+        
+        while cycles > 0 {
+            cycles -= Int64(self.step())
+        }
+        
+        self.deficitCycles = cycles
     }
     
     func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte {

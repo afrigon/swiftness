@@ -29,5 +29,7 @@ class AudioProcessingUnit: GuardStatus {
         """
     }
     
-    
+    func step() {
+        
+    }
 }

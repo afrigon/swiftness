@@ -28,4 +28,8 @@ class PictureProcessingUnit: GuardStatus {
         |-------- PPU --------|
         """
     }
+    
+    func step() {
+        
+    }
 }
