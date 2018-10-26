@@ -1,4 +1,9 @@
-//
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>FILEHEADER</key>
+    <string>
 //    MIT License
 //
 //    Copyright (c) 2018 Alexandre Frigon
@@ -20,24 +25,7 @@
 //    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //    SOFTWARE.
-//
+//</string>
+</dict>
+</plist>
 
-import Cocoa
-
-class CVDisplayLinkLoop: LogicLoop {
-    private var currentTime: Double = CACurrentMediaTime()
-    private var fps: UInt32 = 0
-    private var closure: ((Double) -> ())!
-    
-    var status: String {
-        return "FPS: \(self.fps)"
-    }
-    
-    func start(closure: @escaping (Double) -> ()) {
-        self.closure = closure
-    }
-    
-    func stop() {
-        
-    }
-}
