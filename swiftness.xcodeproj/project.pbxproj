@@ -23,6 +23,7 @@
 		FE53C81D21834E08002BD71F /* bus.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C81C21834E08002BD71F /* bus.swift */; };
 		FE53C82221835789002BD71F /* addressing.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C82121835789002BD71F /* addressing.swift */; };
 		FE53C824218357A7002BD71F /* memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C823218357A7002BD71F /* memory.swift */; };
+		FE53C834218369ED002BD71F /* cpu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C833218369ED002BD71F /* cpu.swift */; };
 		FEA2740C217C45F70072530A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2740B217C45F70072530A /* AppDelegate.swift */; };
 		FEA2740E217C45F90072530A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FEA2740D217C45F90072530A /* Assets.xcassets */; };
 		FEA2741B217C47B50072530A /* cpu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741A217C47B50072530A /* cpu.swift */; };
@@ -57,6 +58,16 @@
 		FEBA1F5921820E920044DC8B /* nes.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2742D218076150072530A /* nes.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		FE53C836218369ED002BD71F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FEA27400217C45F70072530A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FEA27407217C45F70072530A;
+			remoteInfo = "swiftness-osx";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		FE53C80321821344002BD71F /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		FE53C80521822458002BD71F /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -72,6 +83,9 @@
 		FE53C81C21834E08002BD71F /* bus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = bus.swift; sourceTree = "<group>"; };
 		FE53C82121835789002BD71F /* addressing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = addressing.swift; sourceTree = "<group>"; };
 		FE53C823218357A7002BD71F /* memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = memory.swift; sourceTree = "<group>"; };
+		FE53C831218369ED002BD71F /* swiftness-osx-tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swiftness-osx-tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FE53C833218369ED002BD71F /* cpu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = cpu.swift; sourceTree = "<group>"; };
+		FE53C835218369ED002BD71F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FEA27408217C45F70072530A /* swiftness-osx.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "swiftness-osx.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FEA2740B217C45F70072530A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FEA2740D217C45F90072530A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -103,6 +117,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		FE53C82E218369ED002BD71F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FEA27405217C45F70072530A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -138,6 +159,15 @@
 			path = cpu;
 			sourceTree = "<group>";
 		};
+		FE53C832218369ED002BD71F /* swiftness-osx-tests */ = {
+			isa = PBXGroup;
+			children = (
+				FE53C833218369ED002BD71F /* cpu.swift */,
+				FE53C835218369ED002BD71F /* Info.plist */,
+			);
+			path = "swiftness-osx-tests";
+			sourceTree = "<group>";
+		};
 		FEA273FF217C45F70072530A = {
 			isa = PBXGroup;
 			children = (
@@ -145,6 +175,7 @@
 				FEBA1F4E21820E760044DC8B /* swiftness */,
 				FEA2740A217C45F70072530A /* swiftness-osx */,
 				FEBA1F3D21820D610044DC8B /* swiftness-ios */,
+				FE53C832218369ED002BD71F /* swiftness-osx-tests */,
 				FEA27409217C45F70072530A /* Products */,
 			);
 			sourceTree = "<group>";
@@ -154,6 +185,7 @@
 			children = (
 				FEA27408217C45F70072530A /* swiftness-osx.app */,
 				FEBA1F3C21820D610044DC8B /* swiftness-ios.app */,
+				FE53C831218369ED002BD71F /* swiftness-osx-tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -227,6 +259,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		FE53C830218369ED002BD71F /* swiftness-osx-tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FE53C838218369ED002BD71F /* Build configuration list for PBXNativeTarget "swiftness-osx-tests" */;
+			buildPhases = (
+				FE53C82D218369ED002BD71F /* Sources */,
+				FE53C82E218369ED002BD71F /* Frameworks */,
+				FE53C82F218369ED002BD71F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FE53C837218369ED002BD71F /* PBXTargetDependency */,
+			);
+			name = "swiftness-osx-tests";
+			productName = "swiftness-osx-tests";
+			productReference = FE53C831218369ED002BD71F /* swiftness-osx-tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		FEA27407217C45F70072530A /* swiftness-osx */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = FEA27416217C45F90072530A /* Build configuration list for PBXNativeTarget "swiftness-osx" */;
@@ -271,6 +321,10 @@
 				LastUpgradeCheck = 1000;
 				ORGANIZATIONNAME = Frigstudio;
 				TargetAttributes = {
+					FE53C830218369ED002BD71F = {
+						CreatedOnToolsVersion = 10.0;
+						TestTargetID = FEA27407217C45F70072530A;
+					};
 					FEA27407217C45F70072530A = {
 						CreatedOnToolsVersion = 10.0;
 					};
@@ -294,11 +348,19 @@
 			targets = (
 				FEA27407217C45F70072530A /* swiftness-osx */,
 				FEBA1F3B21820D610044DC8B /* swiftness-ios */,
+				FE53C830218369ED002BD71F /* swiftness-osx-tests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		FE53C82F218369ED002BD71F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FEA27406217C45F70072530A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -319,6 +381,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		FE53C82D218369ED002BD71F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FE53C834218369ED002BD71F /* cpu.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FEA27404217C45F70072530A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -380,6 +450,14 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		FE53C837218369ED002BD71F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FEA27407217C45F70072530A /* swiftness-osx */;
+			targetProxy = FE53C836218369ED002BD71F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin PBXVariantGroup section */
 		FEBA1F4721820D620044DC8B /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
@@ -392,6 +470,48 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		FE53C839218369ED002BD71F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 7LYG6KRX2T;
+				INFOPLIST_FILE = "swiftness-osx-tests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swiftness-osx-tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.2;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/swiftness-osx.app/Contents/MacOS/swiftness-osx";
+			};
+			name = Debug;
+		};
+		FE53C83A218369ED002BD71F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 7LYG6KRX2T;
+				INFOPLIST_FILE = "swiftness-osx-tests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swiftness-osx-tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.2;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/swiftness-osx.app/Contents/MacOS/swiftness-osx";
+			};
+			name = Release;
+		};
 		FEA27414217C45F90072530A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -593,6 +713,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		FE53C838218369ED002BD71F /* Build configuration list for PBXNativeTarget "swiftness-osx-tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FE53C839218369ED002BD71F /* Debug */,
+				FE53C83A218369ED002BD71F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		FEA27403217C45F70072530A /* Build configuration list for PBXProject "swiftness" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
