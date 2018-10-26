@@ -3,11 +3,18 @@
 //  Copyright © 2018 Frigstudio. All rights reserved.
 //
 
-class Conductor {
-    let renderer: Renderer
-    let loop: LogicLoop
-    let imageGenerator = ImageGenerator()
-    let nes = NintendoEntertainmentSystem()
+class Conductor: GuardStatus {
+    private let nes = NintendoEntertainmentSystem()
+    private let imageGenerator = ImageGenerator()
+    private let renderer: Renderer
+    private let loop: LogicLoop
+
+    var status: String {
+        return """
+        \(self.loop.status)
+        \(self.nes.status)
+        """
+    }
     
     init(with renderer: Renderer, drivenBy loop: LogicLoop) {
         self.renderer = renderer
@@ -15,7 +22,7 @@ class Conductor {
         self.loop.start(closure: self.loopClosure)
     }
     
-    func loopClosure(_ deltaTime: Double) {
+    private func loopClosure(_ deltaTime: Double) {
         self.processInput()
         self.update(deltaTime)
         self.render()

@@ -3,7 +3,8 @@
 //  Copyright © 2018 Frigstudio. All rights reserved.
 //
 
-protocol LogicLoop: GuardStatus {
-    func start(closure: @escaping (Double) -> ())
-    func stop()
+class InputManager {
+    var currentKeyCode: UInt16?
+    
+    
 }

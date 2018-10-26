@@ -31,17 +31,15 @@ class OverlayLayer: CATextLayer {
         self.lastUpdate += deltaTime
         if self.lastUpdate >= self.refreshInterval {
             self.lastUpdate = 0.0
-            let regsStatus = items.nes.cpu.status
-            let stackStatus = items.nes.cpu.stackStatus
             self.string = """
             |------ General ------|
             Fps: \(items.fps)
             
             |-------- CPU --------|
-            \(regsStatus)
+            
             
             |------- Stack -------|
-            \(stackStatus)
+            
             |-------- PPU --------|
             
             

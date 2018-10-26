@@ -19,13 +19,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         let frame = CGRect(x: screen.frame.midX - width / 2,
-                           y: screen.main!.frame.midY - height / 2,
+                           y: screen.frame.midY - height / 2,
                            width: width,
                            height: height)
         self.window = NSWindow(contentRect: frame, styleMask: [.closable, .miniaturizable, .titled], backing: .buffered, defer: false)
         self.window.title = "Swiftness"
         
-        self.viewController = MetalViewController()
+        self.viewController = ViewController()
         self.viewController.view.frame = CGRect(origin: .zero, size: frame.size)
         self.window.contentView?.addSubview(self.viewController.view)
         

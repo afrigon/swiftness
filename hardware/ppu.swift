@@ -3,6 +3,10 @@
 //  Copyright © 2018 Alexandre Frigon. All rights reserved.
 //
 
-class PictureProcessingUnit {
-    private let memory = PictureProcessingUnitMemory()
+class PictureProcessingUnit: GuardStatus {
+    var status: String {
+        return """
+        |-------- PPU --------|
+        """
+    }
 }

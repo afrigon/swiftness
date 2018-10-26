@@ -85,111 +85,32 @@ struct Operand {
     var additionalCycles: UInt8 = 0
 }
 
-enum AddressingMode {
-    case immediate
-    case relative
-    case implied, accumulator
-    case zeroPage(Alteration)
-    case absolute(Alteration)
-    case indirect(Alteration)
-    enum Alteration: UInt8 { case none = 0, x = 1, y = 2 }
-}
-
-protocol OperandBuilder {
-    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand
-}
-
-class EmptyOperandBuilder: OperandBuilder {
-    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand { return Operand() }
-}
-
-class AlteredOperandBuilder: OperandBuilder {   // Abstract
-    let alteration: AddressingMode.Alteration
-    init(_ alteration: AddressingMode.Alteration = .none) { self.alteration = alteration }
-    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand { return Operand() }
-}
-
-class ZeroPageAddressingOperandBuilder: AlteredOperandBuilder {
-    override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
-        let alterationValue: Byte = self.alteration != .none ? (self.alteration == .x ? regs.x : regs.y) : 0
-        var operand = Operand()
-        operand.address = (memory.readByte(at: regs.pc) + alterationValue).asWord()
-        operand.value = memory.readByte(at: operand.address).asWord()
-        regs.pc++
-        return operand
-    }
-}
-
-class AbsoluteAddressingOperandBuilder: AlteredOperandBuilder {
-    override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
-        let alterationValue: Byte = self.alteration != .none ? (self.alteration == .x ? regs.x : regs.y) : 0
-        var operand = Operand()
-        operand.address = memory.readWord(at: regs.pc) + alterationValue
-        operand.value = memory.readByte(at: operand.address).asWord()
-        regs.pc += 2
-        operand.additionalCycles = self.alteration != .none ? UInt8(regs.isAtSamePage(than: operand.address)) : 0
-        return operand
-    }
-}
-
-class RelativeAddressingOperandBuilder: OperandBuilder {
-    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
-        var operand = Operand()
-        operand.address = memory.readByte(at: regs.pc).asWord()
-        
-        if Bool(operand.address & 0x80) {
-            operand.address -= 0x100 + regs.pc
-        }
-        
-        regs.pc++
-        operand.additionalCycles = UInt8(regs.isAtSamePage(than: operand.address))
-        return operand
-    }
-}
-
-class ImmediateAddressingOperandBuilder: OperandBuilder {
-    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
-        var operand = Operand()
-        operand.value = memory.readByte(at: regs.pc).asWord()
-        regs.pc++
-        return operand
-    }
-}
-
-class IndirectAddressingMode: AlteredOperandBuilder {
-    override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
-        let addressPointer: Word = memory.readWord(at: regs.pc) &+ (self.alteration == .x ? regs.x : 0)
-        
-        var operand = Operand()
-        operand.address = memory.readWordGlitched(at: addressPointer) &+ (self.alteration == .y ? regs.y : 0)
-        operand.value = memory.readByte(at: operand.address).asWord()
-        
-        regs.pc += self.alteration == .none ? 2 : 1
-        operand.additionalCycles = self.alteration == .y ? UInt8(regs.isAtSamePage(than: operand.address)) : 0
-        return operand
-    }
-}
-
 class CoreProcessingUnit {
     private let frequency: UInt32 = 1789773
-    private let memory = CoreProcessingUnitMemory()
-    private let stack: Stack!
-    private var opcodes: [Byte: Opcode] = [:]
+    private let memory: CoreProcessingUnitMemory
+    private let stack: Stack
+    private let bus: Bus
     private var regs = RegisterSet()
+    private var opcodes: [Byte: Opcode]! = nil
     
-    public var status: String {
+    var status: String {
         return """
-        a:  0x\(regs.a.hex())   sp: 0x\(regs.sp.hex())
-        x:  0x\(regs.x.hex())    y: 0x\(regs.y.hex())
-        pc: 0x\(regs.pc.hex())
-        p:  0b\(regs.p.value.bin())
+        |-------- CPU --------|
+        a:  0x\(self.regs.a.hex())   sp: 0x\(self.regs.sp.hex())
+        x:  0x\(self.regs.x.hex())    y: 0x\(self.regs.y.hex())
+        pc: 0x\(self.regs.pc.hex())
+        p:  0b\(self.regs.p.value.bin())
               NV-BDIZC
+        
+        \(self.stack.status)
         """
     }
-    public var stackStatus: String { return memory.stackStatus(regs.sp) }
     
-    init() {
-        self.stack = memory.stack
+    init(using bus: Bus) {
+        self.bus = bus
+        self.memory = CoreProcessingUnitMemory(using: bus)
+        self.stack = Stack(using: self.bus, sp: &self.regs.sp)
+        
         self.opcodes = [
             0x00: Opcode(brk, 7, .implied),
             0x01: Opcode(ora, 6, .indirect(.x)),
@@ -363,8 +284,8 @@ class CoreProcessingUnit {
     }
     
     func interrupt() {
-        stack.pushWord(data: regs.pc, sp: &regs.sp)
-        stack.pushByte(data: regs.p.value | Flag.alwaysOne.rawValue, sp: &regs.sp)
+        stack.pushWord(data: regs.pc)
+        stack.pushByte(data: regs.p.value | Flag.alwaysOne.rawValue)
         regs.p.set(.interrupt)
         regs.pc = memory.readWord(at: InterruptAddress.nmi.rawValue)
         // cycles += 7 ?
@@ -523,27 +444,27 @@ class CoreProcessingUnit {
     private func jmp(_ value: Word, _ address: Word) { regs.pc = value }
     
     // subroutines
-    private func jsr(_ value: Word, _ address: Word) { stack.pushWord(data: regs.pc &- 1, sp: &regs.sp); regs.pc = address }
-    private func rts(_ value: Word, _ address: Word) { regs.pc = stack.popWord(sp: &regs.sp) &+ 1 }
+    private func jsr(_ value: Word, _ address: Word) { stack.pushWord(data: regs.pc &- 1); regs.pc = address }
+    private func rts(_ value: Word, _ address: Word) { regs.pc = stack.popWord() &+ 1 }
     
     // interuptions
     private func rti(_ value: Word, _ address: Word) {
-        regs.p &= stack.popByte(sp: &regs.sp) | Flag.alwaysOne.rawValue
-        regs.pc = stack.popWord(sp: &regs.sp)
+        regs.p &= stack.popByte() | Flag.alwaysOne.rawValue
+        regs.pc = stack.popWord()
     }
     
     private func brk(_ value: Word, _ address: Word) {
         regs.p.set(.alwaysOne | .breaks)
-        stack.pushWord(data: regs.pc &+ 1, sp: &regs.sp) // TODO: make sure pc is handled correctly
-        stack.pushByte(data: regs.p.value, sp: &regs.sp)
+        stack.pushWord(data: regs.pc &+ 1) // TODO: make sure pc is handled correctly
+        stack.pushByte(data: regs.p.value)
         regs.pc = memory.readWord(at: InterruptAddress.nmi.rawValue)
     }
     
     // stack
-    private func pha(_ value: Word, _ address: Word) { stack.pushByte(data: regs.a, sp: &regs.sp) }
-    private func php(_ value: Word, _ address: Word) { stack.pushByte(data: regs.p.value | (.alwaysOne | .breaks), sp: &regs.sp) }
-    private func pla(_ value: Word, _ address: Word) { regs.a = stack.popByte(sp: &regs.sp); regs.p.updateFor(regs.a) }
-    private func plp(_ value: Word, _ address: Word) { regs.p &= stack.popByte(sp: &regs.sp) & ~Flag.breaks.rawValue | Flag.alwaysOne.rawValue }
+    private func pha(_ value: Word, _ address: Word) { stack.pushByte(data: regs.a) }
+    private func php(_ value: Word, _ address: Word) { stack.pushByte(data: regs.p.value | (.alwaysOne | .breaks)) }
+    private func pla(_ value: Word, _ address: Word) { regs.a = stack.popByte(); regs.p.updateFor(regs.a) }
+    private func plp(_ value: Word, _ address: Word) { regs.p &= stack.popByte() & ~Flag.breaks.rawValue | Flag.alwaysOne.rawValue }
     
     // loading
     private func load(_ a: inout Byte, _ operand: Word) { a = operand.rightByte(); regs.p.updateFor(a) }

@@ -6,8 +6,11 @@
 import UIKit
 
 class ViewController: UIViewController {
+    override var prefersStatusBarHidden: Bool { return true }
+    override var preferredStatusBarUpdateAnimation: UIStatusBarAnimation { return .slide }
+    override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation { return .portrait }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        
     }
 }
