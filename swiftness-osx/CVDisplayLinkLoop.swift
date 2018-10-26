@@ -45,7 +45,8 @@ class CVDisplayLinkLoop: LogicLoop {
     }
     
     deinit {
-        self.stop()
+        CVDisplayLinkStop(self.timer)
+        self.source.cancel()
     }
     
     func createTimer() -> CVDisplayLink {
@@ -94,15 +95,8 @@ class CVDisplayLinkLoop: LogicLoop {
     }
     
     func start(closure: @escaping (Double) -> ()) {
-        guard !self.running else { return }
         self.closure = closure
         CVDisplayLinkStart(self.timer)
         self.source.resume()
-    }
-    
-    func stop() {
-        guard self.running else { return }
-        CVDisplayLinkStop(self.timer)
-        self.source.cancel()
     }
 }

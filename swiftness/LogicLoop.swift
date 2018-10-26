@@ -24,5 +24,4 @@
 
 protocol LogicLoop: GuardStatus {
     func start(closure: @escaping (Double) -> ())
-    func stop()
 }
