@@ -25,19 +25,84 @@
 import Cocoa
 
 class CVDisplayLinkLoop: LogicLoop {
+    private let source: DispatchSourceUserDataAdd
+    private var timer: CVDisplayLink! = nil
+    private var running : Bool { return CVDisplayLinkIsRunning(self.timer) }
+    
     private var currentTime: Double = CACurrentMediaTime()
     private var fps: UInt32 = 0
-    private var closure: ((Double) -> ())!
+    private var closure: ((Double) -> ())?
     
     var status: String {
         return "FPS: \(self.fps)"
     }
     
+    init() {
+        self.source = DispatchSource.makeUserDataAddSource(queue: DispatchQueue.main)
+        let timer = self.createTimer()
+        self.setCGDisplay(timer)
+        self.createCallback(timer)
+    }
+    
+    deinit {
+        self.stop()
+    }
+    
+    func createTimer() -> CVDisplayLink {
+        CVDisplayLinkCreateWithActiveCGDisplays(&self.timer)
+        
+        guard self.timer != nil else {
+            fatalError("Could not create link with active display")
+        }
+        
+        return timer
+    }
+    
+    private func setCGDisplay(_ timer: CVDisplayLink) {
+        let result = CVDisplayLinkSetCurrentCGDisplay(timer, CGMainDisplayID())
+        
+        guard result == kCVReturnSuccess else {
+            fatalError("Could not link with current CG display")
+        }
+    }
+    
+    private func createCallback(_ timer: CVDisplayLink) {
+        let result = CVDisplayLinkSetOutputCallback(timer, { timer, currentTime, outputTime, _, _, sourceUnsafeRaw in
+            if let sourceUnsafeRaw = sourceUnsafeRaw {
+                let sourceUnmanaged = Unmanaged<DispatchSourceUserDataAdd>.fromOpaque(sourceUnsafeRaw)
+                sourceUnmanaged.takeUnretainedValue().add(data: 1)
+            }
+            return kCVReturnSuccess
+        }, Unmanaged.passUnretained(self.source).toOpaque())
+        
+        guard result == kCVReturnSuccess else {
+            fatalError("Could not create output callback")
+        }
+        
+        self.source.setEventHandler(handler: self.loopClosure)
+    }
+    
+    private func loopClosure() {
+        let newTime = CACurrentMediaTime()
+        let deltaTime = self.currentTime - newTime
+        self.currentTime = newTime
+        self.fps = UInt32(1 - deltaTime)
+        
+        if let closure = self.closure {
+            closure(deltaTime)
+        }
+    }
+    
     func start(closure: @escaping (Double) -> ()) {
+        guard !self.running else { return }
         self.closure = closure
+        CVDisplayLinkStart(self.timer)
+        self.source.resume()
     }
     
     func stop() {
-        
+        guard self.running else { return }
+        CVDisplayLinkStop(self.timer)
+        self.source.cancel()
     }
 }

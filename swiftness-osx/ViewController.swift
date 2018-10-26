@@ -25,7 +25,7 @@ import Cocoa
 
 class ViewController: NSViewController {
     private let renderer = MetalRenderer()
-    private let loop = CVDisplayLinkLoop()
+    private var loop = CVDisplayLinkLoop()
     private var conductor: Conductor!
     
     override func loadView() {

@@ -28,7 +28,7 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     
     private let cpu: CoreProcessingUnit
     private let ppu = PictureProcessingUnit()
-    private let apu = PictureProcessingUnit()
+    private let apu = AudioProcessingUnit()
     private let ram = RandomAccessMemory()
     private let controller1 = Controller()
     private let controller2 = Controller()

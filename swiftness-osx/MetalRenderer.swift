@@ -85,7 +85,7 @@ class MetalRenderer: Renderer {
     private func createQuadBuffer() {
         let vertexArrayObject: [Vertex] = Vertex.quad
         
-        guard let buffer = self.device.makeBuffer(bytes: vertexArrayObject, length: Vertex.size * vertexArrayObject.count, options: [.storageModePrivate]) else {
+        guard let buffer = self.device.makeBuffer(bytes: vertexArrayObject, length: Vertex.size * vertexArrayObject.count, options: [.storageModeShared]) else {
             fatalError("Could not create the metal renderer instance")
         }
         

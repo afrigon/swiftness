@@ -41,7 +41,7 @@ class DisplayLink {
         }
         
         self.timer = timer
-        self.source.setEventHandler(handler: { [weak self] in self?.callback?() })
+        
     }
     
     deinit { if self.running { self.suspend() } }
