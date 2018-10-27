@@ -22,8 +22,6 @@
 //    SOFTWARE.
 //
 
-class InputManager {
-    var currentKeyCode: UInt16?
-    
-    
+protocol InputManager {
+    var buttons: Byte { get }
 }

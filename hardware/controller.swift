@@ -22,33 +22,43 @@
 //    SOFTWARE.
 //
 
-enum Button: Byte {
-    case a = 1
-    case b = 2
-    case up = 4
-    case down = 8
-    case left = 16
-    case right = 32
-    case select = 64
-    case start = 128
-}
 
 class Controller: BusConnectedComponent, GuardStatus {
+    private let player: Player
     private var strobe: Byte = 0
     private var index: Byte = 1
-    let buttons: Byte = 0
+    var buttons: Byte = 0
+    
+    enum Button: Byte {
+        case a = 1
+        case b = 2
+        case up = 4
+        case down = 8
+        case left = 16
+        case right = 32
+        case select = 64
+        case start = 128
+    }
+    
+    enum Player: UInt8 {
+        case primary = 1, secondary = 2
+    }
     
     var status: String {
         var buttonString = ""
         for i in 0..<8 {
-            buttonString += String(describing: Button(rawValue: 1 << i))
-            buttonString += ": \(self.buttons & 1 << i)\n"
+            buttonString += " \(String(describing: Button(rawValue: 1 << i)!))"
+            buttonString += ": \(Bool(self.buttons & 1 << i))\n"
         }
         
         return """
-        |------- Input -------|
+        |------ Input \(self.player.rawValue) ------|
         \(buttonString)
         """
+    }
+    
+    init(_ player: Player = .primary) {
+        self.player = player
     }
     
     func busRead(at address: Word) -> Byte {

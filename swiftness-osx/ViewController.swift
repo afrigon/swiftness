@@ -23,10 +23,15 @@
 //
 import Cocoa
 
-class ViewController: NSViewController {
+class ViewController: NSViewController, LogicLoopDelegate {
+    private let overlay = CATextLayer()
     private let renderer = MetalRenderer()
     private var loop = CVDisplayLinkLoop()
     private var conductor: Conductor!
+    var inputResponder = InputResponder()
+    
+    private let overlayRefreshDelay: Double = 0.0
+    private var elapsedTime: Double = 0
     
     override func loadView() {
         self.view = NSView()
@@ -36,10 +41,32 @@ class ViewController: NSViewController {
     
     override func viewDidLayout() {
         super.viewDidLayout()
-        //self.renderer.layer.frame = self.view.frame
+        self.renderer.layer.frame = self.view.frame
+        self.overlay.frame = CGRect(x: 10, y: 5, width: self.view.layer!.frame.width - 20, height: self.view.layer!.frame.height - 10)
     }
     
     override func viewDidLoad() {
-        self.conductor = Conductor(with: self.renderer, drivenBy: self.loop)
+        self.conductor = Conductor(with: self.renderer, drivenBy: self.loop, interactingWith: self.inputResponder)
+        self.inputResponder.add(closure: self.toggleOverlay, forKey: 99)    // F3
+        self.loop.delegate = self
+        self.overlay.font = NSFont(name: "Menlo", size: 14)
+        self.overlay.fontSize = 14
+        self.overlay.foregroundColor = .white
+    }
+    
+    func logicLoop(loop: LogicLoop, didExecuteCallback deltaTime: Double) {
+        if self.overlay.superlayer != nil {
+            self.elapsedTime += deltaTime
+            if self.elapsedTime >= self.overlayRefreshDelay {
+                self.elapsedTime = 0
+                self.overlay.string = self.conductor.status
+            }
+        }
+    }
+    
+    private func toggleOverlay() {
+        self.overlay.superlayer == nil
+            ? self.view.layer?.addSublayer(self.overlay)
+            : self.overlay.removeFromSuperlayer()
     }
 }

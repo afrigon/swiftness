@@ -33,8 +33,10 @@ class CVDisplayLinkLoop: LogicLoop {
     private var fps: UInt32 = 0
     private var closure: ((Double) -> ())?
     
+    var delegate: LogicLoopDelegate?
+    
     var status: String {
-        return "FPS: \(self.fps)"
+        return " FPS: \(self.fps)"
     }
     
     init() {
@@ -85,12 +87,13 @@ class CVDisplayLinkLoop: LogicLoop {
     
     private func loopClosure() {
         let newTime = CACurrentMediaTime()
-        let deltaTime = self.currentTime - newTime
+        let deltaTime = newTime - self.currentTime
         self.currentTime = newTime
-        self.fps = UInt32(1 - deltaTime)
+        self.fps = UInt32(1 / deltaTime)
         
         if let closure = self.closure {
             closure(deltaTime)
+            self.delegate?.logicLoop(loop: self, didExecuteCallback: deltaTime)
         }
     }
     

@@ -22,22 +22,27 @@
 //    SOFTWARE.
 //
 
+import Foundation
+
 class Conductor: GuardStatus {
     private let nes = NintendoEntertainmentSystem()
     private let imageGenerator = ImageGenerator()
     private let renderer: Renderer
     private let loop: LogicLoop
+    private let inputManager: InputManager
 
     var status: String {
         return """
+        |------ General ------|
         \(self.loop.status)
         \(self.nes.status)
         """
     }
     
-    init(with renderer: Renderer, drivenBy loop: LogicLoop) {
+    init(with renderer: Renderer, drivenBy loop: LogicLoop, interactingWith inputManager: InputManager) {
         self.renderer = renderer
         self.loop = loop
+        self.inputManager = inputManager
         self.loop.start(closure: self.loopClosure)
     }
     
@@ -48,15 +53,17 @@ class Conductor: GuardStatus {
     }
     
     private func processInput() {
-        
+        self.nes.setInput(to: self.inputManager.buttons, for: .primary)
     }
     
     private func update(_ deltaTime: Double) {
-        // self.nes cycle some stuff
+        //self.nes.run(for: deltaTime)
     }
     
     private func render() {
         let image: [Byte] = self.imageGenerator.generate()
-        self.renderer.draw(image)
+        autoreleasepool {
+            self.renderer.draw(image)
+        }
     }
 }

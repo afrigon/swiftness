@@ -30,8 +30,8 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     private let ppu = PictureProcessingUnit()
     private let apu = AudioProcessingUnit()
     private let ram = RandomAccessMemory()
-    private let controller1 = Controller()
-    private let controller2 = Controller()
+    private let controller1 = Controller(.primary)
+    private let controller2 = Controller(.secondary)
     private let cartridge = Cartridge()
     private let bus = Bus()
     private let frequency: Double
@@ -43,10 +43,9 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         \(self.cpu.status)
         \(self.ppu.status)
         \(self.apu.status)
-        \(self.ram.status)
+        \(self.cartridge.status)
         \(self.controller1.status)
         \(self.controller2.status)
-        \(self.cartridge.status)
         """
     }
     
@@ -92,8 +91,14 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         case 0x0000..<0x2000: return self.ram
         case 0x4016: return self.controller1
         case 0x4017: return self.controller2
-        default:
-            fatalError("Not implemented or invalid read/write at \(address.hex())")
+        default: fatalError("Not implemented or invalid read/write at \(address.hex())")
+        }
+    }
+    
+    func setInput(to value: Byte, for player: Controller.Player = .primary) {
+        switch player {
+        case .primary: self.controller1.buttons = value
+        case .secondary: self.controller2.buttons = value
         }
     }
 }

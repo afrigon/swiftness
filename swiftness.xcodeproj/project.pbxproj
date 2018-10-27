@@ -24,6 +24,7 @@
 		FE53C82221835789002BD71F /* addressing.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C82121835789002BD71F /* addressing.swift */; };
 		FE53C824218357A7002BD71F /* memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C823218357A7002BD71F /* memory.swift */; };
 		FE53C834218369ED002BD71F /* cpu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C833218369ED002BD71F /* cpu.swift */; };
+		FE53C83C2183E5AF002BD71F /* InputResponder.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C83B2183E5AF002BD71F /* InputResponder.swift */; };
 		FEA2740C217C45F70072530A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2740B217C45F70072530A /* AppDelegate.swift */; };
 		FEA2740E217C45F90072530A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FEA2740D217C45F90072530A /* Assets.xcassets */; };
 		FEA2741B217C47B50072530A /* cpu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741A217C47B50072530A /* cpu.swift */; };
@@ -31,11 +32,8 @@
 		FEA27421217C91710072530A /* ppu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27420217C91710072530A /* ppu.swift */; };
 		FEA27426217D1D8A0072530A /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27425217D1D8A0072530A /* File.swift */; };
 		FEA27428217DED280072530A /* Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27427217DED280072530A /* Color.swift */; };
-		FEA2742A21806D9B0072530A /* MetalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2742921806D9B0072530A /* MetalViewController.swift */; };
-		FEA2742C21806E880072530A /* DisplayLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2742B21806E880072530A /* DisplayLink.swift */; };
 		FEA2742E218076150072530A /* nes.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2742D218076150072530A /* nes.swift */; };
 		FEA27430218085510072530A /* Shader.metal in Sources */ = {isa = PBXBuildFile; fileRef = FEA2742F218085510072530A /* Shader.metal */; };
-		FEA274322180B3A00072530A /* OverlayLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA274312180B3A00072530A /* OverlayLayer.swift */; };
 		FEA274342180CB970072530A /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA274332180CB970072530A /* main.swift */; };
 		FEA274362180D0EB0072530A /* Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA274352180D0EA0072530A /* Menu.swift */; };
 		FEA2743B2181FC860072530A /* Conductor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743A2181FC860072530A /* Conductor.swift */; };
@@ -86,6 +84,7 @@
 		FE53C831218369ED002BD71F /* swiftness-osx-tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swiftness-osx-tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FE53C833218369ED002BD71F /* cpu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = cpu.swift; sourceTree = "<group>"; };
 		FE53C835218369ED002BD71F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FE53C83B2183E5AF002BD71F /* InputResponder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputResponder.swift; sourceTree = "<group>"; };
 		FEA27408217C45F70072530A /* swiftness-osx.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "swiftness-osx.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FEA2740B217C45F70072530A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FEA2740D217C45F90072530A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -97,11 +96,8 @@
 		FEA27424217C954F0072530A /* specs.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = specs.md; sourceTree = "<group>"; };
 		FEA27425217D1D8A0072530A /* File.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = File.swift; sourceTree = "<group>"; };
 		FEA27427217DED280072530A /* Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Color.swift; sourceTree = "<group>"; };
-		FEA2742921806D9B0072530A /* MetalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalViewController.swift; sourceTree = "<group>"; };
-		FEA2742B21806E880072530A /* DisplayLink.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DisplayLink.swift; sourceTree = "<group>"; };
 		FEA2742D218076150072530A /* nes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = nes.swift; sourceTree = "<group>"; };
 		FEA2742F218085510072530A /* Shader.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shader.metal; sourceTree = "<group>"; };
-		FEA274312180B3A00072530A /* OverlayLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayLayer.swift; sourceTree = "<group>"; };
 		FEA274332180CB970072530A /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		FEA274352180D0EA0072530A /* Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Menu.swift; sourceTree = "<group>"; };
 		FEA2743A2181FC860072530A /* Conductor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conductor.swift; sourceTree = "<group>"; };
@@ -193,16 +189,14 @@
 		FEA2740A217C45F70072530A /* swiftness-osx */ = {
 			isa = PBXGroup;
 			children = (
-				FE53C809218225C4002BD71F /* CVDisplayLinkLoop.swift */,
 				FE53C807218224C5002BD71F /* MetalRenderer.swift */,
 				FEA2742F218085510072530A /* Shader.metal */,
+				FE53C809218225C4002BD71F /* CVDisplayLinkLoop.swift */,
+				FE53C83B2183E5AF002BD71F /* InputResponder.swift */,
 				FE53C80521822458002BD71F /* ViewController.swift */,
 				FEA274352180D0EA0072530A /* Menu.swift */,
 				FEA2740B217C45F70072530A /* AppDelegate.swift */,
 				FEA274332180CB970072530A /* main.swift */,
-				FEA2742921806D9B0072530A /* MetalViewController.swift */,
-				FEA2742B21806E880072530A /* DisplayLink.swift */,
-				FEA274312180B3A00072530A /* OverlayLayer.swift */,
 				FEA2740D217C45F90072530A /* Assets.xcassets */,
 				FEA27412217C45F90072530A /* Info.plist */,
 				FEA27413217C45F90072530A /* swiftness.entitlements */,
@@ -405,10 +399,10 @@
 				FE53C8162182BE49002BD71F /* ram.swift in Sources */,
 				FEA274362180D0EB0072530A /* Menu.swift in Sources */,
 				FEA2743F2182014E0072530A /* LogicLoop.swift in Sources */,
-				FEA2742C21806E880072530A /* DisplayLink.swift in Sources */,
 				FE53C82221835789002BD71F /* addressing.swift in Sources */,
 				FE53C8182182C27E002BD71F /* mapper.swift in Sources */,
 				FEA27426217D1D8A0072530A /* File.swift in Sources */,
+				FE53C83C2183E5AF002BD71F /* InputResponder.swift in Sources */,
 				FEA27430218085510072530A /* Shader.metal in Sources */,
 				FEA2743B2181FC860072530A /* Conductor.swift in Sources */,
 				FE53C824218357A7002BD71F /* memory.swift in Sources */,
@@ -419,8 +413,6 @@
 				FE53C80F21823FB1002BD71F /* apu.swift in Sources */,
 				FE53C81D21834E08002BD71F /* bus.swift in Sources */,
 				FEA27421217C91710072530A /* ppu.swift in Sources */,
-				FEA2742A21806D9B0072530A /* MetalViewController.swift in Sources */,
-				FEA274322180B3A00072530A /* OverlayLayer.swift in Sources */,
 				FE53C80A218225C4002BD71F /* CVDisplayLinkLoop.swift in Sources */,
 				FEA2740C217C45F70072530A /* AppDelegate.swift in Sources */,
 			);

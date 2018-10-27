@@ -24,43 +24,43 @@
 
 import Cocoa
 
-struct OverlayItems {
-    let fps: UInt32
-    let nes: NintendoEntertainmentSystem
-}
-
-class OverlayLayer: CATextLayer {
-    let refreshInterval: CFTimeInterval = 0.5
-    var lastUpdate: CFTimeInterval
+class InputResponder: NSResponder, InputManager {
+    override var acceptsFirstResponder: Bool { return true }
+    let buttonMap: [UInt16: Controller.Button] = [
+        6: .a,
+        7: .b,
+        126: .up,
+        125: .down,
+        123: .left,
+        124: .right,
+        46: .start,
+        45: .select
+    ]
+    var closures = [UInt16: () -> ()]()
+    var buttons: Byte = 0
     
-    override init() {
-        self.lastUpdate = self.refreshInterval - 0.05
-        super.init()
+    func add(closure: @escaping () -> (), forKey key: UInt16) {
+        self.closures[key] = closure
     }
     
-    required init?(coder aDecoder: NSCoder) {
-        self.lastUpdate = self.refreshInterval - 0.05
-        super.init(coder: aDecoder)
+    func remove(closureForKey key: UInt16) {
+        self.closures.removeValue(forKey: key)
     }
     
-    func update(items: OverlayItems, _ deltaTime: CFTimeInterval) {
-        self.lastUpdate += deltaTime
-        if self.lastUpdate >= self.refreshInterval {
-            self.lastUpdate = 0.0
-            self.string = """
-            |------ General ------|
-            Fps: \(items.fps)
-            
-            |-------- CPU --------|
-            
-            
-            |------- Stack -------|
-            
-            |-------- PPU --------|
-            
-            
-            |-------- APU --------|
-            """
+    override func keyDown(with event: NSEvent) {
+        if let button = self.buttonMap[event.keyCode] {
+            self.buttons |= button.rawValue
+            return
+        }
+        
+        if let closure = self.closures[event.keyCode] {
+            closure()
+        }
+    }
+    
+    override func keyUp(with event: NSEvent) {
+        if let button = self.buttonMap[event.keyCode] {
+            self.buttons &= ~button.rawValue
         }
     }
 }

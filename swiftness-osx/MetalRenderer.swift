@@ -133,8 +133,14 @@ class MetalRenderer: Renderer {
     }
     
     private func configureTextureDescriptor() {
-        self.textureDescriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Uint, width: self.textureSize, height: self.textureSize, mipmapped: false)
-        self.textureRegion = MTLRegionMake2D(0, 0, self.textureSize, self.textureSize)
+        self.textureDescriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm,
+                                                                          width: self.textureSize,
+                                                                          height: self.textureSize,
+                                                                          mipmapped: false)
+        self.textureRegion = MTLRegionMake2D(0,
+                                             0,
+                                             self.textureSize,
+                                             self.textureSize)
         
         guard let texture = self.device.makeTexture(descriptor: self.textureDescriptor) else {
             fatalError("Could not create texture object for metal renderer")
@@ -171,10 +177,12 @@ class MetalRenderer: Renderer {
     }
     
     func draw(_ image: [Byte]) {
-        self.texture.replace(region: self.textureRegion,
-                             mipmapLevel: 0,
-                             withBytes: image,
-                             bytesPerRow: self.textureSize)
+        if image.count == self.textureSize * self.textureSize {
+            self.texture.replace(region: self.textureRegion,
+                                 mipmapLevel: 0,
+                                 withBytes: image,
+                                 bytesPerRow: self.textureSize)
+        }
         
         self.createCommandEncoder { encoder in
             encoder.setRenderPipelineState(self.pipelineState)

@@ -22,14 +22,11 @@
 //    SOFTWARE.
 //
 
-class RandomAccessMemory: BusConnectedComponent, GuardStatus {
+class RandomAccessMemory: BusConnectedComponent {
     private var data: [Byte]
     let addressRange: Range<Word> = 0x0000..<0x2000
     let size: Word = 0x0800 // Bytes
-    
-    var status: String {
-        return ""
-    }
+
     
     init() {
         self.data = Array(repeating: 0x00, count: Int(self.size))

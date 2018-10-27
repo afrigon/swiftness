@@ -27,7 +27,7 @@ import Cocoa
 class AppDelegate: NSObject, NSApplicationDelegate {
     private let scale = 3
     private var window: NSWindow!
-    private var viewController: NSViewController!
+    private var viewController: ViewController!
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         let width = CGFloat(256 * self.scale)
@@ -50,6 +50,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         NSApplication.shared.mainMenu = Menu()
         self.window.makeKeyAndOrderFront(nil)
-        self.window.makeFirstResponder(self.viewController)
+        self.window.makeFirstResponder(self.viewController.inputResponder)
     }
 }

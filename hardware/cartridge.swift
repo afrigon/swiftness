@@ -24,6 +24,8 @@
 
 class Cartridge: GuardStatus {
     var status: String {
-        return ""
+        return """
+        |-------- ROM --------|
+        """
     }
 }

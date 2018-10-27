@@ -115,11 +115,11 @@ class CoreProcessingUnit {
     var status: String {
         return """
         |-------- CPU --------|
-        a:  0x\(self.regs.a.hex())   sp: 0x\(self.regs.sp.hex())
-        x:  0x\(self.regs.x.hex())    y: 0x\(self.regs.y.hex())
-        pc: 0x\(self.regs.pc.hex())
-        p:  0b\(self.regs.p.value.bin())
-              NV-BDIZC
+         a:  0x\(self.regs.a.hex())   sp: 0x\(self.regs.sp.hex())
+         x:  0x\(self.regs.x.hex())    y: 0x\(self.regs.y.hex())
+         pc: 0x\(self.regs.pc.hex())
+         p:  0b\(self.regs.p.value.bin())
+               NV-BDIZC
         
         \(self.stack.status)
         """
