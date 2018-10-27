@@ -55,7 +55,8 @@ class MetalRenderer: Renderer {
     private var textureSize: Int = 2048
     
     private let clearColor = MTLClearColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)
-    
+    private let pixelFormat: MTLPixelFormat = .bgra8Unorm
+    private let shaderName = "textured"
     let layer = CAMetalLayer()
     
     init() {
@@ -78,7 +79,7 @@ class MetalRenderer: Renderer {
     
     private func configureLayer() {
         self.layer.device = self.device
-        self.layer.pixelFormat = .bgra8Unorm
+        self.layer.pixelFormat = self.pixelFormat
         self.layer.framebufferOnly = true
     }
     
@@ -94,13 +95,13 @@ class MetalRenderer: Renderer {
     
     private func compileShaderPipeline() {
         let defaultLibrary = self.device.makeDefaultLibrary()
-        let vertexProgram = defaultLibrary?.makeFunction(name: "textured_vertex")
-        let fragmentProgram = defaultLibrary?.makeFunction(name: "textured_fragment")
+        let vertexProgram = defaultLibrary?.makeFunction(name: "\(self.shaderName)_vertex")
+        let fragmentProgram = defaultLibrary?.makeFunction(name: "\(self.shaderName)_fragment")
         
         let pipelineDescriptor = MTLRenderPipelineDescriptor()
         pipelineDescriptor.vertexFunction = vertexProgram
         pipelineDescriptor.fragmentFunction = fragmentProgram
-        pipelineDescriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
+        pipelineDescriptor.colorAttachments[0].pixelFormat = self.pixelFormat
         
         guard let pipelineState = try? self.device.makeRenderPipelineState(descriptor: pipelineDescriptor) else {
             fatalError("Could not compile pipeline with curent configuration")
@@ -133,7 +134,7 @@ class MetalRenderer: Renderer {
     }
     
     private func configureTextureDescriptor() {
-        self.textureDescriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm,
+        self.textureDescriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: self.pixelFormat,
                                                                           width: self.textureSize,
                                                                           height: self.textureSize,
                                                                           mipmapped: false)

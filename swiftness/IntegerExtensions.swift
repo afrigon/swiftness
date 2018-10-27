@@ -131,7 +131,7 @@ extension UInt16 {
     
     func hex() -> String { return String(format:"%04X", self) }
     func bin() -> String { return String(self, radix: 2).frontPad(with: "0", toLength: 16) }
-    func leftByte() -> UInt8 { return UInt8(self >> 2) }
+    func leftByte() -> UInt8 { return UInt8(self >> 8) }
     func rightByte() -> UInt8 { return UInt8(self & 0xFF) }
     func overflowsByte() -> Bool { return Bool(self & 0xFF00) }
     func overflowsByteByOne() -> Bool { return Bool(self & 0x100) }

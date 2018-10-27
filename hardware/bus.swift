@@ -50,9 +50,20 @@ class Bus {
         }
         delegate.bus(bus: self, didSendWriteSignalAt: address, data: data)
     }
+    
+    static func testsInstance() -> Bus {
+        let bus = Bus()
+        bus.delegate = TestsBusDelegate()
+        return bus
+    }
 }
 
 protocol BusDelegate {
     func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte
     func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte)
+}
+
+class TestsBusDelegate: BusDelegate {
+    func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte { return 0x40 }
+    func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte) {}
 }

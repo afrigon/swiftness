@@ -34,6 +34,8 @@ class ProcessorStatusRegister {
     
     init(_ value: Byte) { self._value = value }
     static func &= (left: inout ProcessorStatusRegister, right: Byte) { left._value = right }
+    static func == (left: ProcessorStatusRegister, right: ProcessorStatusRegister) -> Bool { return left.value == right.value }
+    static func != (left: ProcessorStatusRegister, right: ProcessorStatusRegister) -> Bool { return left.value != right.value }
     
     func set(_ flags: Byte, if condition: Bool? = nil) {
         if let condition = condition {
@@ -97,9 +99,15 @@ struct Opcode {
 }
 
 struct Operand {
-    var value: Word = 0
-    var address: Word = 0
-    var additionalCycles: UInt8 = 0
+    var value: Word
+    var address: Word
+    var additionalCycles: UInt8
+    
+    init(value: Word = 0x0000, address: Word = 0x0000, additionalCycles: UInt8 = 0) {
+        self.value = value
+        self.address = address
+        self.additionalCycles = additionalCycles
+    }
 }
 
 enum InterruptAddress: Word { case nmi = 0xFFFA, reset = 0xFFFC, irq = 0xFFFE }
@@ -109,8 +117,10 @@ class CoreProcessingUnit {
     private let memory: CoreProcessingUnitMemory
     private let stack: Stack
     private let bus: Bus
-    private var regs = RegisterSet()
+    private var regs: RegisterSet
     private var opcodes: [Byte: Opcode]! = nil
+    
+    var registers: RegisterSet { return self.regs }
     
     var status: String {
         return """
@@ -125,8 +135,9 @@ class CoreProcessingUnit {
         """
     }
     
-    init(using bus: Bus) {
+    init(using bus: Bus, with registers: RegisterSet = RegisterSet()) {
         self.bus = bus
+        self.regs = registers
         self.memory = CoreProcessingUnitMemory(using: bus)
         self.stack = Stack(using: self.bus, sp: &self.regs.sp)
         
@@ -285,6 +296,15 @@ class CoreProcessingUnit {
         ]
     }
     
+    // Method used to inject instruction for testing
+    func process(opcode: Byte, operand: Operand = Operand()) {
+        guard let opcode: Opcode = self.opcodes[opcode] else {
+            fatalError("Unknown opcode used (outside of the 151 available)")
+        }
+        
+        opcode.closure(operand.value, operand.address)
+    }
+    
     func step() -> UInt8 {
         let opcodeHex: Byte = self.memory.readByte(at: regs.pc)
         regs.pc++
@@ -326,7 +346,7 @@ class CoreProcessingUnit {
     }
     
     // OPCODES IMPLEMENTATION
-    private func nop (_ value: Word, _ address: Word) {}
+    private func nop(_ value: Word, _ address: Word) {}
     
     // Math
     private func inx(_ value: Word, _ address: Word) { regs.x++; regs.p.updateFor(regs.x) }

@@ -30,7 +30,7 @@ class ViewController: NSViewController, LogicLoopDelegate {
     private var conductor: Conductor!
     var inputResponder = InputResponder()
     
-    private let overlayRefreshDelay: Double = 0.0
+    private let overlayRefreshDelay: Double = 0.5
     private var elapsedTime: Double = 0
     
     override func loadView() {
