@@ -25,15 +25,17 @@
 import Foundation
 
 class Conductor: GuardStatus {
-    private let nes = NintendoEntertainmentSystem()
+    private let nes: NintendoEntertainmentSystem
     private let imageGenerator = ImageGenerator()
     private let renderer: Renderer
     private let loop: LogicLoop
     private let inputManager: InputManager
+    private let filepath: String = "/Users/frigon/Desktop/zelda.nes"
 
     var status: String {
         return """
         |------ General ------|
+         File: \(self.filepath)
         \(self.loop.status)
         \(self.nes.status)
         """
@@ -43,8 +45,16 @@ class Conductor: GuardStatus {
         self.renderer = renderer
         self.loop = loop
         self.inputManager = inputManager
+        
+        let game: Cartridge = iNesFile.load(path: self.filepath)
+        // * blows a bit into the cardridge *
+        self.nes = NintendoEntertainmentSystem(load: game)
+        
         self.loop.start(closure: self.loopClosure)
     }
+    
+    // Debug function
+    func step() { self.nes.step() }
     
     private func loopClosure(_ deltaTime: Double) {
         self.processInput()

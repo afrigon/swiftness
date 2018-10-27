@@ -48,6 +48,7 @@ class ViewController: NSViewController, LogicLoopDelegate {
     override func viewDidLoad() {
         self.conductor = Conductor(with: self.renderer, drivenBy: self.loop, interactingWith: self.inputResponder)
         self.inputResponder.add(closure: self.toggleOverlay, forKey: 99)    // F3
+        self.inputResponder.add(closure: self.step, forKey: 100)    // F8
         self.loop.delegate = self
         self.overlay.font = NSFont(name: "Menlo", size: 14)
         self.overlay.fontSize = 14
@@ -68,5 +69,9 @@ class ViewController: NSViewController, LogicLoopDelegate {
         self.overlay.superlayer == nil
             ? self.view.layer?.addSublayer(self.overlay)
             : self.overlay.removeFromSuperlayer()
+    }
+    
+    private func step() {
+        self.conductor.step()
     }
 }

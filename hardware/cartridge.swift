@@ -22,10 +22,35 @@
 //    SOFTWARE.
 //
 
+enum ScreenMirroring {
+    case vertical
+    case horizontal
+    case quad
+}
+
 class Cartridge: GuardStatus {
+    private let programReadOnlyMemory: [Byte]
+    private let characterReadOnlyMemory: [Byte]
+    private let saveRandomAccessMemory = [Byte](repeating: 0x00, count: 0x2000)
+    private let mapperType: MapperType
+    private let mirroring: ScreenMirroring
+    private let battery: Bool
+    
     var status: String {
         return """
         |-------- ROM --------|
+         PRG:  \(self.programReadOnlyMemory.count / 16384)KB   CHR: \(self.characterReadOnlyMemory.count / 8192)KB
+         SRAM: \(self.saveRandomAccessMemory.count / 8192)KB   Battery: \(self.battery)
+         Mirroring:  \(String(describing: self.mirroring).capitalized)
+         Mapper:     \(String(describing: self.mapperType).capitalized)
         """
+    }
+    
+    init(prg: [Byte], chr: [Byte], mapperType: MapperType, mirroring: ScreenMirroring, battery: Bool) {
+        self.programReadOnlyMemory = prg
+        self.characterReadOnlyMemory = chr
+        self.mapperType = mapperType
+        self.mirroring = mirroring
+        self.battery = battery
     }
 }

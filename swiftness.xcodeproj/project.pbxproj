@@ -45,7 +45,6 @@
 		FE53C84E2183FDCE002BD71F /* LogicLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743E2182014E0072530A /* LogicLoop.swift */; };
 		FE53C84F2183FDCE002BD71F /* InputManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C8112182474F002BD71F /* InputManager.swift */; };
 		FE53C8502183FDCE002BD71F /* ImageGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27451218208D30072530A /* ImageGenerator.swift */; };
-		FE53C8512183FDCE002BD71F /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27425217D1D8A0072530A /* File.swift */; };
 		FE53C8522183FDCE002BD71F /* Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27427217DED280072530A /* Color.swift */; };
 		FE53C8532183FDCE002BD71F /* GuardStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C80C21823094002BD71F /* GuardStatus.swift */; };
 		FE53C8592183FDF7002BD71F /* nes.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2742D218076150072530A /* nes.swift */; };
@@ -60,7 +59,6 @@
 		FE53C8642183FE00002BD71F /* LogicLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743E2182014E0072530A /* LogicLoop.swift */; };
 		FE53C8652183FE00002BD71F /* InputManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C8112182474F002BD71F /* InputManager.swift */; };
 		FE53C8662183FE00002BD71F /* ImageGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27451218208D30072530A /* ImageGenerator.swift */; };
-		FE53C8672183FE00002BD71F /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27425217D1D8A0072530A /* File.swift */; };
 		FE53C8682183FE00002BD71F /* Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27427217DED280072530A /* Color.swift */; };
 		FE53C8692183FE00002BD71F /* GuardStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C80C21823094002BD71F /* GuardStatus.swift */; };
 		FE53C86A2183FE00002BD71F /* IntegerExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741C217C546E0072530A /* IntegerExtensions.swift */; };
@@ -69,7 +67,6 @@
 		FEA2741B217C47B50072530A /* cpu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741A217C47B50072530A /* cpu.swift */; };
 		FEA2741D217C546E0072530A /* IntegerExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741C217C546E0072530A /* IntegerExtensions.swift */; };
 		FEA27421217C91710072530A /* ppu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27420217C91710072530A /* ppu.swift */; };
-		FEA27426217D1D8A0072530A /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27425217D1D8A0072530A /* File.swift */; };
 		FEA27428217DED280072530A /* Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27427217DED280072530A /* Color.swift */; };
 		FEA2742E218076150072530A /* nes.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2742D218076150072530A /* nes.swift */; };
 		FEA27430218085510072530A /* Shader.metal in Sources */ = {isa = PBXBuildFile; fileRef = FEA2742F218085510072530A /* Shader.metal */; };
@@ -84,6 +81,7 @@
 		FEBA1F4621820D620044DC8B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FEBA1F4521820D620044DC8B /* Assets.xcassets */; };
 		FEBA1F4921820D620044DC8B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FEBA1F4721820D620044DC8B /* LaunchScreen.storyboard */; };
 		FEBA1F5621820E920044DC8B /* cpu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741A217C47B50072530A /* cpu.swift */; };
+		FEC79C8921842789006C3096 /* iNesFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8821842789006C3096 /* iNesFile.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -124,7 +122,6 @@
 		FEA2741C217C546E0072530A /* IntegerExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegerExtensions.swift; sourceTree = "<group>"; };
 		FEA27420217C91710072530A /* ppu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ppu.swift; sourceTree = "<group>"; };
 		FEA27424217C954F0072530A /* specs.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = specs.md; sourceTree = "<group>"; };
-		FEA27425217D1D8A0072530A /* File.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = File.swift; sourceTree = "<group>"; };
 		FEA27427217DED280072530A /* Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Color.swift; sourceTree = "<group>"; };
 		FEA2742D218076150072530A /* nes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = nes.swift; sourceTree = "<group>"; };
 		FEA2742F218085510072530A /* Shader.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shader.metal; sourceTree = "<group>"; };
@@ -140,6 +137,7 @@
 		FEBA1F4521820D620044DC8B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FEBA1F4821820D620044DC8B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		FEBA1F4A21820D620044DC8B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FEC79C8821842789006C3096 /* iNesFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iNesFile.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -272,7 +270,7 @@
 				FEA2743E2182014E0072530A /* LogicLoop.swift */,
 				FE53C8112182474F002BD71F /* InputManager.swift */,
 				FEA27451218208D30072530A /* ImageGenerator.swift */,
-				FEA27425217D1D8A0072530A /* File.swift */,
+				FEC79C8821842789006C3096 /* iNesFile.swift */,
 				FEA27427217DED280072530A /* Color.swift */,
 				FE53C80C21823094002BD71F /* GuardStatus.swift */,
 				FEA2741C217C546E0072530A /* IntegerExtensions.swift */,
@@ -428,7 +426,6 @@
 				FE53C8402183FADC002BD71F /* addressing.swift in Sources */,
 				FE53C834218369ED002BD71F /* cpu-tests.swift in Sources */,
 				FE53C84D2183FDCE002BD71F /* Renderer.swift in Sources */,
-				FE53C8512183FDCE002BD71F /* File.swift in Sources */,
 				FE53C84C2183FDCE002BD71F /* Conductor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -439,6 +436,7 @@
 			files = (
 				FE53C8122182474F002BD71F /* InputManager.swift in Sources */,
 				FEA2743D2181FCCA0072530A /* Renderer.swift in Sources */,
+				FEC79C8921842789006C3096 /* iNesFile.swift in Sources */,
 				FE53C80621822458002BD71F /* ViewController.swift in Sources */,
 				FE53C81B21834DBE002BD71F /* cartridge.swift in Sources */,
 				FEA27452218208D30072530A /* ImageGenerator.swift in Sources */,
@@ -451,7 +449,6 @@
 				FEA2743F2182014E0072530A /* LogicLoop.swift in Sources */,
 				FE53C82221835789002BD71F /* addressing.swift in Sources */,
 				FE53C8182182C27E002BD71F /* mapper.swift in Sources */,
-				FEA27426217D1D8A0072530A /* File.swift in Sources */,
 				FE53C83C2183E5AF002BD71F /* InputResponder.swift in Sources */,
 				FEA27430218085510072530A /* Shader.metal in Sources */,
 				FEA2743B2181FC860072530A /* Conductor.swift in Sources */,
@@ -483,7 +480,6 @@
 				FE53C83F2183FADC002BD71F /* memory.swift in Sources */,
 				FEBA1F5621820E920044DC8B /* cpu.swift in Sources */,
 				FE53C8592183FDF7002BD71F /* nes.swift in Sources */,
-				FE53C8672183FE00002BD71F /* File.swift in Sources */,
 				FE53C8422183FAE1002BD71F /* mapper.swift in Sources */,
 				FE53C8662183FE00002BD71F /* ImageGenerator.swift in Sources */,
 				FE53C80421821344002BD71F /* main.swift in Sources */,

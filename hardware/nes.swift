@@ -32,7 +32,7 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     private let ram = RandomAccessMemory()
     private let controller1 = Controller(.primary)
     private let controller2 = Controller(.secondary)
-    private let cartridge = Cartridge()
+    private let cartridge: Cartridge
     private let bus = Bus()
     private let frequency: Double
     
@@ -45,16 +45,17 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         \(self.apu.status)
         \(self.cartridge.status)
         \(self.controller1.status)
-        \(self.controller2.status)
         """
     }
     
-    init() {
+    init(load game: Cartridge) {
         self.cpu = CoreProcessingUnit(using: self.bus)
+        self.cartridge = game
         self.frequency = self.cpu.frequency * 1000000   // MHz * 1e+6 == Hz
         self.bus.delegate = self
     }
     
+    @discardableResult
     func step() -> UInt8 {
         let cpuCycle: UInt8 = self.cpu.step()
         

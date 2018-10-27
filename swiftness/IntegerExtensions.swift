@@ -143,6 +143,9 @@ extension UInt16 {
 extension UInt32 {
     static postfix func ++ (value: inout UInt32) { value &+= 1 }
     static postfix func -- (value: inout UInt32) { value &-= 1 }
+    
+    func hex() -> String { return String(format:"%08X", self) }
+    func bin() -> String { return String(self, radix: 2).frontPad(with: "0", toLength: 32) }
 }
 
 extension UInt64 {

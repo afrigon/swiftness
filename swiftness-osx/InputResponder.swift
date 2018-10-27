@@ -55,6 +55,8 @@ class InputResponder: NSResponder, InputManager {
         
         if let closure = self.closures[event.keyCode] {
             closure()
+        } else {
+            print(event.keyCode)
         }
     }
     
