@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FE3F925421859C1C0000B574 /* iNesFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8821842789006C3096 /* iNesFile.swift */; };
+		FE3F925521859C1D0000B574 /* iNesFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8821842789006C3096 /* iNesFile.swift */; };
+		FE3F925621859C260000B574 /* mmc1.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8A218459A7006C3096 /* mmc1.swift */; };
+		FE3F925721859C260000B574 /* mmc3.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8C21845CF7006C3096 /* mmc3.swift */; };
+		FE3F925821859C260000B574 /* mmc1.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8A218459A7006C3096 /* mmc1.swift */; };
+		FE3F925921859C260000B574 /* mmc3.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8C21845CF7006C3096 /* mmc3.swift */; };
 		FE53C80421821344002BD71F /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C80321821344002BD71F /* main.swift */; };
 		FE53C80621822458002BD71F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C80521822458002BD71F /* ViewController.swift */; };
 		FE53C808218224C5002BD71F /* MetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C807218224C5002BD71F /* MetalRenderer.swift */; };
@@ -82,6 +88,8 @@
 		FEBA1F4921820D620044DC8B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FEBA1F4721820D620044DC8B /* LaunchScreen.storyboard */; };
 		FEBA1F5621820E920044DC8B /* cpu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741A217C47B50072530A /* cpu.swift */; };
 		FEC79C8921842789006C3096 /* iNesFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8821842789006C3096 /* iNesFile.swift */; };
+		FEC79C8B218459A7006C3096 /* mmc1.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8A218459A7006C3096 /* mmc1.swift */; };
+		FEC79C8D21845CF7006C3096 /* mmc3.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8C21845CF7006C3096 /* mmc3.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -138,6 +146,8 @@
 		FEBA1F4821820D620044DC8B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		FEBA1F4A21820D620044DC8B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FEC79C8821842789006C3096 /* iNesFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iNesFile.swift; sourceTree = "<group>"; };
+		FEC79C8A218459A7006C3096 /* mmc1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mmc1.swift; sourceTree = "<group>"; };
+		FEC79C8C21845CF7006C3096 /* mmc3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mmc3.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -169,6 +179,8 @@
 			isa = PBXGroup;
 			children = (
 				FE53C8172182C27E002BD71F /* mapper.swift */,
+				FEC79C8A218459A7006C3096 /* mmc1.swift */,
+				FEC79C8C21845CF7006C3096 /* mmc3.swift */,
 			);
 			path = mappers;
 			sourceTree = "<group>";
@@ -410,9 +422,11 @@
 				FE53C8442183FAE4002BD71F /* nes.swift in Sources */,
 				FE53C8502183FDCE002BD71F /* ImageGenerator.swift in Sources */,
 				FE53C8482183FAE4002BD71F /* controller.swift in Sources */,
+				FE3F925821859C260000B574 /* mmc1.swift in Sources */,
 				FE53C84E2183FDCE002BD71F /* LogicLoop.swift in Sources */,
 				FE53C84A2183FAE4002BD71F /* bus.swift in Sources */,
 				FE53C8472183FAE4002BD71F /* ram.swift in Sources */,
+				FE3F925921859C260000B574 /* mmc3.swift in Sources */,
 				FE53C84F2183FDCE002BD71F /* InputManager.swift in Sources */,
 				FE53C8432183FAE1002BD71F /* mapper.swift in Sources */,
 				FE53C8462183FAE4002BD71F /* apu.swift in Sources */,
@@ -420,6 +434,7 @@
 				FE53C8412183FADC002BD71F /* memory.swift in Sources */,
 				FE53C8492183FAE4002BD71F /* cartridge.swift in Sources */,
 				FE53C84B2183FDC8002BD71F /* IntegerExtensions.swift in Sources */,
+				FE3F925421859C1C0000B574 /* iNesFile.swift in Sources */,
 				FE53C83D2183FAD3002BD71F /* cpu.swift in Sources */,
 				FE53C8522183FDCE002BD71F /* Color.swift in Sources */,
 				FE53C8452183FAE4002BD71F /* ppu.swift in Sources */,
@@ -447,6 +462,7 @@
 				FE53C8162182BE49002BD71F /* ram.swift in Sources */,
 				FEA274362180D0EB0072530A /* Menu.swift in Sources */,
 				FEA2743F2182014E0072530A /* LogicLoop.swift in Sources */,
+				FEC79C8B218459A7006C3096 /* mmc1.swift in Sources */,
 				FE53C82221835789002BD71F /* addressing.swift in Sources */,
 				FE53C8182182C27E002BD71F /* mapper.swift in Sources */,
 				FE53C83C2183E5AF002BD71F /* InputResponder.swift in Sources */,
@@ -458,6 +474,7 @@
 				FEA2741B217C47B50072530A /* cpu.swift in Sources */,
 				FEA2741D217C546E0072530A /* IntegerExtensions.swift in Sources */,
 				FE53C80F21823FB1002BD71F /* apu.swift in Sources */,
+				FEC79C8D21845CF7006C3096 /* mmc3.swift in Sources */,
 				FE53C81D21834E08002BD71F /* bus.swift in Sources */,
 				FEA27421217C91710072530A /* ppu.swift in Sources */,
 				FE53C80A218225C4002BD71F /* CVDisplayLinkLoop.swift in Sources */,
@@ -471,6 +488,7 @@
 			files = (
 				FE53C8652183FE00002BD71F /* InputManager.swift in Sources */,
 				FEBA1F4121820D610044DC8B /* ViewController.swift in Sources */,
+				FE3F925521859C1D0000B574 /* iNesFile.swift in Sources */,
 				FE53C8682183FE00002BD71F /* Color.swift in Sources */,
 				FE53C8692183FE00002BD71F /* GuardStatus.swift in Sources */,
 				FE53C810218245F0002BD71F /* Shader.metal in Sources */,
@@ -479,6 +497,7 @@
 				FE53C85A2183FDF7002BD71F /* ppu.swift in Sources */,
 				FE53C83F2183FADC002BD71F /* memory.swift in Sources */,
 				FEBA1F5621820E920044DC8B /* cpu.swift in Sources */,
+				FE3F925621859C260000B574 /* mmc1.swift in Sources */,
 				FE53C8592183FDF7002BD71F /* nes.swift in Sources */,
 				FE53C8422183FAE1002BD71F /* mapper.swift in Sources */,
 				FE53C8662183FE00002BD71F /* ImageGenerator.swift in Sources */,
@@ -492,6 +511,7 @@
 				FE53C85B2183FDF7002BD71F /* apu.swift in Sources */,
 				FE53C80B21822B19002BD71F /* MetalRenderer.swift in Sources */,
 				FE53C8632183FE00002BD71F /* Renderer.swift in Sources */,
+				FE3F925721859C260000B574 /* mmc3.swift in Sources */,
 				FE53C83E2183FADC002BD71F /* addressing.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

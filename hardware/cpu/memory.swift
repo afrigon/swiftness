@@ -29,11 +29,12 @@ class Stack: GuardStatus {
     
     var status: String {
         let size: UInt8 = 10
-        let pointer: Word = self.sp.pointee.asWord() + 0x100
+        let pointer: Word = self.sp.pointee.asWord() + self.size
         var stackString: String = ""
         
-        for i in stride(from: pointer, through: max(pointer - size - 1, 0x100), by: -2) {
-            stackString += " 0x\(Word(i).hex()):  0x\(self.bus.readByte(at: i).hex()) 0x\(self.bus.readByte(at: i - 1).hex())\n"
+        for i in stride(from: pointer, to: pointer + size, by: 1) {
+            if i >= 0x200 { break }
+            stackString += " 0x\(Word(i).hex()): 0x\(self.bus.readByte(at: i).hex())\n"
         }
         
         return """
@@ -48,13 +49,13 @@ class Stack: GuardStatus {
     }
     
     func pushByte(data: Byte) {
-        self.bus.writeByte(data, at: self.sp.pointee.asWord())
+        self.bus.writeByte(data, at: self.sp.pointee.asWord() + self.size)
         self.sp.pointee--
     }
 
     func popByte() -> Byte {
         self.sp.pointee++
-        return self.bus.readByte(at: self.sp.pointee.asWord())
+        return self.bus.readByte(at: self.sp.pointee.asWord() + self.size)
     }
 
     func pushWord(data: Word) {

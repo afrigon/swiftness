@@ -30,7 +30,7 @@ class Conductor: GuardStatus {
     private let renderer: Renderer
     private let loop: LogicLoop
     private let inputManager: InputManager
-    private let filepath: String = "/Users/frigon/Desktop/zelda.nes"
+    private let filepath: String = "/Users/frigon/Downloads/roms/tetris.nes"
 
     var status: String {
         return """

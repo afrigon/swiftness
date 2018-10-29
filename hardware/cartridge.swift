@@ -28,29 +28,81 @@ enum ScreenMirroring {
     case quad
 }
 
-class Cartridge: GuardStatus {
-    private let programReadOnlyMemory: [Byte]
-    private let characterReadOnlyMemory: [Byte]
-    private let saveRandomAccessMemory = [Byte](repeating: 0x00, count: 0x2000)
-    private let mapperType: MapperType
+enum CartridgeRegion {
+    case prg, chr, sram
+}
+
+class Cartridge: GuardStatus, BusConnectedComponent, MapperDelegate {
     private let mirroring: ScreenMirroring
     private let battery: Bool
+    private let mapperType: MapperType
+    private var mapper: Mapper
+    
+    private var programRom: [Byte]
+    private var characterRom: [Byte]
+    private var saveRam = [Byte](repeating: 0x00, count: 0x2000)
     
     var status: String {
         return """
         |-------- ROM --------|
-         PRG:  \(self.programReadOnlyMemory.count / 16384)KB   CHR: \(self.characterReadOnlyMemory.count / 8192)KB
-         SRAM: \(self.saveRandomAccessMemory.count / 8192)KB   Battery: \(self.battery)
+         PRG:  \(self.programRom.count / 16384)KB   CHR: \(self.characterRom.count / 8192)KB
+         SRAM: \(self.saveRam.count / 8192)KB   Battery: \(self.battery)
          Mirroring:  \(String(describing: self.mirroring).capitalized)
-         Mapper:     \(String(describing: self.mapperType).capitalized)
+         Mapper:     \(String(describing: self.mapperType).uppercased())
         """
     }
     
     init(prg: [Byte], chr: [Byte], mapperType: MapperType, mirroring: ScreenMirroring, battery: Bool) {
-        self.programReadOnlyMemory = prg
-        self.characterReadOnlyMemory = chr
-        self.mapperType = mapperType
+        self.programRom = prg
+        self.characterRom = chr
         self.mirroring = mirroring
         self.battery = battery
+        self.mapperType = mapperType
+        self.mapper = MapperFactory.create(mapperType)
+        self.mapper.delegate = self
+    }
+
+    // actions from the bus delivered to the mapper
+    func busRead(at address: Word) -> Byte {
+        return self.mapper.busRead(at: address)
+    }
+    
+    func busWrite(_ data: Byte, at address: Word) {
+        self.mapper.busWrite(data, at: address)
+    }
+    
+    // actions from the mapper
+    func mapper(mapper: Mapper, didReadAt address: Word, of region: CartridgeRegion) -> Byte {
+        guard self.validate(region, contains: address) else {
+            print("Illegal rom read at: 0x\(address.hex()) on region \(String(describing: region).uppercased())")
+            return 0x00
+        }
+        
+        switch region {
+        case .prg: return self.programRom[address]
+        case .chr: return self.characterRom[address]
+        case .sram: return self.saveRam[address]
+        }
+    }
+    
+    func mapper(mapper: Mapper, didWriteAt address: Word, of region: CartridgeRegion, data: Byte) {
+        guard self.validate(region, contains: address) else {
+            print("Illegal rom write at: 0x\(address.hex()) on region \(String(describing: region).uppercased())")
+            return
+        }
+        
+        switch region {
+        case .prg: self.programRom[address] = data
+        case .chr: self.characterRom[address] = data
+        case .sram: self.saveRam[address] = data
+        }
+    }
+    
+    func validate(_ region: CartridgeRegion, contains address: Word) -> Bool {
+        switch region {
+        case .prg: return (0..<self.programRom.count).contains(Int(address))
+        case .chr: return (0..<self.characterRom.count).contains(Int(address))
+        case .sram: return (0..<self.saveRam.count).contains(Int(address))
+        }
     }
 }

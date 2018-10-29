@@ -53,6 +53,7 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         self.cartridge = game
         self.frequency = self.cpu.frequency * 1000000   // MHz * 1e+6 == Hz
         self.bus.delegate = self
+        self.cpu.requestInterrupt(type: .reset)
     }
     
     @discardableResult
@@ -92,7 +93,8 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         case 0x0000..<0x2000: return self.ram
         case 0x4016: return self.controller1
         case 0x4017: return self.controller2
-        default: fatalError("Not implemented or invalid read/write at \(address.hex())")
+        case 0x6000...0xFFFF: return self.cartridge
+        default: fatalError("Not implemented or invalid read/write at 0x\(address.hex())")
         }
     }
     

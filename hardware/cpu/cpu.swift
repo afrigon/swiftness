@@ -49,6 +49,7 @@ class ProcessorStatusRegister {
     func unset(_ flags: Byte) { self._value &= ~flags }
     func unset(_ flag: Flag) { self.unset(flag.rawValue) }
     func isSet(_ flag: Flag) -> Bool { return Bool(self.value & flag.rawValue) }
+    func isNotSet(_ flag: Flag) -> Bool { return !self.isSet(flag) }
     func valueOf(_ flag: Flag) -> UInt8 { return self.isSet(flag) ? 1 : 0 }
     
     func updateFor(_ value: Word) { self.updateFor(value.rightByte()) }
@@ -110,7 +111,12 @@ struct Operand {
     }
 }
 
-enum InterruptAddress: Word { case nmi = 0xFFFA, reset = 0xFFFC, irq = 0xFFFE }
+enum InterruptType: Word {
+    case nmi = 0xFFFA       // Non-Maskable Interrupt triggered by ppu
+    case reset = 0xFFFC     // Triggered on reset button press and initial boot
+    case irq = 0xFFFE       // Maskable Interrupt triggered by a brk instruction or by memory mappers
+    var address: Word { return self.rawValue }
+}
 
 class CoreProcessingUnit {
     let frequency: Double = 1.789773    // MHz
@@ -119,8 +125,10 @@ class CoreProcessingUnit {
     private let bus: Bus
     private var regs: RegisterSet
     private var opcodes: [Byte: Opcode]! = nil
+    private var interruptRequest: InterruptType? = nil
     
     var registers: RegisterSet { return self.regs }
+    
     
     var status: String {
         return """
@@ -296,7 +304,15 @@ class CoreProcessingUnit {
         ]
     }
     
-    // Method used to inject instruction for testing
+    func requestInterrupt(type: InterruptType) {
+        // maybe handle interrupt priority as described in this document at page 13
+        // http://nesdev.com/NESDoc.pdf
+        self.interruptRequest = type
+        
+        // maybe will have to switch to a queue of interrupts ?
+    }
+    
+    /// Method used to inject instructions for testing
     func process(opcode: Byte, operand: Operand = Operand()) {
         guard let opcode: Opcode = self.opcodes[opcode] else {
             fatalError("Unknown opcode used (outside of the 151 available)")
@@ -306,6 +322,10 @@ class CoreProcessingUnit {
     }
     
     func step() -> UInt8 {
+        if let interrupt = self.interruptRequest {
+            return self.interrupt(type: interrupt)
+        }
+        
         let opcodeHex: Byte = self.memory.readByte(at: regs.pc)
         regs.pc++
         
@@ -319,18 +339,24 @@ class CoreProcessingUnit {
         return opcode.cycles + operand.additionalCycles
     }
     
-    func interrupt() {
+    private func interrupt(type: InterruptType) -> UInt8 {
+        self.interruptRequest = nil
+        
+        // Handle the bit 7 of PPU Control Register 1 ($2000)
+        let isValidNmi: Bool = type == .nmi && Bool(self.memory.readByte(at: 0x2000) & 0b10000000)
+        
+        guard isValidNmi || self.regs.p.isNotSet(.interrupt) else {
+            return 0
+        }
+        
         stack.pushWord(data: regs.pc)
         stack.pushByte(data: regs.p.value | Flag.alwaysOne.rawValue)
-        regs.p.set(.interrupt)
-        regs.pc = memory.readWord(at: InterruptAddress.nmi.rawValue)
-        // cycles += 7 ?
-    }
-    
-    func reset() {
-        regs.pc = memory.readWord(at: InterruptAddress.reset.rawValue)
-        regs.sp = 0xFD
-        regs.p.set(.interrupt)
+        self.regs.p.set(.interrupt)
+        self.regs.pc = memory.readWord(at: type.address)
+        
+        if type == .reset { self.regs.sp = 0xFD }
+        
+        return 7
     }
     
     private func buildOperand(using addressingMode: AddressingMode) -> Operand {
@@ -491,9 +517,9 @@ class CoreProcessingUnit {
     
     private func brk(_ value: Word, _ address: Word) {
         regs.p.set(.alwaysOne | .breaks)
-        stack.pushWord(data: regs.pc &+ 1) // TODO: make sure pc is handled correctly
-        stack.pushByte(data: regs.p.value)
-        regs.pc = memory.readWord(at: InterruptAddress.nmi.rawValue)
+        self.interruptRequest = .irq
+//        stack.pushWord(data: regs.pc &+ 1) // TODO: make sure pc is handled correctly
+//        stack.pushByte(data: regs.p.value)
     }
     
     // stack
