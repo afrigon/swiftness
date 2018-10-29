@@ -56,6 +56,19 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         self.cpu.requestInterrupt(type: .reset)
     }
     
+    func reset() {
+        // reset mapper
+        // reset ram
+        self.cpu.requestInterrupt(type: .reset)
+    }
+    
+    func setInputs(to value: Byte, for player: Controller.Player = .primary) {
+        switch player {
+        case .primary: self.controller1.buttons = value
+        case .secondary: self.controller2.buttons = value
+        }
+    }
+    
     @discardableResult
     func step() -> UInt8 {
         let cpuCycle: UInt8 = self.cpu.step()
@@ -88,20 +101,13 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         self.getComponent(at: address).busWrite(data, at: address)
     }
     
-    func getComponent(at address: Word) -> BusConnectedComponent {
+    private func getComponent(at address: Word) -> BusConnectedComponent {
         switch address {
         case 0x0000..<0x2000: return self.ram
         case 0x4016: return self.controller1
         case 0x4017: return self.controller2
         case 0x6000...0xFFFF: return self.cartridge
         default: fatalError("Not implemented or invalid read/write at 0x\(address.hex())")
-        }
-    }
-    
-    func setInput(to value: Byte, for player: Controller.Player = .primary) {
-        switch player {
-        case .primary: self.controller1.buttons = value
-        case .secondary: self.controller2.buttons = value
         }
     }
 }

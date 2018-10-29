@@ -4,8 +4,19 @@
 //
 
 enum MapperType: Byte {
+    case nrom = 0
     case mmc1 = 1
+    case unrom = 2
+    case cnrom = 3
     case mmc3 = 4
+    case mmc5 = 5
+    case ffef4 = 6
+    case aorom = 7
+    case ffef3 = 8
+    case mmc2 = 9
+    case mmc4 = 10
+    case colordream = 11
+    case ffef6 = 12
 }
 
 protocol MapperDelegate {
@@ -22,6 +33,8 @@ class MapperFactory {
         switch type {
         case .mmc1: return MemoryManagmentController1()
         case .mmc3: return MemoryManagmentController3()
+        default:
+            fatalError("Mapper (\(String(describing: type).uppercased())) is not implemented")
         }
     }
 }

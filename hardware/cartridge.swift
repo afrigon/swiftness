@@ -23,9 +23,7 @@
 //
 
 enum ScreenMirroring {
-    case vertical
-    case horizontal
-    case quad
+    case vertical, horizontal, quad
 }
 
 enum CartridgeRegion {
@@ -61,6 +59,14 @@ class Cartridge: GuardStatus, BusConnectedComponent, MapperDelegate {
         self.mapper = MapperFactory.create(mapperType)
         self.mapper.delegate = self
     }
+    
+    private func validate(_ region: CartridgeRegion, contains address: Word) -> Bool {
+        switch region {
+        case .prg: return (0..<self.programRom.count).contains(Int(address))
+        case .chr: return (0..<self.characterRom.count).contains(Int(address))
+        case .sram: return (0..<self.saveRam.count).contains(Int(address))
+        }
+    }
 
     // actions from the bus delivered to the mapper
     func busRead(at address: Word) -> Byte {
@@ -95,14 +101,6 @@ class Cartridge: GuardStatus, BusConnectedComponent, MapperDelegate {
         case .prg: self.programRom[address] = data
         case .chr: self.characterRom[address] = data
         case .sram: self.saveRam[address] = data
-        }
-    }
-    
-    func validate(_ region: CartridgeRegion, contains address: Word) -> Bool {
-        switch region {
-        case .prg: return (0..<self.programRom.count).contains(Int(address))
-        case .chr: return (0..<self.characterRom.count).contains(Int(address))
-        case .sram: return (0..<self.saveRam.count).contains(Int(address))
         }
     }
 }

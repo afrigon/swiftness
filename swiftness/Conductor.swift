@@ -63,7 +63,7 @@ class Conductor: GuardStatus {
     }
     
     private func processInput() {
-        self.nes.setInput(to: self.inputManager.buttons, for: .primary)
+        self.nes.setInputs(to: self.inputManager.buttons, for: .primary)
     }
     
     private func update(_ deltaTime: Double) {
