@@ -23,7 +23,11 @@
 //
 
 class MemoryManagmentController3: Mapper {
-    var delegate: MapperDelegate?
+    var delegate: MapperDelegate
+    
+    required init(_ delegate: MapperDelegate) {
+        self.delegate = delegate
+    }
     
     func busRead(at address: Word) -> Byte {
         return 0x00

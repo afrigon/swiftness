@@ -34,17 +34,17 @@ class Cartridge: GuardStatus, BusConnectedComponent, MapperDelegate {
     private let mirroring: ScreenMirroring
     private let battery: Bool
     private let mapperType: MapperType
-    private var mapper: Mapper
+    private var mapper: Mapper!
     
     private var programRom: [Byte]
     private var characterRom: [Byte]
-    private var saveRam = [Byte](repeating: 0x00, count: 0x2000)
+    private var saveRam = [Byte](repeating: 0x00, count: 0x2000)    // should probably be assigned only when supported by the mapper ?
     
     var status: String {
         return """
         |-------- ROM --------|
-         PRG:  \(self.programRom.count / 16384)KB   CHR: \(self.characterRom.count / 8192)KB
-         SRAM: \(self.saveRam.count / 8192)KB   Battery: \(self.battery)
+         PRG:  \(self.programRom.count / 1024)KB   CHR: \(self.characterRom.count / 1024)KB
+         SRAM: \(self.saveRam.count / 1024)KB   Battery: \(self.battery)
          Mirroring:  \(String(describing: self.mirroring).capitalized)
          Mapper:     \(String(describing: self.mapperType).uppercased())
         """
@@ -56,8 +56,7 @@ class Cartridge: GuardStatus, BusConnectedComponent, MapperDelegate {
         self.mirroring = mirroring
         self.battery = battery
         self.mapperType = mapperType
-        self.mapper = MapperFactory.create(mapperType)
-        self.mapper.delegate = self
+        self.mapper = MapperFactory.create(mapperType, withDelegate: self)
     }
     
     private func validate(_ region: CartridgeRegion, contains address: Word) -> Bool {
@@ -75,6 +74,10 @@ class Cartridge: GuardStatus, BusConnectedComponent, MapperDelegate {
     
     func busWrite(_ data: Byte, at address: Word) {
         self.mapper.busWrite(data, at: address)
+    }
+    
+    func programBankCount(for mapper: Mapper) -> UInt8 {
+        return UInt8(UInt16(self.programRom.count) / 0x4000)    // Assuming 0x4000 sized banks
     }
     
     // actions from the mapper

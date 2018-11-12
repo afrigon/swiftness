@@ -22,17 +22,19 @@ enum MapperType: Byte {
 protocol MapperDelegate {
     func mapper(mapper: Mapper, didReadAt address: Word, of region: CartridgeRegion) -> Byte
     func mapper(mapper: Mapper, didWriteAt address: Word, of region: CartridgeRegion, data: Byte)
+    func programBankCount(for mapper: Mapper) -> UInt8
 }
 
 protocol Mapper: BusConnectedComponent {
-    var delegate: MapperDelegate? { get set }
+    var delegate: MapperDelegate { get set }
+    init(_ delegate: MapperDelegate)
 }
 
 class MapperFactory {
-    static func create(_ type: MapperType) -> Mapper {
+    static func create(_ type: MapperType, withDelegate delegate: MapperDelegate) -> Mapper {
         switch type {
-        case .mmc1: return MemoryManagmentController1()
-        case .mmc3: return MemoryManagmentController3()
+        case .mmc1: return MemoryManagmentController1(delegate)
+        case .mmc3: return MemoryManagmentController3(delegate)
         default:
             fatalError("Mapper (\(String(describing: type).uppercased())) is not implemented")
         }

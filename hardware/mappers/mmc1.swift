@@ -22,14 +22,74 @@
 //    SOFTWARE.
 //
 
+fileprivate enum RegisterType { case control, prgBank, chrBank0, chrBank1 }
+
+fileprivate class Registers {
+    private var shiftRegister: Byte = 0b10000
+    private var controlRegister: Byte = 0
+    private var prgBankRegister: Byte = 0
+    private var chrBankRegister0: Byte = 0
+    private var chrBankRegister1: Byte = 0
+    
+    fileprivate func write(_ data: Byte, to register: RegisterType) {
+        guard !Bool(data & 0b10000000) else {
+            self.shiftRegister = 0b10000
+            self.controlRegister |= Byte(0b1100)
+            return
+        }
+        
+        let shouldPush = Bool(self.shiftRegister & 1)
+        self.shiftRegister = (self.shiftRegister >> 1) | ((data & 1) << 4)
+        
+        if shouldPush {
+            switch register {
+            case .control: self.controlRegister = self.shiftRegister
+            case .prgBank: self.prgBankRegister = self.shiftRegister
+            case .chrBank0: self.chrBankRegister0 = self.shiftRegister
+            case .chrBank1: self.chrBankRegister1 = self.shiftRegister
+            }
+            self.shiftRegister = 0b10000
+        }
+    }
+}
+
 class MemoryManagmentController1: Mapper {
-    var delegate: MapperDelegate?
+    var delegate: MapperDelegate
+    
+    private let bankSize: Word = 0x4000
+    private var lowerPrgIndex: UInt8 = 0
+    private var higherPrgIndex: UInt8 = 1
+    
+    private var registers = Registers()
+    
+    required init(_ delegate: MapperDelegate) {
+        self.delegate = delegate
+        self.higherPrgIndex = self.delegate.programBankCount(for: self)
+    }
     
     func busRead(at address: Word) -> Byte {
-        return 0x00
+        // missing ppu reads
+        switch address {
+        case 0x6000..<0x8000:
+            return delegate.mapper(mapper: self, didReadAt: address - 0x6000, of: .sram)
+        case 0x8000..<0xC000:
+            let address: Word = address - 0x8000 + self.lowerPrgIndex.asWord() * self.bankSize
+            return delegate.mapper(mapper: self, didReadAt: address, of: .prg)
+        case 0xC000...0xFFFF:
+            let address: Word = address - 0xC000 + self.higherPrgIndex.asWord() * self.bankSize
+            return delegate.mapper(mapper: self, didReadAt: address, of: .prg)
+        default: return 0x00
+        }
     }
     
     func busWrite(_ data: Byte, at address: Word) {
-        
+        switch address {
+        case 0x6000..<0x8000: delegate.mapper(mapper: self, didWriteAt: address, of: .sram, data: data)
+        case 0x8000..<0xA000: self.registers.write(data, to: .control)
+        case 0xA000..<0xC000: self.registers.write(data, to: .chrBank0)
+        case 0xC000..<0xE000: self.registers.write(data, to: .chrBank1)
+        case 0xE000...0xFFFF: self.registers.write(data, to: .prgBank)
+        default: return
+        }
     }
 }

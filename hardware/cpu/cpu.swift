@@ -78,7 +78,7 @@ struct RegisterSet {
     var a: AccumulatorRegister      = 0x00
     var x: XIndexRegister           = 0x00
     var y: YIndexRegister           = 0x00
-    var p: ProcessorStatusRegister  = ProcessorStatusRegister(0x34)
+    var p: ProcessorStatusRegister  = ProcessorStatusRegister(Flag.alwaysOne.rawValue)
     var sp: StackPointerRegister    = 0xFD
     var pc: ProgramCounterRegister  = 0x0000
     
@@ -518,8 +518,8 @@ class CoreProcessingUnit {
     private func brk(_ value: Word, _ address: Word) {
         regs.p.set(.alwaysOne | .breaks)
         self.interruptRequest = .irq
-//        stack.pushWord(data: regs.pc &+ 1) // TODO: make sure pc is handled correctly
-//        stack.pushByte(data: regs.p.value)
+        stack.pushWord(data: regs.pc &+ 1) // TODO: make sure pc is handled correctly
+        stack.pushByte(data: regs.p.value)
     }
     
     // stack
@@ -529,7 +529,11 @@ class CoreProcessingUnit {
     private func plp(_ value: Word, _ address: Word) { regs.p &= stack.popByte() & ~Flag.breaks.rawValue | Flag.alwaysOne.rawValue }
     
     // loading
-    private func load(_ a: inout Byte, _ operand: Word) { a = operand.rightByte(); regs.p.updateFor(a) }
+    private func load(_ a: inout Byte, _ operand: Word) {
+        let value = operand.rightByte()
+        a = value
+        regs.p.updateFor(value)
+    }
     private func lda(_ value: Word, _ address: Word) { self.load(&regs.a, value) }
     private func ldx(_ value: Word, _ address: Word) { self.load(&regs.x, value) }
     private func ldy(_ value: Word, _ address: Word) { self.load(&regs.y, value) }

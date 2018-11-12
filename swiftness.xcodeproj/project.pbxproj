@@ -712,6 +712,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swiftness-osx";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ENFORCE_EXCLUSIVE_ACCESS = none;
 				SWIFT_VERSION = 4.2;
 			};
 			name = Debug;
@@ -731,6 +732,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swiftness-osx";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ENFORCE_EXCLUSIVE_ACCESS = none;
 				SWIFT_VERSION = 4.2;
 			};
 			name = Release;
