@@ -24,6 +24,22 @@
 
 import Cocoa
 
+func printUsage() {
+    print("usage: swiftness rom-path")
+}
+
+if CommandLine.arguments.count <= 1 ||
+    CommandLine.arguments.contains(where: { (n) -> Bool in
+        return ["-h", "--help", "-help", "help"].contains(n)
+    }) {
+    printUsage()
+    exit(0)
+}
+
+if CommandLine.arguments.contains("-t") {
+    exit(0)
+}
+
 let delegate = AppDelegate()
 NSApplication.shared.delegate = delegate
 let app = NSApplicationMain(CommandLine.argc, CommandLine.unsafeArgv)

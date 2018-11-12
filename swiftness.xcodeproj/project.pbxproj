@@ -17,7 +17,6 @@
 		FE53C80621822458002BD71F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C80521822458002BD71F /* ViewController.swift */; };
 		FE53C808218224C5002BD71F /* MetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C807218224C5002BD71F /* MetalRenderer.swift */; };
 		FE53C80A218225C4002BD71F /* CVDisplayLinkLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C809218225C4002BD71F /* CVDisplayLinkLoop.swift */; };
-		FE53C80B21822B19002BD71F /* MetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C807218224C5002BD71F /* MetalRenderer.swift */; };
 		FE53C80D21823094002BD71F /* GuardStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C80C21823094002BD71F /* GuardStatus.swift */; };
 		FE53C80F21823FB1002BD71F /* apu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C80E21823FB1002BD71F /* apu.swift */; };
 		FE53C810218245F0002BD71F /* Shader.metal in Sources */ = {isa = PBXBuildFile; fileRef = FEA2742F218085510072530A /* Shader.metal */; };
@@ -509,7 +508,6 @@
 				FE53C8642183FE00002BD71F /* LogicLoop.swift in Sources */,
 				FEBA1F3F21820D610044DC8B /* AppDelegate.swift in Sources */,
 				FE53C85B2183FDF7002BD71F /* apu.swift in Sources */,
-				FE53C80B21822B19002BD71F /* MetalRenderer.swift in Sources */,
 				FE53C8632183FE00002BD71F /* Renderer.swift in Sources */,
 				FE3F925721859C260000B574 /* mmc3.swift in Sources */,
 				FE53C83E2183FADC002BD71F /* addressing.swift in Sources */,

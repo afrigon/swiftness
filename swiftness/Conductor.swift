@@ -30,7 +30,6 @@ class Conductor: GuardStatus {
     private let renderer: Renderer
     private let loop: LogicLoop
     private let inputManager: InputManager
-    private let filepath: String = "/Users/frigon/.nes/roms/zelda.nes"
 
     var status: String {
         return """
@@ -41,12 +40,12 @@ class Conductor: GuardStatus {
         """
     }
     
-    init(with renderer: Renderer, drivenBy loop: LogicLoop, interactingWith inputManager: InputManager) {
+    init(load filepath: String, with renderer: Renderer, drivenBy loop: LogicLoop, interactingWith inputManager: InputManager) {
         self.renderer = renderer
         self.loop = loop
         self.inputManager = inputManager
         
-        let game: Cartridge = iNesFile.load(path: self.filepath)
+        let game: Cartridge = iNesFile.load(path: filepath)
         // * blows a bit into the cardridge *
         self.nes = NintendoEntertainmentSystem(load: game)
         
