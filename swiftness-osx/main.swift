@@ -28,14 +28,14 @@ func printUsage() {
     print("usage: swiftness rom-path")
 }
 
-if CommandLine.arguments.count <= 1 ||
+if CommandLine.arguments.count <= 3 ||
     CommandLine.arguments.contains(where: { (n) -> Bool in
         return ["-h", "--help", "-help", "help"].contains(n)
     }) {
     printUsage()
     exit(0)
 }
-
+print(CommandLine.arguments)
 if CommandLine.arguments.contains("-t") {
     exit(0)
 }

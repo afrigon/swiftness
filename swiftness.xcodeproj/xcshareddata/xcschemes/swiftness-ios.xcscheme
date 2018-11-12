@@ -29,12 +29,6 @@
       shouldUseLaunchSchemeArgsEnv = "NO">
       <Testables>
       </Testables>
-      <CommandLineArguments>
-         <CommandLineArgument
-            argument = "-t"
-            isEnabled = "YES">
-         </CommandLineArgument>
-      </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
    </TestAction>

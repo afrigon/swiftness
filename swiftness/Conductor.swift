@@ -30,6 +30,7 @@ class Conductor: GuardStatus {
     private let renderer: Renderer
     private let loop: LogicLoop
     private let inputManager: InputManager
+    private let filepath: String
 
     var status: String {
         return """
@@ -41,11 +42,12 @@ class Conductor: GuardStatus {
     }
     
     init(load filepath: String, with renderer: Renderer, drivenBy loop: LogicLoop, interactingWith inputManager: InputManager) {
+        self.filepath = filepath
         self.renderer = renderer
         self.loop = loop
         self.inputManager = inputManager
         
-        let game: Cartridge = iNesFile.load(path: filepath)
+        let game: Cartridge = iNesFile.load(path: self.filepath)
         // * blows a bit into the cardridge *
         self.nes = NintendoEntertainmentSystem(load: game)
         
