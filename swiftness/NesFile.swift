@@ -35,7 +35,7 @@ fileprivate struct Header {
     static var size: Int = 16
 }
 
-class iNesFile {
+class NesFile {
     static let filetypeValue: DWord = 0x4E45531A    // NES^
 
     static func load(path: String) -> Cartridge {
@@ -45,7 +45,7 @@ class iNesFile {
 
         var header: Header = Header()
         data.getBytes(&header, length: Header.size)
-        iNesFile.validateFormat(header)
+        NesFile.validateFormat(header)
 
         let battery = Bool(header.control1 & 0b10)
         let mirroring: ScreenMirroring = !Bool(header.control1 & 0b1000)
@@ -75,7 +75,7 @@ class iNesFile {
     }
 
     private static func validateFormat(_ header: Header) {
-        guard iNesFile.filetypeValue == DWord(bigEndian: header.filetype) else {
+        guard NesFile.filetypeValue == DWord(bigEndian: header.filetype) else {
             fatalError("File is not .nes format")
         }
     }

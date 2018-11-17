@@ -51,7 +51,7 @@ class Conductor: GuardStatus {
             return
         }
 
-        let game: Cartridge = iNesFile.load(path: filepath)
+        let game: Cartridge = NesFile.load(path: filepath)
         // * blows a bit into the cardridge *
         self.nes = NintendoEntertainmentSystem(load: game)
         
