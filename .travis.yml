@@ -1,4 +1,5 @@
 language: swift
 script:
-  - xctool -project swiftness.xcodeproj -scheme swiftness-osx-tests -destination platform\=macOS build test
+  - xcodebuild -project swiftness.xcodeproj -scheme swiftness-osx-tests -destination platform\=macOS build
+  - xctool -project swiftness.xcodeproj -scheme swiftness-osx-tests -destination platform\=macOS test
 
