@@ -154,13 +154,14 @@ class CoreProcessingUnitTests: XCTestCase {
 //        let expectedRegisters = RegisterSet(a: Byte(0x10), x: Byte(0x20), y: Byte(0x30), p: ProcessorStatusRegister(0x34), sp: Byte(0xFD), pc: Word(0x1234))
 //        self.assertRegister(equal: expectedRegisters)
 //    }
-//
-//    func test_and() {
-//        self.cpu.process(opcode: 0x00, operand: Operand(value: Word(0), address: Word(0)))
-//        let expectedRegisters = RegisterSet(a: Byte(0x10), x: Byte(0x20), y: Byte(0x30), p: ProcessorStatusRegister(0x34), sp: Byte(0xFD), pc: Word(0x1234))
-//        self.assertRegister(equal: expectedRegisters)
-//    }
-//
+
+    func test_and() {
+        let cpu = self.generateCPU(a: 0b11101111)
+        let expected = self.generateRegs(a: 0b10001001, flags: 0b10100000)
+        cpu.process(opcode: 0x29, operand: Operand(value: 0b10011001, address: 0))
+        self.assertRegister(equal: expected, with: cpu.registers)
+    }
+
 //    func test_eor() {
 //        self.cpu.process(opcode: 0x00, operand: Operand(value: Word(0), address: Word(0)))
 //        let expectedRegisters = RegisterSet(a: Byte(0x10), x: Byte(0x20), y: Byte(0x30), p: ProcessorStatusRegister(0x34), sp: Byte(0xFD), pc: Word(0x1234))
