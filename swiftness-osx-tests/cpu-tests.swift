@@ -26,11 +26,22 @@ import XCTest
 @testable import swiftness_osx
 
 class CoreProcessingUnitTests: XCTestCase {
-    private func generateRegs(a: Byte? = nil, x: Byte? = nil, y: Byte? = nil, flags: Byte = 0) -> RegisterSet {
-        return RegisterSet(a: a ?? 0x10, x: x ?? 0x20, y: y ?? 0x30, p: ProcessorStatusRegister(flags | Flag.alwaysOne.rawValue), sp: 0xFD, pc: 0x1234)
+    private func generateRegs(a: Byte? = nil,
+                              x: Byte? = nil,
+                              y: Byte? = nil,
+                              flags: Byte = 0) -> RegisterSet {
+        return RegisterSet(a: a ?? 0x10,
+                           x: x ?? 0x20,
+                           y: y ?? 0x30,
+                           p: ProcessorStatusRegister(flags | Flag.alwaysOne.rawValue),
+                           sp: 0xFD,
+                           pc: 0x1234)
     }
 
-    private func generateCPU(a: Byte? = nil, x: Byte? = nil, y: Byte? = nil, flags: Byte = 0) -> CoreProcessingUnit {
+    private func generateCPU(a: Byte? = nil,
+                             x: Byte? = nil,
+                             y: Byte? = nil,
+                             flags: Byte = 0) -> CoreProcessingUnit {
         let regs = self.generateRegs(a: a, x: x, y: y, flags: flags)
         let cpu = CoreProcessingUnit(using: Bus.testsInstance(), with: regs)
         return cpu

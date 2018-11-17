@@ -521,7 +521,7 @@ class CoreProcessingUnit {
     private func brk(_ value: Word, _ address: Word) {
         regs.p.set(.alwaysOne | .breaks)
         self.interruptRequest = .irq
-        stack.pushWord(data: regs.pc &+ 1) // TODO: make sure pc is handled correctly
+        stack.pushWord(data: regs.pc &+ 1) // make sure pc is handled correctly
         stack.pushByte(data: regs.p.value)
     }
 
