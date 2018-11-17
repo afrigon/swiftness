@@ -44,7 +44,10 @@ class ViewController: NSViewController, LogicLoopDelegate {
     override func viewDidLayout() {
         super.viewDidLayout()
         self.renderer?.layer.frame = self.view.frame
-        self.overlay.frame = CGRect(x: 10, y: 5, width: self.view.layer!.frame.width - 20, height: self.view.layer!.frame.height - 10)
+        self.overlay.frame = CGRect(x: 10,
+                                    y: 5,
+                                    width: self.view.layer!.frame.width - 20,
+                                    height: self.view.layer!.frame.height - 10)
     }
 
     override func viewDidLoad() {
@@ -53,7 +56,10 @@ class ViewController: NSViewController, LogicLoopDelegate {
         }
 
         let options: StartupOptions = appDelegate.options
-        self.conductor = Conductor(use: options, with: renderer, drivenBy: self.loop, interactingWith: self.inputResponder)
+        self.conductor = Conductor(use: options,
+                                   with: renderer,
+                                   drivenBy: self.loop,
+                                   interactingWith: self.inputResponder)
         self.inputResponder.add(closure: self.toggleOverlay, forKey: 99)    // F3
         self.inputResponder.add(closure: self.step, forKey: 100)    // F8
         self.loop.delegate = self

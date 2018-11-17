@@ -31,7 +31,7 @@ class CVDisplayLinkLoop: LogicLoop {
 
     private var currentTime: Double = CACurrentMediaTime()
     private var fps: UInt32 = 0
-    private var closure: ((Double) -> ())?
+    private var closure: ((Double) -> Void)?
 
     var delegate: LogicLoopDelegate?
 
@@ -97,7 +97,7 @@ class CVDisplayLinkLoop: LogicLoop {
         }
     }
 
-    func start(closure: @escaping (Double) -> ()) {
+    func start(closure: @escaping (Double) -> Void) {
         self.closure = closure
         CVDisplayLinkStart(self.timer)
         self.source.resume()

@@ -30,11 +30,11 @@ enum RunMode {
 
 class StartupOptions {
     var mode: RunMode = .normal
-    var filepath: String? = nil
+    var filepath: String?
 
     static func parse(_ arguments: [String]) -> StartupOptions? {
         let options = StartupOptions()
-        var temp: String? = nil
+        var temp: String?
 
         for argument in arguments {
             switch argument {

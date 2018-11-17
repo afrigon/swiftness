@@ -36,10 +36,10 @@ class InputResponder: NSResponder, InputManager {
         46: .start,
         45: .select
     ]
-    var closures = [UInt16: () -> ()]()
+    var closures = [UInt16: () -> Void]()
     var buttons: Byte = 0
 
-    func add(closure: @escaping () -> (), forKey key: UInt16) {
+    func add(closure: @escaping () -> Void, forKey key: UInt16) {
         self.closures[key] = closure
     }
 

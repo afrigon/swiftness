@@ -31,7 +31,7 @@ class Conductor: GuardStatus {
     private let loop: LogicLoop
     private let inputManager: InputManager
     private let options: StartupOptions
-    
+
     var status: String {
         return """
         |------ General ------|
@@ -41,7 +41,10 @@ class Conductor: GuardStatus {
         """
     }
 
-    init(use options: StartupOptions, with renderer: Renderer, drivenBy loop: LogicLoop, interactingWith inputManager: InputManager) {
+    init(use options: StartupOptions,
+         with renderer: Renderer,
+         drivenBy loop: LogicLoop,
+         interactingWith inputManager: InputManager) {
         self.options = options
         self.renderer = renderer
         self.loop = loop
@@ -54,7 +57,7 @@ class Conductor: GuardStatus {
         let game: Cartridge = NesFile.load(path: filepath)
         // * blows a bit into the cardridge *
         self.nes = NintendoEntertainmentSystem(load: game)
-        
+
         self.loop.start(closure: self.loopClosure)
     }
 

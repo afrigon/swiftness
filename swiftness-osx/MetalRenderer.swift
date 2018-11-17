@@ -82,7 +82,9 @@ class MetalRenderer: Renderer {
     private func createQuadBuffer() {
         let vertexArrayObject: [Vertex] = Vertex.quad
 
-        guard let buffer = self.device.makeBuffer(bytes: vertexArrayObject, length: Vertex.size * vertexArrayObject.count, options: [.storageModeShared]) else {
+        guard let buffer = self.device.makeBuffer(bytes: vertexArrayObject,
+                                                  length: Vertex.size * vertexArrayObject.count,
+                                                  options: [.storageModeShared]) else {
             fatalError("Could not create the metal renderer instance")
         }
 
@@ -146,7 +148,7 @@ class MetalRenderer: Renderer {
         self.texture = texture
     }
 
-    private func createCommandEncoder(_ renderFunction: (MTLRenderCommandEncoder) -> ()) {
+    private func createCommandEncoder(_ renderFunction: (MTLRenderCommandEncoder) -> Void) {
         guard let commandBuffer = self.commandQueue.makeCommandBuffer() else {
             print("Could not create command buffer for metal renderer")
             return
