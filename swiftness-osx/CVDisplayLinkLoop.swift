@@ -70,7 +70,7 @@ class CVDisplayLinkLoop: LogicLoop {
     }
 
     private func createCallback(_ timer: CVDisplayLink) {
-        let result = CVDisplayLinkSetOutputCallback(timer, { timer, currentTime, outputTime, _, _, sourceUnsafeRaw in
+        let result = CVDisplayLinkSetOutputCallback(timer, { _, _, _, _, _, sourceUnsafeRaw in
             if let sourceUnsafeRaw = sourceUnsafeRaw {
                 let sourceUnmanaged = Unmanaged<DispatchSourceUserDataAdd>.fromOpaque(sourceUnsafeRaw)
                 sourceUnmanaged.takeUnretainedValue().add(data: 1)
@@ -90,7 +90,7 @@ class CVDisplayLinkLoop: LogicLoop {
         let deltaTime = newTime - self.currentTime
         self.currentTime = newTime
         self.fps = UInt32(1 / deltaTime)
-        
+
         if let closure = self.closure {
             closure(deltaTime)
             self.delegate?.logicLoop(loop: self, didExecuteCallback: deltaTime)

@@ -48,11 +48,11 @@ class ViewController: NSViewController, LogicLoopDelegate {
     }
 
     override func viewDidLoad() {
-        guard let renderer = self.renderer else {
+        guard let renderer = self.renderer, let appDelegate = NSApplication.shared.delegate as? AppDelegate else {
             return
         }
 
-        let options: StartupOptions = (NSApplication.shared.delegate as! AppDelegate).options
+        let options: StartupOptions = appDelegate.options
         self.conductor = Conductor(use: options, with: renderer, drivenBy: self.loop, interactingWith: self.inputResponder)
         self.inputResponder.add(closure: self.toggleOverlay, forKey: 99)    // F3
         self.inputResponder.add(closure: self.step, forKey: 100)    // F8

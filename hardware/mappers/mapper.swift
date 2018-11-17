@@ -19,7 +19,7 @@ enum MapperType: Byte {
     case ffef6 = 12
 }
 
-protocol MapperDelegate {
+protocol MapperDelegate: AnyObject {
     func mapper(mapper: Mapper, didReadAt address: Word, of region: CartridgeRegion) -> Byte
     func mapper(mapper: Mapper, didWriteAt address: Word, of region: CartridgeRegion, data: Byte)
     func programBankCount(for mapper: Mapper) -> UInt8

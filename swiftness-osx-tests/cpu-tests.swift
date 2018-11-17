@@ -89,7 +89,6 @@ class CoreProcessingUnitTests: XCTestCase {
         cpu.process(opcode: 0xC8)
         self.assertRegister(equal: expected, with: cpu.registers)
     }
-    
 
     func test_dex() {
         var cpu = self.generateCPU()

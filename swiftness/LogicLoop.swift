@@ -24,9 +24,9 @@
 
 protocol LogicLoop: GuardStatus {
     var delegate: LogicLoopDelegate? { get set }
-    func start(closure: @escaping (Double) -> ())
+    func start(closure: @escaping (Double) -> Void)
 }
 
-protocol LogicLoopDelegate {
+protocol LogicLoopDelegate: AnyObject {
     func logicLoop(loop: LogicLoop, didExecuteCallback deltaTime: Double)
 }

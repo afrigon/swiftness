@@ -30,7 +30,7 @@ class Color {
 
     init(_ value: UInt32) {
         // no alpha (0x123456)
-        if (value.leadingZeroBitCount >= 8) {
+        if value.leadingZeroBitCount >= 8 {
             self.red = UInt8(value & 0xFF0000 >> 16)
             self.green = UInt8(value & 0xFF00 >> 8)
             self.blue = UInt8(value & 0xFF)

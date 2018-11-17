@@ -58,7 +58,7 @@ class Bus {
     }
 }
 
-protocol BusDelegate {
+protocol BusDelegate: AnyObject {
     func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte
     func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte)
 }
