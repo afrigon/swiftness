@@ -25,8 +25,14 @@
 import Cocoa
 
 let arguments = Array(CommandLine.arguments.dropFirst())
-guard let options: StartupOptions = StartupOptions.parse(arguments) else {
+guard var options: StartupOptions = StartupOptions.parse(arguments) else {
     exit(0)
+}
+
+// options injection for debuging
+if options.mode != .test {
+    options.filepath = "/Users/frigon/.nes/roms/zelda.nes"
+    options.mode = .debug
 }
 
 let delegate = AppDelegate(options)
