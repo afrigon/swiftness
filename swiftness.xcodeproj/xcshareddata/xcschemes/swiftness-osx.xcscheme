@@ -48,12 +48,6 @@
             ReferencedContainer = "container:swiftness.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
-      <CommandLineArguments>
-         <CommandLineArgument
-            argument = "-t"
-            isEnabled = "YES">
-         </CommandLineArgument>
-      </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
    </TestAction>

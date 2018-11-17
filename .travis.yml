@@ -1,6 +1,6 @@
 osx_image: xcode10.1
 language: swift
-script:
-  - xcodebuild -project swiftness.xcodeproj -scheme swiftness-osx-tests -destination platform\=macOS clean build-for-testing
-  - xctool -project swiftness.xcodeproj -scheme swiftness-osx-tests -destination platform\=macOS run-tests
+xcode_scheme: swiftness-osx-tests
+xcode_project: swiftness.xcodeproj
+xcode_destination: platform=macOS
 

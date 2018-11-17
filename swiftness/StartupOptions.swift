@@ -39,7 +39,6 @@ class StartupOptions {
         for argument in arguments {
             switch argument {
             case "-h", "--help", "-help", "help": StartupOptions.printUsage(); return nil
-            case "-t", "--test": options.mode = .test
             case "-d", "--debug": options.mode = .debug
             default:
                 if argument.hasPrefix("-") {

@@ -59,22 +59,18 @@ class MetalRenderer: Renderer {
     private let shaderName = "textured"
     let layer = CAMetalLayer()
     
-    init() {
-        self.createDevice()
+    init?() {
+        guard let device = MTLCreateSystemDefaultDevice() else {
+            return nil
+        }
+        
+        self.device = device
         self.configureLayer()
         self.createQuadBuffer()
         self.compileShaderPipeline()
         self.createCommandQueue()
         self.createSamplerState()
         self.configureTextureDescriptor()
-    }
-    
-    private func createDevice() {
-        guard let device = MTLCreateSystemDefaultDevice() else {
-            fatalError("Metal not supported on this device")
-        }
-        
-        self.device = device
     }
     
     private func configureLayer() {
