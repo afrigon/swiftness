@@ -37,16 +37,16 @@ fileprivate struct Header {
 
 class iNesFile {
     static let filetypeValue: DWord = 0x4E45531A    // NES^
-    
+
     static func load(path: String) -> Cartridge {
         guard let data: NSData = NSData(contentsOfFile: path) else {
             fatalError("Could not open file at: \(path)")
         }
-        
+
         var header: Header = Header()
         data.getBytes(&header, length: Header.size)
         iNesFile.validateFormat(header)
-        
+
         let battery = Bool(header.control1 & 0b10)
         let mirroring: ScreenMirroring = !Bool(header.control1 & 0b1000)
             ? (Bool(header.control1 & 1)
@@ -57,23 +57,23 @@ class iNesFile {
         guard let mapperType = MapperType(rawValue: mapperNumber) else {
             fatalError("Mapper (\(mapperNumber)) is not implemented")
         }
-        
+
         let trainerSize = Bool(header.control1 & 0b100) ? 512 : 0
         let prgSize = Int(header.prgSize) * 16384
         let prgRange: NSRange = NSMakeRange(Header.size + trainerSize, prgSize)
         var prg = [Byte](repeating: 0x00, count: prgSize)
         data.getBytes(&prg, range: prgRange)
-        
+
         let chrSize = Bool(header.chrSize) ? Int(header.chrSize) * 8192 : 8192
         var chr = [Byte](repeating: 0x00, count: chrSize)
         if Bool(header.chrSize) {
             let chrRange: NSRange = NSMakeRange(Header.size + trainerSize + prgSize, chrSize)
             data.getBytes(&chr, range: chrRange)
         }
-        
+
         return Cartridge(prg: prg, chr: chr, mapperType: mapperType, mirroring: mirroring, battery: battery)
     }
-    
+
     private static func validateFormat(_ header: Header) {
         guard iNesFile.filetypeValue == DWord(bigEndian: header.filetype) else {
             fatalError("File is not .nes format")

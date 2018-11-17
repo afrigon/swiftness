@@ -28,7 +28,7 @@ class Controller: BusConnectedComponent, GuardStatus {
     private var strobe: Byte = 0
     private var index: Byte = 1
     var buttons: Byte = 0
-    
+
     enum Button: Byte {
         case a = 1
         case b = 2
@@ -39,36 +39,36 @@ class Controller: BusConnectedComponent, GuardStatus {
         case select = 64
         case start = 128
     }
-    
+
     enum Player: UInt8 {
         case primary = 1, secondary = 2
     }
-    
+
     var status: String {
         var buttonString = ""
         for i in 0..<8 {
             buttonString += " \(String(describing: Button(rawValue: 1 << i)!))"
             buttonString += ": \(Bool(self.buttons & 1 << i))\n"
         }
-        
+
         return """
         |------ Input \(self.player.rawValue) ------|
         \(buttonString)
         """
     }
-    
+
     init(_ player: Player = .primary) {
         self.player = player
     }
-    
+
     func busRead(at address: Word) -> Byte {
         defer {
             self.index = self.strobe.isLeastSignificantBitOn() ? 1 : self.index << 1
         }
-        
+
         return self.buttons & self.index
     }
-    
+
     func busWrite(_ data: Byte, at address: Word) {
         if data.isLeastSignificantBitOn() {
             self.index = 1

@@ -28,8 +28,8 @@ class AudioProcessingUnit: GuardStatus {
         |-------- APU --------|
         """
     }
-    
+
     func step() {
-        
+
     }
 }

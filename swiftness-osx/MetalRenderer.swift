@@ -46,24 +46,24 @@ class MetalRenderer: Renderer {
     private var device: MTLDevice! = nil
     private var pipelineState: MTLRenderPipelineState! = nil
     private var commandQueue: MTLCommandQueue! = nil
-    
+
     private var vertexBufferObject: MTLBuffer! = nil
     private var samplerState: MTLSamplerState! = nil
     private var textureDescriptor: MTLTextureDescriptor! = nil
     private var textureRegion: MTLRegion! = nil
     private var texture: MTLTexture! = nil
     private var textureSize: Int = 2048
-    
+
     private let clearColor = MTLClearColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)
     private let pixelFormat: MTLPixelFormat = .bgra8Unorm
     private let shaderName = "textured"
     let layer = CAMetalLayer()
-    
+
     init?() {
         guard let device = MTLCreateSystemDefaultDevice() else {
             return nil
         }
-        
+
         self.device = device
         self.configureLayer()
         self.createQuadBuffer()
@@ -72,48 +72,48 @@ class MetalRenderer: Renderer {
         self.createSamplerState()
         self.configureTextureDescriptor()
     }
-    
+
     private func configureLayer() {
         self.layer.device = self.device
         self.layer.pixelFormat = self.pixelFormat
         self.layer.framebufferOnly = true
     }
-    
+
     private func createQuadBuffer() {
         let vertexArrayObject: [Vertex] = Vertex.quad
-        
+
         guard let buffer = self.device.makeBuffer(bytes: vertexArrayObject, length: Vertex.size * vertexArrayObject.count, options: [.storageModeShared]) else {
             fatalError("Could not create the metal renderer instance")
         }
-        
+
         self.vertexBufferObject = buffer
     }
-    
+
     private func compileShaderPipeline() {
         let defaultLibrary = self.device.makeDefaultLibrary()
         let vertexProgram = defaultLibrary?.makeFunction(name: "\(self.shaderName)_vertex")
         let fragmentProgram = defaultLibrary?.makeFunction(name: "\(self.shaderName)_fragment")
-        
+
         let pipelineDescriptor = MTLRenderPipelineDescriptor()
         pipelineDescriptor.vertexFunction = vertexProgram
         pipelineDescriptor.fragmentFunction = fragmentProgram
         pipelineDescriptor.colorAttachments[0].pixelFormat = self.pixelFormat
-        
+
         guard let pipelineState = try? self.device.makeRenderPipelineState(descriptor: pipelineDescriptor) else {
             fatalError("Could not compile pipeline with curent configuration")
         }
-        
+
         self.pipelineState = pipelineState
     }
-    
+
     private func createCommandQueue() {
         guard let commandQueue = self.device.makeCommandQueue() else {
             fatalError("Could not create command queue for metal renderer")
         }
-        
+
         self.commandQueue = commandQueue
     }
-    
+
     private func createSamplerState() {
         let samplerDescriptor = MTLSamplerDescriptor()
         samplerDescriptor.sAddressMode = .clampToEdge
@@ -121,14 +121,14 @@ class MetalRenderer: Renderer {
         samplerDescriptor.minFilter = .nearest
         samplerDescriptor.magFilter = .linear
         samplerDescriptor.mipFilter = .linear
-        
+
         guard let samplerState = self.device.makeSamplerState(descriptor: samplerDescriptor) else {
             fatalError("Could not create sampler state for metal renderer")
         }
-        
+
         self.samplerState = samplerState
     }
-    
+
     private func configureTextureDescriptor() {
         self.textureDescriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: self.pixelFormat,
                                                                           width: self.textureSize,
@@ -138,41 +138,41 @@ class MetalRenderer: Renderer {
                                              0,
                                              self.textureSize,
                                              self.textureSize)
-        
+
         guard let texture = self.device.makeTexture(descriptor: self.textureDescriptor) else {
             fatalError("Could not create texture object for metal renderer")
         }
-        
+
         self.texture = texture
     }
-    
+
     private func createCommandEncoder(_ renderFunction: (MTLRenderCommandEncoder) -> ()) {
         guard let commandBuffer = self.commandQueue.makeCommandBuffer() else {
             print("Could not create command buffer for metal renderer")
             return
         }
-        
+
         guard let drawable = self.layer.nextDrawable() else {
             print("Could not fetch next drawable for metal renderer")
             return
         }
-        
+
         let renderPassDescriptor = MTLRenderPassDescriptor()
         renderPassDescriptor.colorAttachments[0].texture = drawable.texture
         renderPassDescriptor.colorAttachments[0].loadAction = .clear
         renderPassDescriptor.colorAttachments[0].clearColor = self.clearColor
-        
+
         guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor) else {
             print("Could not create encoder for metal renderer")
             return
         }
-        
+
         renderFunction(encoder)
-        
+
         commandBuffer.present(drawable)
         commandBuffer.commit()
     }
-    
+
     func draw(_ image: [Byte]) {
         if image.count == self.textureSize * self.textureSize {
             self.texture.replace(region: self.textureRegion,
@@ -180,14 +180,14 @@ class MetalRenderer: Renderer {
                                  withBytes: image,
                                  bytesPerRow: self.textureSize)
         }
-        
+
         self.createCommandEncoder { encoder in
             encoder.setRenderPipelineState(self.pipelineState)
-            
+
             encoder.setVertexBuffer(self.vertexBufferObject, offset: 0, index: 0)
             encoder.setFragmentTexture(self.texture, index: 0)
             encoder.setFragmentSamplerState(self.samplerState, index: 0)
-            
+
             encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6)
             encoder.endEncoding()
         }

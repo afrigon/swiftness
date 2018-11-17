@@ -36,21 +36,21 @@ protocol BusConnectedComponent {
 
 class Bus {
     var delegate: BusDelegate?
-    
+
     func readByte(at address: Word) -> Byte {
         guard let delegate = self.delegate else {
             fatalError("A bus delegate must be assign before any read or write signal is sent over the bus")
         }
         return delegate.bus(bus: self, didSendReadSignalAt: address)
     }
-    
+
     func writeByte(_ data: Byte, at address: Word) {
         guard let delegate = self.delegate else {
             fatalError("A bus delegate must be assign before any read or write signal is sent over the bus")
         }
         delegate.bus(bus: self, didSendWriteSignalAt: address, data: data)
     }
-    
+
     static func testsInstance() -> Bus {
         let bus = Bus()
         bus.delegate = TestsBusDelegate()

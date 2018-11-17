@@ -38,28 +38,28 @@ class InputResponder: NSResponder, InputManager {
     ]
     var closures = [UInt16: () -> ()]()
     var buttons: Byte = 0
-    
+
     func add(closure: @escaping () -> (), forKey key: UInt16) {
         self.closures[key] = closure
     }
-    
+
     func remove(closureForKey key: UInt16) {
         self.closures.removeValue(forKey: key)
     }
-    
+
     override func keyDown(with event: NSEvent) {
         if let button = self.buttonMap[event.keyCode] {
             self.buttons |= button.rawValue
             return
         }
-        
+
         if let closure = self.closures[event.keyCode] {
             closure()
         } else {
             print(event.keyCode)
         }
     }
-    
+
     override func keyUp(with event: NSEvent) {
         if let button = self.buttonMap[event.keyCode] {
             self.buttons &= ~button.rawValue

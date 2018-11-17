@@ -25,7 +25,7 @@
 class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     let screenWidth: UInt16 = 256
     let screenHeight: UInt16 = 240
-    
+
     private let cpu: CoreProcessingUnit
     private let ppu = PictureProcessingUnit()
     private let apu = AudioProcessingUnit()
@@ -35,9 +35,9 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     private let cartridge: Cartridge
     private let bus = Bus()
     private let frequency: Double
-    
+
     private var deficitCycles: Int64 = 0
-    
+
     var status: String {
         return """
         \(self.cpu.status)
@@ -47,7 +47,7 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         \(self.controller1.status)
         """
     }
-    
+
     init(load game: Cartridge) {
         self.cpu = CoreProcessingUnit(using: self.bus)
         self.cartridge = game
@@ -55,52 +55,52 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         self.bus.delegate = self
         self.cpu.requestInterrupt(type: .reset)
     }
-    
+
     func reset() {
         // reset mapper
         // reset ram
         self.cpu.requestInterrupt(type: .reset)
     }
-    
+
     func setInputs(to value: Byte, for player: Controller.Player = .primary) {
         switch player {
         case .primary: self.controller1.buttons = value
         case .secondary: self.controller2.buttons = value
         }
     }
-    
+
     @discardableResult
     func step() -> UInt8 {
         let cpuCycle: UInt8 = self.cpu.step()
-        
+
         for _ in 0..<cpuCycle * 3 {
             self.ppu.step()
         }
-        
+
         self.apu.step()
-        
+
         return cpuCycle
     }
-    
+
     // TODO: what to do when the emulation is running behind
     func run(for deltaTime: Double) {
         var cycles: Int64 = Int64(self.frequency * deltaTime) + self.deficitCycles
-        
+
         while cycles > 0 {
             cycles -= Int64(self.step())
         }
-        
+
         self.deficitCycles = cycles
     }
-    
+
     func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte {
         return self.getComponent(at: address).busRead(at: address)
     }
-    
+
     func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte) {
         self.getComponent(at: address).busWrite(data, at: address)
     }
-    
+
     private func getComponent(at address: Word) -> BusConnectedComponent {
         switch address {
         case 0x0000..<0x2000: return self.ram

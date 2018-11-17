@@ -31,27 +31,27 @@ typealias ProgramCounterRegister = Word
 class ProcessorStatusRegister {
     private var _value: Byte
     var value: Byte { return self._value }
-    
+
     init(_ value: Byte) { self._value = value }
     static func &= (left: inout ProcessorStatusRegister, right: Byte) { left._value = right }
     static func == (left: ProcessorStatusRegister, right: ProcessorStatusRegister) -> Bool { return left.value == right.value }
     static func != (left: ProcessorStatusRegister, right: ProcessorStatusRegister) -> Bool { return left.value != right.value }
-    
+
     func set(_ flags: Byte, if condition: Bool? = nil) {
         if let condition = condition {
             return condition ? self.set(flags) : self.unset(flags)
         }
-        
+
         self._value |= flags
     }
-    
+
     func set(_ flag: Flag, if condition: Bool? = nil) { self.set(flag.rawValue, if: condition) }
     func unset(_ flags: Byte) { self._value &= ~flags }
     func unset(_ flag: Flag) { self.unset(flag.rawValue) }
     func isSet(_ flag: Flag) -> Bool { return Bool(self.value & flag.rawValue) }
     func isNotSet(_ flag: Flag) -> Bool { return !self.isSet(flag) }
     func valueOf(_ flag: Flag) -> UInt8 { return self.isSet(flag) ? 1 : 0 }
-    
+
     func updateFor(_ value: Word) { self.updateFor(value.rightByte()) }
     func updateFor(_ value: Byte) {
         self.set(.zero, if: value.isZero())
@@ -68,7 +68,7 @@ enum Flag: UInt8 {
     case alwaysOne  = 32    // 0b00100000
     case overflow   = 64    // 0b01000000   V
     case negative   = 128   // 0b10000000   N
-    
+
     static func | (left: Flag, right: Flag) -> UInt8 { return left.rawValue | right.rawValue }
     static func & (left: Flag, right: Flag) -> UInt8 { return left.rawValue & right.rawValue }
     static prefix func ~ (value: Flag) -> UInt8 { return ~value.rawValue }
@@ -81,7 +81,7 @@ struct RegisterSet {
     var p: ProcessorStatusRegister  = ProcessorStatusRegister(Flag.alwaysOne.rawValue)
     var sp: StackPointerRegister    = 0xFD
     var pc: ProgramCounterRegister  = 0x0000
-    
+
     func isAtSamePage(than address: Word) -> Bool {
         return self.pc >> 8 != address >> 8
     }
@@ -91,7 +91,7 @@ struct Opcode {
     let closure: (Word, Word) -> Void
     let cycles: UInt8
     let addressingMode: AddressingMode
-    
+
     init(_ closure: @escaping (Word, Word) -> Void, _ cycles: UInt8, _ addressingMode: AddressingMode) {
         self.closure = closure
         self.cycles = cycles
@@ -103,7 +103,7 @@ struct Operand {
     var value: Word
     var address: Word
     var additionalCycles: UInt8
-    
+
     init(value: Word = 0x0000, address: Word = 0x0000, additionalCycles: UInt8 = 0) {
         self.value = value
         self.address = address
@@ -126,9 +126,9 @@ class CoreProcessingUnit {
     private var regs: RegisterSet
     private var opcodes: [Byte: Opcode]! = nil
     private var interruptRequest: InterruptType? = nil
-    
+
     var registers: RegisterSet { return self.regs }
-    
+
     var status: String {
         return """
         |-------- CPU --------|
@@ -137,17 +137,17 @@ class CoreProcessingUnit {
          pc: 0x\(self.regs.pc.hex())
          p:  0b\(self.regs.p.value.bin())
                NV-BDIZC
-        
+
         \(self.stack.status)
         """
     }
-    
+
     init(using bus: Bus, with registers: RegisterSet = RegisterSet()) {
         self.bus = bus
         self.regs = registers
         self.memory = CoreProcessingUnitMemory(using: bus)
         self.stack = Stack(using: self.bus, sp: &self.regs.sp)
-        
+
         self.opcodes = [
             0x00: Opcode(brk, 7, .implied),
             0x01: Opcode(ora, 6, .indirect(.x)),
@@ -302,62 +302,62 @@ class CoreProcessingUnit {
             0xFE: Opcode(inc, 7, .absolute(.x))
         ]
     }
-    
+
     func requestInterrupt(type: InterruptType) {
         // maybe handle interrupt priority as described in this document at page 13
         // http://nesdev.com/NESDoc.pdf
         self.interruptRequest = type
-        
+
         // maybe will have to switch to a queue of interrupts ?
     }
-    
+
     /// Method used to inject instructions for testing
     func process(opcode: Byte, operand: Operand = Operand()) {
         guard let opcode: Opcode = self.opcodes[opcode] else {
             fatalError("Unknown opcode used (outside of the 151 available)")
         }
-        
+
         opcode.closure(operand.value, operand.address)
     }
-    
+
     func step() -> UInt8 {
         if let interrupt = self.interruptRequest {
             return self.interrupt(type: interrupt)
         }
-        
+
         let opcodeHex: Byte = self.memory.readByte(at: regs.pc)
         regs.pc++
-        
+
         guard let opcode: Opcode = self.opcodes[opcodeHex] else {
             fatalError("Unknown opcode used (outside of the 151 available)")
         }
-        
+
         let operand: Operand = self.buildOperand(using: opcode.addressingMode)
         opcode.closure(operand.value, operand.address)
-        
+
         return opcode.cycles + operand.additionalCycles
     }
-    
+
     private func interrupt(type: InterruptType) -> UInt8 {
         self.interruptRequest = nil
-        
+
         // Handle the bit 7 of PPU Control Register 1 ($2000)
         let isValidNmi: Bool = type == .nmi && Bool(self.memory.readByte(at: 0x2000) & 0b10000000)
-        
+
         guard isValidNmi || self.regs.p.isNotSet(.interrupt) else {
             return 0
         }
-        
+
         stack.pushWord(data: regs.pc)
         stack.pushByte(data: regs.p.value | Flag.alwaysOne.rawValue)
         self.regs.p.set(.interrupt)
         self.regs.pc = memory.readWord(at: type.address)
-        
+
         if type == .reset { self.regs.sp = 0xFD }
-        
+
         return 7
     }
-    
+
     private func buildOperand(using addressingMode: AddressingMode) -> Operand {
         switch addressingMode {
         case .zeroPage(let alteration): return ZeroPageAddressingOperandBuilder(alteration).evaluate(&regs, memory)
@@ -369,16 +369,16 @@ class CoreProcessingUnit {
         default: return EmptyOperandBuilder().evaluate(&regs, memory)
         }
     }
-    
+
     // OPCODES IMPLEMENTATION
     private func nop(_ value: Word, _ address: Word) {}
-    
+
     // Math
     private func inx(_ value: Word, _ address: Word) { regs.x++; regs.p.updateFor(regs.x) }
     private func iny(_ value: Word, _ address: Word) { regs.y++; regs.p.updateFor(regs.y) }
     private func dex(_ value: Word, _ address: Word) { regs.x--; regs.p.updateFor(regs.x) }
     private func dey(_ value: Word, _ address: Word) { regs.y--; regs.p.updateFor(regs.y) }
-    
+
     private func adc(_ value: Word, _ address: Word) {
         let result = regs.a &+ value &+ regs.p.valueOf(.carry)
         regs.p.set(.carry, if: result.overflowsByte())
@@ -386,7 +386,7 @@ class CoreProcessingUnit {
         regs.a = result.rightByte()
         regs.p.updateFor(regs.a)
     }
-    
+
     private func sbc(_ value: Word, _ address: Word) {
         let result = regs.a &- value &- (1 - regs.p.valueOf(.carry))
         regs.p.set(.carry, if: !result.overflowsByte())
@@ -394,50 +394,50 @@ class CoreProcessingUnit {
         regs.a = result.rightByte()
         regs.p.updateFor(regs.a)
     }
-    
+
     private func inc(_ value: Word, _ address: Word) {
         let result: Byte = value.rightByte() &+ 1
         memory.writeByte(result, at: address)
         regs.p.updateFor(result)
     }
-    
+
     private func dec(_ value: Word, _ address: Word) {
         let result: Byte = value.rightByte() &- 1
         memory.writeByte(result, at: address)
         regs.p.updateFor(result)
     }
-    
+
     // Bitwise
     private func and(_ value: Word, _ address: Word) { regs.a &= value; regs.p.updateFor(regs.a) }
     private func eor(_ value: Word, _ address: Word) { regs.a ^= value; regs.p.updateFor(regs.a) }
     private func ora(_ value: Word, _ address: Word) { regs.a |= value; regs.p.updateFor(regs.a) }
-    
+
     private func bit(_ value: Word, _ address: Word) {
         regs.p.set(.zero, if: Bool(regs.a & value))
         regs.p.set((.overflow | .negative) & value)
     }
-    
+
     private func asl(_ value: Word, _ address: Word) {
         regs.p.set(.carry, if: value.rightByte().isMostSignificantBitOn())
         let result: Byte = value.rightByte() << 1
         regs.p.updateFor(result)
         memory.writeByte(result, at: address)
     }
-    
+
     private func lsr(_ value: Word, _ address: Word) {
         regs.p.set(.carry, if: value.rightByte().isLeastSignificantBitOn())
         let result: Byte = value.rightByte() >> 1
         regs.p.updateFor(result)
         memory.writeByte(result, at: address)
     }
-    
+
     private func rol(_ value: Word, _ address: Word) {
         let result: Word = value << 1 | regs.p.valueOf(.carry)
         regs.p.set(.carry, if: result.overflowsByteByOne())
         memory.writeByte(result.rightByte(), at: address)
         regs.p.updateFor(result)
     }
-    
+
     private func ror(_ value: Word, _ address: Word) {
         let carry: Byte = regs.p.valueOf(.carry)
         regs.p.set(.carry, if: value.isLeastSignificantBitOn())
@@ -445,33 +445,33 @@ class CoreProcessingUnit {
         regs.p.updateFor(result)
         memory.writeByte(result, at: address)
     }
-    
+
     private func asla(_ value: Word, _ address: Word) {
         regs.p.set(.carry, if: regs.a.isMostSignificantBitOn())
         regs.a <<= 1
         regs.p.updateFor(regs.a)
     }
-    
+
     private func lsra(_ value: Word, _ address: Word) {
         regs.p.set(.carry, if: regs.a.isLeastSignificantBitOn())
         regs.a >>= 1
         regs.p.updateFor(regs.a)
     }
-    
+
     private func rola(_ value: Word, _ address: Word) {
         let result: Word = regs.a.asWord() << 1 | regs.p.valueOf(.carry)
         regs.p.set(.carry, if: result.overflowsByteByOne())
         regs.a = result.rightByte()
         regs.p.updateFor(regs.a)
     }
-    
+
     private func rora(_ value: Word, _ address: Word) {
         let carry = regs.p.valueOf(.carry)
         regs.p.set(.carry, if: regs.a.isLeastSignificantBitOn())
         regs.a = regs.a >> 1 | carry << 7
         regs.p.updateFor(regs.a)
     }
-    
+
     // flags
     private func clc(_ value: Word, _ address: Word) { regs.p.unset(.carry) }
     private func cld(_ value: Word, _ address: Word) { regs.p.unset(.decimal) }
@@ -480,7 +480,7 @@ class CoreProcessingUnit {
     private func sec(_ value: Word, _ address: Word) { regs.p.set(.carry) }
     private func sed(_ value: Word, _ address: Word) { regs.p.set(.decimal) }
     private func sei(_ value: Word, _ address: Word) { regs.p.set(.interrupt) }
-    
+
     // comparison
     private func compare(_ a: Byte, _ value: Word) {
         regs.p.updateFor(a - value.rightByte())
@@ -489,7 +489,7 @@ class CoreProcessingUnit {
     private func cmp(_ value: Word, _ address: Word) { compare(regs.a, value) }
     private func cpx(_ value: Word, _ address: Word) { compare(regs.x, value) }
     private func cpy(_ value: Word, _ address: Word) { compare(regs.y, value) }
-    
+
     // branches
     private func branch(to address: Word, if condition: Bool) { if condition { regs.pc = address } }
     private func beq(_ value: Word, _ address: Word) { branch(to: address, if: regs.p.isSet(.zero)) }
@@ -500,33 +500,33 @@ class CoreProcessingUnit {
     private func bcc(_ value: Word, _ address: Word) { branch(to: address, if: !regs.p.isSet(.carry)) }
     private func bvs(_ value: Word, _ address: Word) { branch(to: address, if: regs.p.isSet(.overflow)) }
     private func bvc(_ value: Word, _ address: Word) { branch(to: address, if: !regs.p.isSet(.overflow)) }
-    
+
     // jump
     private func jmp(_ value: Word, _ address: Word) { regs.pc = value }
-    
+
     // subroutines
     private func jsr(_ value: Word, _ address: Word) { stack.pushWord(data: regs.pc &- 1); regs.pc = address }
     private func rts(_ value: Word, _ address: Word) { regs.pc = stack.popWord() &+ 1 }
-    
+
     // interuptions
     private func rti(_ value: Word, _ address: Word) {
         regs.p &= stack.popByte() | Flag.alwaysOne.rawValue
         regs.pc = stack.popWord()
     }
-    
+
     private func brk(_ value: Word, _ address: Word) {
         regs.p.set(.alwaysOne | .breaks)
         self.interruptRequest = .irq
         stack.pushWord(data: regs.pc &+ 1) // TODO: make sure pc is handled correctly
         stack.pushByte(data: regs.p.value)
     }
-    
+
     // stack
     private func pha(_ value: Word, _ address: Word) { stack.pushByte(data: regs.a) }
     private func php(_ value: Word, _ address: Word) { stack.pushByte(data: regs.p.value | (.alwaysOne | .breaks)) }
     private func pla(_ value: Word, _ address: Word) { regs.a = stack.popByte(); regs.p.updateFor(regs.a) }
     private func plp(_ value: Word, _ address: Word) { regs.p &= stack.popByte() & ~Flag.breaks.rawValue | Flag.alwaysOne.rawValue }
-    
+
     // loading
     private func load(_ a: inout Byte, _ operand: Word) {
         let value = operand.rightByte()
@@ -536,12 +536,12 @@ class CoreProcessingUnit {
     private func lda(_ value: Word, _ address: Word) { self.load(&regs.a, value) }
     private func ldx(_ value: Word, _ address: Word) { self.load(&regs.x, value) }
     private func ldy(_ value: Word, _ address: Word) { self.load(&regs.y, value) }
-    
+
     // storing
     private func sta(_ value: Word, _ address: Word) { memory.writeByte(regs.a, at: address) }
     private func stx(_ value: Word, _ address: Word) { memory.writeByte(regs.x, at: address) }
     private func sty(_ value: Word, _ address: Word) { memory.writeByte(regs.y, at: address) }
-    
+
     // transfering
     private func transfer(_ a: inout Byte, _ b: Byte) { a = b; regs.p.updateFor(a) }
     private func tax(_ value: Word, _ address: Word) { self.transfer(&regs.x, regs.a) }

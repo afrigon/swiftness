@@ -35,11 +35,11 @@ class Cartridge: GuardStatus, BusConnectedComponent, MapperDelegate {
     private let battery: Bool
     private let mapperType: MapperType
     private var mapper: Mapper!
-    
+
     private var programRom: [Byte]
     private var characterRom: [Byte]
     private var saveRam = [Byte](repeating: 0x00, count: 0x2000)    // should probably be assigned only when supported by the mapper ?
-    
+
     var status: String {
         return """
         |-------- ROM --------|
@@ -49,7 +49,7 @@ class Cartridge: GuardStatus, BusConnectedComponent, MapperDelegate {
          Mapper:     \(String(describing: self.mapperType).uppercased())
         """
     }
-    
+
     init(prg: [Byte], chr: [Byte], mapperType: MapperType, mirroring: ScreenMirroring, battery: Bool) {
         self.programRom = prg
         self.characterRom = chr
@@ -58,7 +58,7 @@ class Cartridge: GuardStatus, BusConnectedComponent, MapperDelegate {
         self.mapperType = mapperType
         self.mapper = MapperFactory.create(mapperType, withDelegate: self)
     }
-    
+
     private func validate(_ region: CartridgeRegion, contains address: Word) -> Bool {
         switch region {
         case .prg: return (0..<self.programRom.count).contains(Int(address))
@@ -71,35 +71,35 @@ class Cartridge: GuardStatus, BusConnectedComponent, MapperDelegate {
     func busRead(at address: Word) -> Byte {
         return self.mapper.busRead(at: address)
     }
-    
+
     func busWrite(_ data: Byte, at address: Word) {
         self.mapper.busWrite(data, at: address)
     }
-    
+
     func programBankCount(for mapper: Mapper) -> UInt8 {
         return UInt8(UInt32(self.programRom.count) / 0x4000)    // Assuming 0x4000 sized banks
     }
-    
+
     // actions from the mapper
     func mapper(mapper: Mapper, didReadAt address: Word, of region: CartridgeRegion) -> Byte {
         guard self.validate(region, contains: address) else {
             print("Illegal rom read at: 0x\(address.hex()) on region \(String(describing: region).uppercased())")
             return 0x00
         }
-        
+
         switch region {
         case .prg: return self.programRom[address]
         case .chr: return self.characterRom[address]
         case .sram: return self.saveRam[address]
         }
     }
-    
+
     func mapper(mapper: Mapper, didWriteAt address: Word, of region: CartridgeRegion, data: Byte) {
         guard self.validate(region, contains: address) else {
             print("Illegal rom write at: 0x\(address.hex()) on region \(String(describing: region).uppercased())")
             return
         }
-        
+
         switch region {
         case .prg: self.programRom[address] = data
         case .chr: self.characterRom[address] = data

@@ -73,11 +73,11 @@ class RelativeAddressingOperandBuilder: OperandBuilder {
     func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
         var operand = Operand()
         operand.address = memory.readByte(at: regs.pc).asWord()
-        
+
         if Bool(operand.address & 0x80) {
             operand.address -= 0x100 + regs.pc
         }
-        
+
         regs.pc++
         operand.additionalCycles = UInt8(regs.isAtSamePage(than: operand.address))
         return operand
@@ -96,11 +96,11 @@ class ImmediateAddressingOperandBuilder: OperandBuilder {
 class IndirectAddressingMode: AlteredOperandBuilder {
     override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
         let addressPointer: Word = memory.readWord(at: regs.pc) &+ (self.alteration == .x ? regs.x : 0)
-        
+
         var operand = Operand()
         operand.address = memory.readWordGlitched(at: addressPointer) &+ (self.alteration == .y ? regs.y : 0)
         operand.value = memory.readByte(at: operand.address).asWord()
-        
+
         regs.pc += self.alteration == .none ? 2 : 1
         operand.additionalCycles = self.alteration == .y ? UInt8(regs.isAtSamePage(than: operand.address)) : 0
         return operand

@@ -31,11 +31,11 @@ enum RunMode {
 class StartupOptions {
     var mode: RunMode = .normal
     var filepath: String? = nil
-    
+
     static func parse(_ arguments: [String]) -> StartupOptions? {
         let options = StartupOptions()
         var temp: String? = nil
-        
+
         for argument in arguments {
             switch argument {
             case "-h", "--help", "-help", "help": StartupOptions.printUsage(); return nil
@@ -45,21 +45,21 @@ class StartupOptions {
                     temp = argument
                     continue
                 }
-                
+
                 guard let option = temp else {
                     options.filepath = argument
                     continue
                 }
-                
+
                 switch option {
                 default: continue
                 }
             }
         }
-        
+
         return options
     }
-    
+
     static func printUsage() {
         print("USAGE: swiftness <options> [gamepath]")
     }

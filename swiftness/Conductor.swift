@@ -31,7 +31,7 @@ class Conductor: GuardStatus {
     private let loop: LogicLoop
     private let inputManager: InputManager
     private let options: StartupOptions
-
+    
     var status: String {
         return """
         |------ General ------|
@@ -40,46 +40,46 @@ class Conductor: GuardStatus {
         \(self.nes.status)
         """
     }
-    
+
     init(use options: StartupOptions, with renderer: Renderer, drivenBy loop: LogicLoop, interactingWith inputManager: InputManager) {
         self.options = options
         self.renderer = renderer
         self.loop = loop
         self.inputManager = inputManager
-        
+
         guard self.options.mode != .test, let filepath = self.options.filepath else {
             return
         }
-        
+
         let game: Cartridge = iNesFile.load(path: filepath)
         // * blows a bit into the cardridge *
         self.nes = NintendoEntertainmentSystem(load: game)
         
         self.loop.start(closure: self.loopClosure)
     }
-    
+
     func step() {
         if self.options.mode == .debug {
             self.nes.step()
         }
     }
-    
+
     private func loopClosure(_ deltaTime: Double) {
         self.processInput()
         self.update(deltaTime)
         self.render()
     }
-    
+
     private func processInput() {
         self.nes.setInputs(to: self.inputManager.buttons, for: .primary)
     }
-    
+
     private func update(_ deltaTime: Double) {
         if self.options.mode == .normal {
             self.nes.run(for: deltaTime)
         }
     }
-    
+
     private func render() {
         let image: [Byte] = self.imageGenerator.generate()
         autoreleasepool {

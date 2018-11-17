@@ -27,7 +27,7 @@ class Color {
     var green: UInt8
     var blue: UInt8
     var alpha: UInt8
-    
+
     init(_ value: UInt32) {
         // no alpha (0x123456)
         if (value.leadingZeroBitCount >= 8) {
@@ -42,14 +42,14 @@ class Color {
             self.alpha = UInt8(value & 0xFF)
         }
     }
-    
+
     init(greyscale: UInt8 = 0xFF, alpha: UInt8 = 0xFF) {
         self.red = greyscale
         self.green = greyscale
         self.blue = greyscale
         self.alpha = alpha
     }
-    
+
     init(_ red: UInt8 = 0xFF, _ green: UInt8 = 0xFF, _ blue: UInt8 = 0xFF, alpha: UInt8 = 0xFF) {
         self.red = red
         self.green = green
