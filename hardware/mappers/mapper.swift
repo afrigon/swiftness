@@ -26,7 +26,7 @@ protocol MapperDelegate: AnyObject {
 }
 
 protocol Mapper: BusConnectedComponent {
-    var delegate: MapperDelegate { get set }
+    var delegate: MapperDelegate! { get set }
     init(_ delegate: MapperDelegate)
 }
 

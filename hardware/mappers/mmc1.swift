@@ -54,7 +54,7 @@ fileprivate class Registers {
 }
 
 class MemoryManagmentController1: Mapper {
-    var delegate: MapperDelegate
+    weak var delegate: MapperDelegate!
 
     private let bankSize: Word = 0x4000
     private var lowerPrgIndex: UInt8 = 0

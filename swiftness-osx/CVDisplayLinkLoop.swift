@@ -33,7 +33,7 @@ class CVDisplayLinkLoop: LogicLoop {
     private var fps: UInt32 = 0
     private var closure: ((Double) -> Void)?
 
-    var delegate: LogicLoopDelegate?
+    weak var delegate: LogicLoopDelegate?
 
     var status: String {
         return " FPS: \(self.fps)"

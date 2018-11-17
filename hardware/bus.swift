@@ -35,7 +35,7 @@ protocol BusConnectedComponent {
 //}
 
 class Bus {
-    var delegate: BusDelegate?
+    weak var delegate: BusDelegate?
 
     func readByte(at address: Word) -> Byte {
         guard let delegate = self.delegate else {
@@ -52,18 +52,21 @@ class Bus {
     }
 
     static func testsInstance() -> Bus {
-        let bus = Bus()
-        bus.delegate = TestsBusDelegate()
-        return bus
+        return TestsBus()
     }
+}
+
+class TestsBus: Bus, BusDelegate {
+    override init() {
+        super.init()
+        self.delegate = self
+    }
+
+    func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte { return 0x40 }
+    func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte) {}
 }
 
 protocol BusDelegate: AnyObject {
     func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte
     func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte)
-}
-
-class TestsBusDelegate: BusDelegate {
-    func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte { return 0x40 }
-    func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte) {}
 }

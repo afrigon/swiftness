@@ -60,7 +60,7 @@ class NesFile {
 
         let trainerSize = Bool(header.control1 & 0b100) ? 512 : 0
         let prgSize = Int(header.prgSize) * 16384
-        let prgRange: NSRange = NSMakeRange(Header.size + trainerSize, prgSize)
+        let prgRange = NSRange(location: Header.size + trainerSize, length: prgSize)
         var prg = [Byte](repeating: 0x00, count: prgSize)
         data.getBytes(&prg, range: prgRange)
 

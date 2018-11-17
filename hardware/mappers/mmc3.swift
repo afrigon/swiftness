@@ -23,7 +23,7 @@
 //
 
 class MemoryManagmentController3: Mapper {
-    var delegate: MapperDelegate
+    weak var delegate: MapperDelegate!
 
     required init(_ delegate: MapperDelegate) {
         self.delegate = delegate
