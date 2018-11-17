@@ -132,7 +132,6 @@
 		FEA2741A217C47B50072530A /* cpu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = cpu.swift; sourceTree = "<group>"; };
 		FEA2741C217C546E0072530A /* IntegerExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegerExtensions.swift; sourceTree = "<group>"; };
 		FEA27420217C91710072530A /* ppu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ppu.swift; sourceTree = "<group>"; };
-		FEA27424217C954F0072530A /* specs.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = specs.md; sourceTree = "<group>"; };
 		FEA27427217DED280072530A /* Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Color.swift; sourceTree = "<group>"; };
 		FEA2742D218076150072530A /* nes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = nes.swift; sourceTree = "<group>"; };
 		FEA2742F218085510072530A /* Shader.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shader.metal; sourceTree = "<group>"; };
@@ -252,7 +251,6 @@
 			children = (
 				FE53C81E2183570E002BD71F /* cpu */,
 				FE53C81921834D9D002BD71F /* mappers */,
-				FEA27424217C954F0072530A /* specs.md */,
 				FEA2742D218076150072530A /* nes.swift */,
 				FEA27420217C91710072530A /* ppu.swift */,
 				FE53C80E21823FB1002BD71F /* apu.swift */,
