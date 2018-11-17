@@ -52,7 +52,7 @@ class Menu: NSMenu, NSMenuItemValidation, NSMenuDelegate {
 
     @objc func about() {
         NSApplication.shared.orderFrontStandardAboutPanel(options: [
-            NSApplication.AboutPanelOptionKey.applicationName : "Swiftness",
+            NSApplication.AboutPanelOptionKey.applicationName: "Swiftness"
         ])
     }
 

@@ -47,7 +47,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                            y: screen.frame.midY - height / 2,
                            width: width,
                            height: height)
-        self.window = NSWindow(contentRect: frame, styleMask: [.closable, .miniaturizable, .titled], backing: .buffered, defer: false)
+        self.window = NSWindow(contentRect: frame,
+                               styleMask: [.closable, .miniaturizable, .titled],
+                               backing: .buffered,
+                               defer: false)
         self.window.title = "Swiftness"
 
         self.viewController = ViewController()

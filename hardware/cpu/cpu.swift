@@ -34,8 +34,12 @@ class ProcessorStatusRegister {
 
     init(_ value: Byte) { self._value = value }
     static func &= (left: inout ProcessorStatusRegister, right: Byte) { left._value = right }
-    static func == (left: ProcessorStatusRegister, right: ProcessorStatusRegister) -> Bool { return left.value == right.value }
-    static func != (left: ProcessorStatusRegister, right: ProcessorStatusRegister) -> Bool { return left.value != right.value }
+    static func == (left: ProcessorStatusRegister, right: ProcessorStatusRegister) -> Bool {
+        return left.value == right.value
+    }
+    static func != (left: ProcessorStatusRegister, right: ProcessorStatusRegister) -> Bool {
+        return left.value != right.value
+    }
 
     func set(_ flags: Byte, if condition: Bool? = nil) {
         if let condition = condition {
@@ -125,7 +129,7 @@ class CoreProcessingUnit {
     private let bus: Bus
     private var regs: RegisterSet
     private var opcodes: [Byte: Opcode]! = nil
-    private var interruptRequest: InterruptType? = nil
+    private var interruptRequest: InterruptType?
 
     var registers: RegisterSet { return self.regs }
 

@@ -22,7 +22,6 @@
 //    SOFTWARE.
 //
 
-
 class Controller: BusConnectedComponent, GuardStatus {
     private let player: Player
     private var strobe: Byte = 0

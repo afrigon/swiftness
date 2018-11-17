@@ -38,7 +38,8 @@ class Cartridge: GuardStatus, BusConnectedComponent, MapperDelegate {
 
     private var programRom: [Byte]
     private var characterRom: [Byte]
-    private var saveRam = [Byte](repeating: 0x00, count: 0x2000)    // should probably be assigned only when supported by the mapper ?
+    private var saveRam = [Byte](repeating: 0x00, count: 0x2000)
+    // should probably be assigned only when supported by the mapper ?
 
     var status: String {
         return """

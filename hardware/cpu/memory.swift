@@ -47,7 +47,7 @@ class Stack: GuardStatus {
         self.bus = bus
         self.sp = sp
     }
-    
+
     func pushByte(data: Byte) {
         self.bus.writeByte(data, at: self.sp.pointee.asWord() + self.size)
         self.sp.pointee--
