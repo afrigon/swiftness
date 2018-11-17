@@ -60,7 +60,7 @@ class Cartridge: GuardStatus, BusConnectedComponent, MapperDelegate {
         self.mapper = MapperFactory.create(mapperType, withDelegate: self)
     }
 
-    private func validate(_ region: CartridgeRegion, contains address: Word) -> Bool {
+    private func validate(_ region: CartridgeRegion, contains address: DWord) -> Bool {
         switch region {
         case .prg: return (0..<self.programRom.count).contains(Int(address))
         case .chr: return (0..<self.characterRom.count).contains(Int(address))
@@ -82,7 +82,7 @@ class Cartridge: GuardStatus, BusConnectedComponent, MapperDelegate {
     }
 
     // actions from the mapper
-    func mapper(mapper: Mapper, didReadAt address: Word, of region: CartridgeRegion) -> Byte {
+    func mapper(mapper: Mapper, didReadAt address: DWord, of region: CartridgeRegion) -> Byte {
         guard self.validate(region, contains: address) else {
             print("Illegal rom read at: 0x\(address.hex()) on region \(String(describing: region).uppercased())")
             return 0x00
@@ -96,7 +96,7 @@ class Cartridge: GuardStatus, BusConnectedComponent, MapperDelegate {
     }
 
     func mapper(mapper: Mapper, didWriteAt address: Word, of region: CartridgeRegion, data: Byte) {
-        guard self.validate(region, contains: address) else {
+        guard self.validate(region, contains: DWord(address)) else {
             print("Illegal rom write at: 0x\(address.hex()) on region \(String(describing: region).uppercased())")
             return
         }
