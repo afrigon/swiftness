@@ -46,8 +46,8 @@ class ViewController: NSViewController, LogicLoopDelegate {
     }
     
     override func viewDidLoad() {
-        let filepath = CommandLine.arguments[CommandLine.arguments.count - 3]
-        self.conductor = Conductor(load: filepath, with: self.renderer, drivenBy: self.loop, interactingWith: self.inputResponder)
+        let options: StartupOptions = (NSApplication.shared.delegate as! AppDelegate).options
+        self.conductor = Conductor(use: options, with: self.renderer, drivenBy: self.loop, interactingWith: self.inputResponder)
         self.inputResponder.add(closure: self.toggleOverlay, forKey: 99)    // F3
         self.inputResponder.add(closure: self.step, forKey: 100)    // F8
         self.loop.delegate = self

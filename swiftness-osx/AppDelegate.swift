@@ -25,9 +25,15 @@
 import Cocoa
 
 class AppDelegate: NSObject, NSApplicationDelegate {
+    let options: StartupOptions
     private let scale = 3
     private var window: NSWindow!
     private var viewController: ViewController!
+    
+    init(_ options: StartupOptions) {
+        self.options = options
+        super.init()
+    }
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         let width = CGFloat(256 * self.scale)

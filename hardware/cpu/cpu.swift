@@ -129,7 +129,6 @@ class CoreProcessingUnit {
     
     var registers: RegisterSet { return self.regs }
     
-    
     var status: String {
         return """
         |-------- CPU --------|
