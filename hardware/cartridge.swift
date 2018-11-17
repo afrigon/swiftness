@@ -77,7 +77,7 @@ class Cartridge: GuardStatus, BusConnectedComponent, MapperDelegate {
     }
     
     func programBankCount(for mapper: Mapper) -> UInt8 {
-        return UInt8(UInt16(self.programRom.count) / 0x4000)    // Assuming 0x4000 sized banks
+        return UInt8(UInt32(self.programRom.count) / 0x4000)    // Assuming 0x4000 sized banks
     }
     
     // actions from the mapper

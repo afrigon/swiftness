@@ -22,19 +22,45 @@
 //    SOFTWARE.
 //
 
-import Cocoa
-
-let arguments = Array(CommandLine.arguments.dropFirst())
-guard var options: StartupOptions = StartupOptions.parse(arguments) else {
-    exit(0)
+enum RunMode {
+    case debug      // step cpu cycle manually
+    case test       // early exit for unit tests
+    case normal     // as expected
 }
 
-// options injection for debuging
-if options.mode != .test {
-    options.filepath = "/Users/frigon/.nes/roms/zelda.nes"
-    options.mode = .debug
+class StartupOptions {
+    var mode: RunMode = .normal
+    var filepath: String? = nil
+    
+    static func parse(_ arguments: [String]) -> StartupOptions? {
+        let options = StartupOptions()
+        var temp: String? = nil
+        
+        for argument in arguments {
+            switch argument {
+            case "-h", "--help", "-help", "help": StartupOptions.printUsage(); return nil
+            case "-d", "--debug": options.mode = .debug
+            default:
+                if argument.hasPrefix("-") {
+                    temp = argument
+                    continue
+                }
+                
+                guard let option = temp else {
+                    options.filepath = argument
+                    continue
+                }
+                
+                switch option {
+                default: continue
+                }
+            }
+        }
+        
+        return options
+    }
+    
+    static func printUsage() {
+        print("USAGE: swiftness <options> [gamepath]")
+    }
 }
-
-let delegate = AppDelegate(options)
-NSApplication.shared.delegate = delegate
-let app = NSApplicationMain(CommandLine.argc, CommandLine.unsafeArgv)

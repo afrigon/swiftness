@@ -17,7 +17,6 @@
 		FE53C80621822458002BD71F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C80521822458002BD71F /* ViewController.swift */; };
 		FE53C808218224C5002BD71F /* MetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C807218224C5002BD71F /* MetalRenderer.swift */; };
 		FE53C80A218225C4002BD71F /* CVDisplayLinkLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C809218225C4002BD71F /* CVDisplayLinkLoop.swift */; };
-		FE53C80B21822B19002BD71F /* MetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C807218224C5002BD71F /* MetalRenderer.swift */; };
 		FE53C80D21823094002BD71F /* GuardStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C80C21823094002BD71F /* GuardStatus.swift */; };
 		FE53C80F21823FB1002BD71F /* apu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C80E21823FB1002BD71F /* apu.swift */; };
 		FE53C810218245F0002BD71F /* Shader.metal in Sources */ = {isa = PBXBuildFile; fileRef = FEA2742F218085510072530A /* Shader.metal */; };
@@ -68,6 +67,9 @@
 		FE53C8682183FE00002BD71F /* Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27427217DED280072530A /* Color.swift */; };
 		FE53C8692183FE00002BD71F /* GuardStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C80C21823094002BD71F /* GuardStatus.swift */; };
 		FE53C86A2183FE00002BD71F /* IntegerExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741C217C546E0072530A /* IntegerExtensions.swift */; };
+		FE82CB42219FD8AD00E08545 /* StartupOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE82CB41219FD8AD00E08545 /* StartupOptions.swift */; };
+		FE82CB6321A00BE700E08545 /* StartupOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE82CB41219FD8AD00E08545 /* StartupOptions.swift */; };
+		FE82CB6421A00BE800E08545 /* StartupOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE82CB41219FD8AD00E08545 /* StartupOptions.swift */; };
 		FEA2740C217C45F70072530A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2740B217C45F70072530A /* AppDelegate.swift */; };
 		FEA2740E217C45F90072530A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FEA2740D217C45F90072530A /* Assets.xcassets */; };
 		FEA2741B217C47B50072530A /* cpu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741A217C47B50072530A /* cpu.swift */; };
@@ -121,6 +123,7 @@
 		FE53C833218369ED002BD71F /* cpu-tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "cpu-tests.swift"; sourceTree = "<group>"; };
 		FE53C835218369ED002BD71F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FE53C83B2183E5AF002BD71F /* InputResponder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputResponder.swift; sourceTree = "<group>"; };
+		FE82CB41219FD8AD00E08545 /* StartupOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupOptions.swift; sourceTree = "<group>"; };
 		FEA27408217C45F70072530A /* swiftness-osx.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "swiftness-osx.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FEA2740B217C45F70072530A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FEA2740D217C45F90072530A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -283,6 +286,7 @@
 				FE53C8112182474F002BD71F /* InputManager.swift */,
 				FEA27451218208D30072530A /* ImageGenerator.swift */,
 				FEC79C8821842789006C3096 /* iNesFile.swift */,
+				FE82CB41219FD8AD00E08545 /* StartupOptions.swift */,
 				FEA27427217DED280072530A /* Color.swift */,
 				FE53C80C21823094002BD71F /* GuardStatus.swift */,
 				FEA2741C217C546E0072530A /* IntegerExtensions.swift */,
@@ -441,6 +445,7 @@
 				FE53C8402183FADC002BD71F /* addressing.swift in Sources */,
 				FE53C834218369ED002BD71F /* cpu-tests.swift in Sources */,
 				FE53C84D2183FDCE002BD71F /* Renderer.swift in Sources */,
+				FE82CB6421A00BE800E08545 /* StartupOptions.swift in Sources */,
 				FE53C84C2183FDCE002BD71F /* Conductor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -467,6 +472,7 @@
 				FE53C8182182C27E002BD71F /* mapper.swift in Sources */,
 				FE53C83C2183E5AF002BD71F /* InputResponder.swift in Sources */,
 				FEA27430218085510072530A /* Shader.metal in Sources */,
+				FE82CB42219FD8AD00E08545 /* StartupOptions.swift in Sources */,
 				FEA2743B2181FC860072530A /* Conductor.swift in Sources */,
 				FE53C824218357A7002BD71F /* memory.swift in Sources */,
 				FEA2742E218076150072530A /* nes.swift in Sources */,
@@ -490,6 +496,7 @@
 				FEBA1F4121820D610044DC8B /* ViewController.swift in Sources */,
 				FE3F925521859C1D0000B574 /* iNesFile.swift in Sources */,
 				FE53C8682183FE00002BD71F /* Color.swift in Sources */,
+				FE82CB6321A00BE700E08545 /* StartupOptions.swift in Sources */,
 				FE53C8692183FE00002BD71F /* GuardStatus.swift in Sources */,
 				FE53C810218245F0002BD71F /* Shader.metal in Sources */,
 				FE53C8622183FE00002BD71F /* Conductor.swift in Sources */,
@@ -509,7 +516,6 @@
 				FE53C8642183FE00002BD71F /* LogicLoop.swift in Sources */,
 				FEBA1F3F21820D610044DC8B /* AppDelegate.swift in Sources */,
 				FE53C85B2183FDF7002BD71F /* apu.swift in Sources */,
-				FE53C80B21822B19002BD71F /* MetalRenderer.swift in Sources */,
 				FE53C8632183FE00002BD71F /* Renderer.swift in Sources */,
 				FE3F925721859C260000B574 /* mmc3.swift in Sources */,
 				FE53C83E2183FADC002BD71F /* addressing.swift in Sources */,
@@ -542,6 +548,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = 7LYG6KRX2T;
@@ -563,6 +570,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = 7LYG6KRX2T;
@@ -702,9 +710,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "swiftness-osx/swiftness.entitlements";
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 7LYG6KRX2T;
+				DEVELOPMENT_TEAM = "";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				INFOPLIST_FILE = "swiftness-osx/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -712,6 +725,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swiftness-osx";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_ENFORCE_EXCLUSIVE_ACCESS = none;
 				SWIFT_VERSION = 4.2;
 			};
@@ -722,9 +736,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "swiftness-osx/swiftness.entitlements";
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 7LYG6KRX2T;
+				DEVELOPMENT_TEAM = "";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				INFOPLIST_FILE = "swiftness-osx/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -732,6 +751,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swiftness-osx";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_ENFORCE_EXCLUSIVE_ACCESS = none;
 				SWIFT_VERSION = 4.2;
 			};

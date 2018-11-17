@@ -1,5 +1,6 @@
 osx_image: xcode10.1
 language: swift
-xcode_workspace: swiftness.xcodeproj/project.xcworkspace
 xcode_scheme: swiftness-osx-tests
+xcode_project: swiftness.xcodeproj
 xcode_destination: platform=macOS
+

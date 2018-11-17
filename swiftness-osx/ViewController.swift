@@ -25,7 +25,7 @@ import Cocoa
 
 class ViewController: NSViewController, LogicLoopDelegate {
     private let overlay = CATextLayer()
-    private let renderer = MetalRenderer()
+    private let renderer: MetalRenderer? = MetalRenderer()
     private var loop = CVDisplayLinkLoop()
     private var conductor: Conductor!
     var inputResponder = InputResponder()
@@ -36,17 +36,24 @@ class ViewController: NSViewController, LogicLoopDelegate {
     override func loadView() {
         self.view = NSView()
         self.view.wantsLayer = true
-        self.view.layer?.addSublayer(self.renderer.layer)
+        if self.renderer != nil {
+            self.view.layer?.addSublayer(self.renderer!.layer)
+        }
     }
     
     override func viewDidLayout() {
         super.viewDidLayout()
-        self.renderer.layer.frame = self.view.frame
+        self.renderer?.layer.frame = self.view.frame
         self.overlay.frame = CGRect(x: 10, y: 5, width: self.view.layer!.frame.width - 20, height: self.view.layer!.frame.height - 10)
     }
     
     override func viewDidLoad() {
-        self.conductor = Conductor(with: self.renderer, drivenBy: self.loop, interactingWith: self.inputResponder)
+        guard let renderer = self.renderer else {
+            return
+        }
+        
+        let options: StartupOptions = (NSApplication.shared.delegate as! AppDelegate).options
+        self.conductor = Conductor(use: options, with: renderer, drivenBy: self.loop, interactingWith: self.inputResponder)
         self.inputResponder.add(closure: self.toggleOverlay, forKey: 99)    // F3
         self.inputResponder.add(closure: self.step, forKey: 100)    // F8
         self.loop.delegate = self

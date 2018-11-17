@@ -25,36 +25,44 @@
 import Foundation
 
 class Conductor: GuardStatus {
-    private let nes: NintendoEntertainmentSystem
+    private var nes: NintendoEntertainmentSystem! = nil
     private let imageGenerator = ImageGenerator()
     private let renderer: Renderer
     private let loop: LogicLoop
     private let inputManager: InputManager
-    private let filepath: String = "/Users/frigon/.nes/roms/zelda.nes"
+    private let options: StartupOptions
 
     var status: String {
         return """
         |------ General ------|
-         File: \(self.filepath)
+         File: \(self.options.filepath ?? "None")
         \(self.loop.status)
         \(self.nes.status)
         """
     }
     
-    init(with renderer: Renderer, drivenBy loop: LogicLoop, interactingWith inputManager: InputManager) {
+    init(use options: StartupOptions, with renderer: Renderer, drivenBy loop: LogicLoop, interactingWith inputManager: InputManager) {
+        self.options = options
         self.renderer = renderer
         self.loop = loop
         self.inputManager = inputManager
         
-        let game: Cartridge = iNesFile.load(path: self.filepath)
+        guard self.options.mode != .test, let filepath = self.options.filepath else {
+            return
+        }
+        
+        let game: Cartridge = iNesFile.load(path: filepath)
         // * blows a bit into the cardridge *
         self.nes = NintendoEntertainmentSystem(load: game)
         
         self.loop.start(closure: self.loopClosure)
     }
     
-    // Debug function
-    func step() { self.nes.step() }
+    func step() {
+        if self.options.mode == .debug {
+            self.nes.step()
+        }
+    }
     
     private func loopClosure(_ deltaTime: Double) {
         self.processInput()
@@ -67,7 +75,9 @@ class Conductor: GuardStatus {
     }
     
     private func update(_ deltaTime: Double) {
-        //self.nes.run(for: deltaTime)
+        if self.options.mode == .normal {
+            self.nes.run(for: deltaTime)
+        }
     }
     
     private func render() {
