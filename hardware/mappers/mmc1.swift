@@ -30,17 +30,17 @@ fileprivate class Registers {
     private var prgBankRegister: Byte = 0
     private var chrBankRegister0: Byte = 0
     private var chrBankRegister1: Byte = 0
-    
+
     fileprivate func write(_ data: Byte, to register: RegisterType) {
         guard !Bool(data & 0b10000000) else {
             self.shiftRegister = 0b10000
             self.controlRegister |= Byte(0b1100)
             return
         }
-        
+
         let shouldPush = Bool(self.shiftRegister & 1)
         self.shiftRegister = (self.shiftRegister >> 1) | ((data & 1) << 4)
-        
+
         if shouldPush {
             switch register {
             case .control: self.controlRegister = self.shiftRegister
@@ -55,18 +55,18 @@ fileprivate class Registers {
 
 class MemoryManagmentController1: Mapper {
     var delegate: MapperDelegate
-    
+
     private let bankSize: Word = 0x4000
     private var lowerPrgIndex: UInt8 = 0
     private var higherPrgIndex: UInt8 = 1
-    
+
     private var registers = Registers()
-    
+
     required init(_ delegate: MapperDelegate) {
         self.delegate = delegate
         self.higherPrgIndex = self.delegate.programBankCount(for: self)
     }
-    
+
     func busRead(at address: Word) -> Byte {
         // missing ppu reads
         switch address {
@@ -81,7 +81,7 @@ class MemoryManagmentController1: Mapper {
         default: return 0x00
         }
     }
-    
+
     func busWrite(_ data: Byte, at address: Word) {
         switch address {
         case 0x6000..<0x8000: delegate.mapper(mapper: self, didWriteAt: address, of: .sram, data: data)
