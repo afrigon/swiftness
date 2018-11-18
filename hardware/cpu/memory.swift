@@ -32,7 +32,7 @@ class Stack: GuardStatus {
         let pointer: Word = self.sp.pointee.asWord() + self.size
         var stackString: String = ""
 
-        for i in stride(from: pointer, to: pointer + size, by: 1) {
+        for i in stride(from: pointer + 1, to: pointer + size, by: 1) {
             if i >= 0x200 { break }
             stackString += " 0x\(Word(i).hex()): 0x\(self.bus.readByte(at: i).hex())\n"
         }

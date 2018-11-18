@@ -64,7 +64,7 @@ class MemoryManagmentController1: Mapper {
 
     required init(_ delegate: MapperDelegate) {
         self.delegate = delegate
-        self.higherPrgIndex = self.delegate.programBankCount(for: self)
+        self.higherPrgIndex = self.delegate.programBankCount(for: self) - 1
     }
 
     func busRead(at address: Word) -> Byte {

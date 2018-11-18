@@ -82,7 +82,7 @@ struct RegisterSet {
     var a: AccumulatorRegister      = 0x00
     var x: XIndexRegister           = 0x00
     var y: YIndexRegister           = 0x00
-    var p: ProcessorStatusRegister  = ProcessorStatusRegister(Flag.alwaysOne.rawValue)
+    var p: ProcessorStatusRegister  = ProcessorStatusRegister(Flag.alwaysOne | Flag.breaks)
     var sp: StackPointerRegister    = 0xFD
     var pc: ProgramCounterRegister  = 0x0000
 
@@ -352,12 +352,12 @@ class CoreProcessingUnit {
             return 0
         }
 
+        if type == .reset { self.regs.sp = 0xFD }
+
         stack.pushWord(data: regs.pc)
         stack.pushByte(data: regs.p.value | Flag.alwaysOne.rawValue)
         self.regs.p.set(.interrupt)
         self.regs.pc = memory.readWord(at: type.address)
-
-        if type == .reset { self.regs.sp = 0xFD }
 
         return 7
     }
