@@ -34,12 +34,14 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     private let controller2 = Controller(.secondary)
     private let cartridge: Cartridge
     private let bus = Bus()
-    private let frequency: Double
 
+    private let frequency: Double
+    private var totalCycles: UInt64 = 0
     private var deficitCycles: Int64 = 0
 
     var status: String {
         return """
+         Cycles: \(self.totalCycles)
         \(self.cpu.status)
         \(self.ppu.status)
         \(self.apu.status)
@@ -51,7 +53,7 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     init(load game: Cartridge) {
         self.cpu = CoreProcessingUnit(using: self.bus)
         self.cartridge = game
-        self.frequency = self.cpu.frequency * 1000000   // MHz * 1e+6 == Hz
+        self.frequency = self.cpu.frequency * 1e6   // MHz * 1e+6 == Hz
         self.bus.delegate = self
         self.cpu.requestInterrupt(type: .reset)
     }
@@ -72,6 +74,7 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     @discardableResult
     func step() -> UInt8 {
         let cpuCycle: UInt8 = self.cpu.step()
+        self.totalCycles += UInt64(cpuCycle)
 
         for _ in 0..<cpuCycle * 3 {
             self.ppu.step()
@@ -104,6 +107,7 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     private func getComponent(at address: Word) -> BusConnectedComponent {
         switch address {
         case 0x0000..<0x2000: return self.ram
+        case 0x2000..<0x4000: return self.ppu
         case 0x4016: return self.controller1
         case 0x4017: return self.controller2
         case 0x6000...0xFFFF: return self.cartridge

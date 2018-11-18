@@ -22,7 +22,7 @@
 //    SOFTWARE.
 //
 
-class PictureProcessingUnit: GuardStatus {
+class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
     var status: String {
         return """
         |-------- PPU --------|
@@ -30,6 +30,14 @@ class PictureProcessingUnit: GuardStatus {
     }
 
     func step() {
+
+    }
+
+    func busRead(at address: Word) -> Byte {
+        return 0
+    }
+
+    func busWrite(_ data: Byte, at address: Word) {
 
     }
 }
