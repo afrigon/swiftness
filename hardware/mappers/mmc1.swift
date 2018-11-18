@@ -56,7 +56,7 @@ fileprivate class Registers {
 class MemoryManagmentController1: Mapper {
     weak var delegate: MapperDelegate!
 
-    private let bankSize: Word = 0x4000
+    private let bankSize: DWord = 0x4000
     private var lowerPrgIndex: UInt8 = 0
     private var higherPrgIndex: UInt8 = 1
 
@@ -71,12 +71,12 @@ class MemoryManagmentController1: Mapper {
         // missing ppu reads
         switch address {
         case 0x6000..<0x8000:
-            return delegate.mapper(mapper: self, didReadAt: address - 0x6000, of: .sram)
+            return delegate.mapper(mapper: self, didReadAt: DWord(address - 0x6000), of: .sram)
         case 0x8000..<0xC000:
-            let address: Word = address - 0x8000 + self.lowerPrgIndex.asWord() * self.bankSize
+            let address: DWord = DWord(address - 0x8000) + DWord(self.lowerPrgIndex) * self.bankSize
             return delegate.mapper(mapper: self, didReadAt: address, of: .prg)
         case 0xC000...0xFFFF:
-            let address: Word = address - 0xC000 + self.higherPrgIndex.asWord() * self.bankSize
+            let address: DWord = DWord(address - 0xC000) + DWord(self.higherPrgIndex) * self.bankSize
             return delegate.mapper(mapper: self, didReadAt: address, of: .prg)
         default: return 0x00
         }
