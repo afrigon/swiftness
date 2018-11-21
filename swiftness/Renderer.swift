@@ -22,6 +22,25 @@
 //    SOFTWARE.
 //
 
+class FrameBuffer {
+    var data: [DWord]
+    var size: (width: Int, height: Int)
+
+    init(width: Int, height: Int) {
+        self.size = (width, height)
+        self.data = [DWord](repeating: 0, count: width * height)
+    }
+
+    func set(x: Int, y: Int, color: DWord = 0x000000) {
+        if x < 0 || y < 0 || x >= self.size.width || y >= self.size.height {
+            print("invalid write to framebuffer at (\(x), \(y)) with color #\(color.hex())")
+            return
+        }
+
+        self.data[x * self.size.width + y] = color
+    }
+}
+
 protocol Renderer {
-    func draw(_ image: [Byte]) // maybe pass overlay stuff idk?
+    func draw(_ image: FrameBuffer)
 }

@@ -26,7 +26,6 @@ import Foundation
 
 class Conductor: GuardStatus {
     private var nes: NintendoEntertainmentSystem! = nil
-    private let imageGenerator = ImageGenerator()
     private let renderer: Renderer
     private let loop: LogicLoop
     private let inputManager: InputManager
@@ -84,9 +83,8 @@ class Conductor: GuardStatus {
     }
 
     private func render() {
-        let image: [Byte] = self.imageGenerator.generate()
         autoreleasepool {
-            self.renderer.draw(image)
+            self.renderer.draw(nes.getFrameBuffer())
         }
     }
 }

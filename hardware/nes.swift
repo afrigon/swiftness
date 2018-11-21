@@ -23,11 +23,11 @@
 //
 
 class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
-    let screenWidth: UInt16 = 256
-    let screenHeight: UInt16 = 240
+    static let screenWidth: Int = 256
+    static let screenHeight: Int = 224
 
     private let cpu: CoreProcessingUnit
-    private let ppu = PictureProcessingUnit()
+    private let ppu: PictureProcessingUnit
     private let apu = AudioProcessingUnit()
     private let ram = RandomAccessMemory()
     private let controller1 = Controller(.primary)
@@ -52,6 +52,7 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
 
     init(load game: Cartridge) {
         self.cpu = CoreProcessingUnit(using: self.bus)
+        self.ppu = PictureProcessingUnit(using: self.bus)
         self.cartridge = game
         self.frequency = self.cpu.frequency * 1e6   // MHz * 1e+6 == Hz
         self.bus.delegate = self
@@ -74,7 +75,7 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     @discardableResult
     func step() -> UInt8 {
         let cpuCycle: UInt8 = self.cpu.step()
-        self.totalCycles += UInt64(cpuCycle)
+        self.totalCycles &+= UInt64(cpuCycle)
 
         for _ in 0..<cpuCycle * 3 {
             self.ppu.step()
@@ -96,6 +97,14 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         self.deficitCycles = cycles
     }
 
+    func getFrameBuffer() -> FrameBuffer {
+        return self.ppu.getFrameBuffer()
+    }
+
+    func bus(bus: Bus, shouldTriggerInterrupt type: InterruptType) {
+        self.cpu.requestInterrupt(type: type)
+    }
+
     func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte {
         return self.getComponent(at: address).busRead(at: address)
     }
@@ -107,7 +116,7 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     private func getComponent(at address: Word) -> BusConnectedComponent {
         switch address {
         case 0x0000..<0x2000: return self.ram
-        case 0x2000..<0x4000: return self.ppu
+        case 0x2000..<0x4000, 0x4014: return self.ppu
         case 0x4016: return self.controller1
         case 0x4017: return self.controller2
         case 0x6000...0xFFFF: return self.cartridge

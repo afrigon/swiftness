@@ -26,7 +26,7 @@ import Cocoa
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     let options: StartupOptions
-    private let scale = 3
+    private let scale: Int = 3
     private var window: NSWindow!
     private var viewController: ViewController!
 
@@ -36,8 +36,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let width = CGFloat(256 * self.scale)
-        let height = CGFloat(240 * self.scale)
+        let width = CGFloat(NintendoEntertainmentSystem.screenWidth * self.scale)
+        let height = CGFloat(NintendoEntertainmentSystem.screenHeight * self.scale)
 
         guard let screen = NSScreen.main else {
             fatalError("User has no screen, wtf?!")

@@ -70,7 +70,6 @@ class MetalRenderer: Renderer {
         self.compileShaderPipeline()
         self.createCommandQueue()
         self.createSamplerState()
-        self.configureTextureDescriptor()
     }
 
     private func configureLayer() {
@@ -131,15 +130,15 @@ class MetalRenderer: Renderer {
         self.samplerState = samplerState
     }
 
-    private func configureTextureDescriptor() {
+    private func configureTextureDescriptor(width: Int, height: Int) {
         self.textureDescriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: self.pixelFormat,
-                                                                          width: self.textureSize,
-                                                                          height: self.textureSize,
+                                                                          width: width,
+                                                                          height: height,
                                                                           mipmapped: false)
         self.textureRegion = MTLRegionMake2D(0,
                                              0,
-                                             self.textureSize,
-                                             self.textureSize)
+                                             width,
+                                             height)
 
         guard let texture = self.device.makeTexture(descriptor: self.textureDescriptor) else {
             fatalError("Could not create texture object for metal renderer")
@@ -175,13 +174,15 @@ class MetalRenderer: Renderer {
         commandBuffer.commit()
     }
 
-    func draw(_ image: [Byte]) {
-        if image.count == self.textureSize * self.textureSize {
-            self.texture.replace(region: self.textureRegion,
-                                 mipmapLevel: 0,
-                                 withBytes: image,
-                                 bytesPerRow: self.textureSize)
+    func draw(_ image: FrameBuffer) {
+        if self.textureDescriptor.width != image.size.width || self.textureDescriptor.height != image.size.height {
+            self.configureTextureDescriptor(width: image.size.width, height: image.size.height)
         }
+
+        self.texture.replace(region: self.textureRegion,
+                             mipmapLevel: 0,
+                             withBytes: image.data,
+                             bytesPerRow: image.size.width)
 
         self.createCommandEncoder { encoder in
             encoder.setRenderPipelineState(self.pipelineState)

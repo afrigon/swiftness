@@ -37,6 +37,13 @@ protocol BusConnectedComponent {
 class Bus {
     weak var delegate: BusDelegate?
 
+    func triggerInterrupt(of type: InterruptType) {
+        guard let delegate = self.delegate else {
+            fatalError("A bus delegate must be assign before any interrupt signal is sent over the bus")
+        }
+        delegate.bus(bus: self, shouldTriggerInterrupt: type)
+    }
+
     func readByte(at address: Word) -> Byte {
         guard let delegate = self.delegate else {
             fatalError("A bus delegate must be assign before any read or write signal is sent over the bus")
@@ -62,11 +69,13 @@ class TestsBus: Bus, BusDelegate {
         self.delegate = self
     }
 
+    func bus(bus: Bus, shouldTriggerInterrupt type: InterruptType) {}
     func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte { return 0x40 }
     func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte) {}
 }
 
 protocol BusDelegate: AnyObject {
+    func bus(bus: Bus, shouldTriggerInterrupt type: InterruptType)
     func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte
     func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte)
 }
