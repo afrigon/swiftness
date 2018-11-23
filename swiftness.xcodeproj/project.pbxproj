@@ -92,6 +92,8 @@
 		FEC79C8921842789006C3096 /* NesFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8821842789006C3096 /* NesFile.swift */; };
 		FEC79C8B218459A7006C3096 /* mmc1.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8A218459A7006C3096 /* mmc1.swift */; };
 		FEC79C8D21845CF7006C3096 /* mmc3.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8C21845CF7006C3096 /* mmc3.swift */; };
+		FEFA972021A7B98F00FF74ED /* cpu-tests-roms.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEFA971F21A7B98F00FF74ED /* cpu-tests-roms.swift */; };
+		FEFA972521A7DF1E00FF74ED /* functional-tests.6502 in Resources */ = {isa = PBXBuildFile; fileRef = FEFA972421A7DF1E00FF74ED /* functional-tests.6502 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -150,6 +152,8 @@
 		FEC79C8821842789006C3096 /* NesFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NesFile.swift; sourceTree = "<group>"; };
 		FEC79C8A218459A7006C3096 /* mmc1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mmc1.swift; sourceTree = "<group>"; };
 		FEC79C8C21845CF7006C3096 /* mmc3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mmc3.swift; sourceTree = "<group>"; };
+		FEFA971F21A7B98F00FF74ED /* cpu-tests-roms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "cpu-tests-roms.swift"; sourceTree = "<group>"; };
+		FEFA972421A7DF1E00FF74ED /* functional-tests.6502 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "functional-tests.6502"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -200,7 +204,9 @@
 		FE53C832218369ED002BD71F /* swiftness-osx-tests */ = {
 			isa = PBXGroup;
 			children = (
+				FEFA972321A7DEFD00FF74ED /* roms */,
 				FE53C833218369ED002BD71F /* cpu-tests.swift */,
+				FEFA971F21A7B98F00FF74ED /* cpu-tests-roms.swift */,
 				FE53C835218369ED002BD71F /* Info.plist */,
 			);
 			path = "swiftness-osx-tests";
@@ -290,6 +296,14 @@
 				FEA2741C217C546E0072530A /* IntegerExtensions.swift */,
 			);
 			path = swiftness;
+			sourceTree = "<group>";
+		};
+		FEFA972321A7DEFD00FF74ED /* roms */ = {
+			isa = PBXGroup;
+			children = (
+				FEFA972421A7DF1E00FF74ED /* functional-tests.6502 */,
+			);
+			path = roms;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -394,6 +408,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FEFA972521A7DF1E00FF74ED /* functional-tests.6502 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -439,6 +454,7 @@
 				FE3F925421859C1C0000B574 /* NesFile.swift in Sources */,
 				FE53C83D2183FAD3002BD71F /* cpu.swift in Sources */,
 				FE53C8522183FDCE002BD71F /* Color.swift in Sources */,
+				FEFA972021A7B98F00FF74ED /* cpu-tests-roms.swift in Sources */,
 				FE53C8452183FAE4002BD71F /* ppu.swift in Sources */,
 				FE53C8402183FADC002BD71F /* addressing.swift in Sources */,
 				FE53C834218369ED002BD71F /* cpu-tests.swift in Sources */,
@@ -559,6 +575,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swiftness-osx-tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ENFORCE_EXCLUSIVE_ACCESS = none;
 				SWIFT_VERSION = 4.2;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/swiftness-osx.app/Contents/MacOS/swiftness-osx";
 			};
@@ -581,6 +598,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swiftness-osx-tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ENFORCE_EXCLUSIVE_ACCESS = none;
 				SWIFT_VERSION = 4.2;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/swiftness-osx.app/Contents/MacOS/swiftness-osx";
 			};

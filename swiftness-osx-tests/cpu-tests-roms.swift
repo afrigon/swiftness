@@ -1,0 +1,87 @@
+//
+//    MIT License
+//
+//    Copyright (c) 2018 Alexandre Frigon
+//
+//    Permission is hereby granted, free of charge, to any person obtaining a copy
+//    of this software and associated documentation files (the "Software"), to deal
+//    in the Software without restriction, including without limitation the rights
+//    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//    copies of the Software, and to permit persons to whom the Software is
+//    furnished to do so, subject to the following conditions:
+//
+//    The above copyright notice and this permission notice shall be included in all
+//    copies or substantial portions of the Software.
+//
+//    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//    SOFTWARE.
+//
+
+import XCTest
+@testable import swiftness_osx
+
+class CoreProcessingUnitTestsRoms: XCTestCase, BusDelegate {
+    private var cpu: CoreProcessingUnit!
+    private var program = [Byte]()
+    private let bus = Bus()
+
+    override func setUp() {
+        self.cpu = CoreProcessingUnit(using: self.bus)
+        self.bus.delegate = self
+    }
+
+    func isTraped() -> Word? {
+        guard self.program[self.cpu.registers.pc] == 0x4C else {
+            return nil
+        }
+
+        let address: Word = self.program[self.cpu.registers.pc + Word(1)].asWord() & self.program[self.cpu.registers.pc + Word(2)].asWord() << 8
+        return address == self.cpu.registers.pc ? address : nil
+    }
+
+    func test_functional() {
+        let programStart: Word = 0x0400
+        let successAddress: Word = 0x3469
+
+        // load program
+        let bundle = Bundle(for: type(of: self))
+        let path = bundle.path(forResource: "functional-tests", ofType: "6502")!
+        self.program = NesFile.loadRaw(path: path)
+
+        // jump to start address
+        self.cpu.process(opcode: 0x4C, operand: Operand(value: programStart, address: programStart, additionalCycles: 0))
+
+        var lastInstructions = [Word](repeating: 0, count: 50)
+        while lastInstructions.last! != self.cpu.registers.pc {
+            lastInstructions.append(self.cpu.registers.pc)
+            lastInstructions.removeFirst()
+
+            if self.cpu.registers.pc == 0x9f7 {
+                let _ = 10 + 10
+            }
+
+            self.cpu.step()
+        }
+
+        XCTAssert(self.cpu.registers.pc == successAddress, """
+        The cpu got traped at 0x\(lastInstructions.last!.hex())
+        Trace:
+        \(lastInstructions.reduce("", { (acc, n) -> String in
+            return "\(acc)0x\(n.hex())\n"
+        }))
+        """)
+    }
+
+    func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte {
+        return self.program[address]
+    }
+
+    func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte) {
+        self.program[address] = data
+    }
+}

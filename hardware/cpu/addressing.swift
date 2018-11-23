@@ -72,13 +72,17 @@ class AbsoluteAddressingOperandBuilder: AlteredOperandBuilder {
 class RelativeAddressingOperandBuilder: OperandBuilder {
     func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
         var operand = Operand()
-        operand.address = memory.readByte(at: regs.pc).asWord()
 
-        if Bool(operand.address & 0x80) {
-            operand.address -= 0x100 + regs.pc
+        // transform the relative address into an absolute address
+        let value = memory.readByte(at: regs.pc)
+        regs.pc++
+        operand.address = regs.pc
+        if value.isSignBitOn() {
+            operand.address -= Word(128 - value & 0b01111111)
+        } else {
+            operand.address += value.asWord() & 0b01111111
         }
 
-        regs.pc++
         operand.additionalCycles = UInt8(regs.isAtSamePage(than: operand.address))
         return operand
     }

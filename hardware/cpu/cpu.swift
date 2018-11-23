@@ -157,12 +157,12 @@ class CoreProcessingUnit {
             0x01: Opcode(ora, 6, .indirect(.x)),
             0x05: Opcode(ora, 3, .zeroPage(.none)),
             0x06: Opcode(asl, 5, .zeroPage(.none)),
-            0x08: Opcode(brk, 3, .implied),
+            0x08: Opcode(php, 3, .implied),
             0x09: Opcode(ora, 2, .immediate),
-            0x0A: Opcode(brk, 2, .accumulator),
+            0x0A: Opcode(asla, 2, .accumulator),
             0x0D: Opcode(ora, 4, .absolute(.none)),
             0x0E: Opcode(asl, 6, .absolute(.none)),
-            0x10: Opcode(bpl, 2, .implied),
+            0x10: Opcode(bpl, 2, .relative),
             0x11: Opcode(ora, 5, .indirect(.y)),
             0x15: Opcode(ora, 4, .zeroPage(.x)),
             0x16: Opcode(asl, 6, .zeroPage(.x)),
@@ -170,7 +170,7 @@ class CoreProcessingUnit {
             0x19: Opcode(ora, 4, .absolute(.y)),
             0x1D: Opcode(ora, 4, .absolute(.x)),
             0x1E: Opcode(asl, 7, .absolute(.x)),
-            0x20: Opcode(jsr, 6, .implied),
+            0x20: Opcode(jsr, 6, .absolute(.none)),
             0x21: Opcode(and, 6, .indirect(.x)),
             0x24: Opcode(bit, 3, .zeroPage(.none)),
             0x25: Opcode(and, 3, .zeroPage(.none)),
@@ -181,7 +181,7 @@ class CoreProcessingUnit {
             0x2C: Opcode(bit, 4, .absolute(.none)),
             0x2D: Opcode(and, 2, .absolute(.none)),
             0x2E: Opcode(rol, 6, .absolute(.none)),
-            0x30: Opcode(bmi, 2, .implied),
+            0x30: Opcode(bmi, 2, .relative),
             0x31: Opcode(and, 5, .indirect(.y)),
             0x35: Opcode(and, 4, .zeroPage(.x)),
             0x36: Opcode(rol, 6, .zeroPage(.x)),
@@ -199,7 +199,7 @@ class CoreProcessingUnit {
             0x4C: Opcode(jmp, 3, .absolute(.none)),
             0x4D: Opcode(eor, 4, .absolute(.none)),
             0x4E: Opcode(lsr, 6, .absolute(.none)),
-            0x50: Opcode(bvc, 2, .implied),
+            0x50: Opcode(bvc, 2, .relative),
             0x51: Opcode(eor, 5, .indirect(.y)),
             0x55: Opcode(eor, 4, .zeroPage(.x)),
             0x56: Opcode(lsr, 6, .zeroPage(.x)),
@@ -217,7 +217,7 @@ class CoreProcessingUnit {
             0x6C: Opcode(jmp, 5, .indirect(.none)),
             0x6D: Opcode(adc, 4, .absolute(.none)),
             0x6E: Opcode(ror, 6, .absolute(.none)),
-            0x70: Opcode(bvs, 2, .implied),
+            0x70: Opcode(bvs, 2, .relative),
             0x71: Opcode(adc, 5, .indirect(.y)),
             0x75: Opcode(adc, 4, .zeroPage(.x)),
             0x76: Opcode(ror, 6, .zeroPage(.x)),
@@ -234,7 +234,7 @@ class CoreProcessingUnit {
             0x8C: Opcode(sty, 4, .absolute(.none)),
             0x8D: Opcode(sta, 4, .absolute(.none)),
             0x8E: Opcode(stx, 4, .absolute(.none)),
-            0x90: Opcode(bcc, 2, .implied),
+            0x90: Opcode(bcc, 2, .relative),
             0x91: Opcode(sta, 6, .indirect(.y)),
             0x94: Opcode(sty, 4, .zeroPage(.x)),
             0x95: Opcode(sta, 4, .zeroPage(.x)),
@@ -255,7 +255,7 @@ class CoreProcessingUnit {
             0xAC: Opcode(ldy, 4, .absolute(.none)),
             0xAD: Opcode(lda, 4, .absolute(.none)),
             0xAE: Opcode(ldx, 4, .absolute(.none)),
-            0xB0: Opcode(bcs, 2, .implied),
+            0xB0: Opcode(bcs, 2, .relative),
             0xB1: Opcode(lda, 5, .indirect(.y)),
             0xB4: Opcode(ldy, 4, .zeroPage(.x)),
             0xB5: Opcode(lda, 4, .zeroPage(.x)),
@@ -277,7 +277,7 @@ class CoreProcessingUnit {
             0xCC: Opcode(cpy, 4, .absolute(.none)),
             0xCD: Opcode(cmp, 4, .absolute(.none)),
             0xCE: Opcode(dec, 6, .absolute(.none)),
-            0xD0: Opcode(bne, 2, .implied),
+            0xD0: Opcode(bne, 2, .relative),
             0xD1: Opcode(cmp, 5, .indirect(.y)),
             0xD5: Opcode(cmp, 4, .zeroPage(.x)),
             0xD6: Opcode(dec, 6, .zeroPage(.x)),
@@ -296,7 +296,7 @@ class CoreProcessingUnit {
             0xEC: Opcode(cpx, 4, .absolute(.none)),
             0xED: Opcode(sbc, 4, .absolute(.none)),
             0xEE: Opcode(inc, 6, .absolute(.none)),
-            0xF0: Opcode(beq, 2, .implied),
+            0xF0: Opcode(beq, 2, .relative),
             0xF1: Opcode(sbc, 5, .indirect(.y)),
             0xF5: Opcode(sbc, 4, .zeroPage(.x)),
             0xF6: Opcode(inc, 6, .zeroPage(.x)),
@@ -324,6 +324,7 @@ class CoreProcessingUnit {
         opcode.closure(operand.value, operand.address)
     }
 
+    @discardableResult
     func step() -> UInt8 {
         if let interrupt = self.interruptRequest {
             return self.interrupt(type: interrupt)
@@ -342,6 +343,7 @@ class CoreProcessingUnit {
         return opcode.cycles + operand.additionalCycles
     }
 
+    @discardableResult
     private func interrupt(type: InterruptType) -> UInt8 {
         self.interruptRequest = nil
 
@@ -354,7 +356,7 @@ class CoreProcessingUnit {
 
         if type == .reset { self.regs.sp = 0xFD }
 
-        stack.pushWord(data: regs.pc)
+        stack.pushWord(data: regs.pc + 1)
         stack.pushByte(data: regs.p.value | Flag.alwaysOne.rawValue)
         self.regs.p.set(.interrupt)
         self.regs.pc = memory.readWord(at: type.address)
@@ -487,7 +489,7 @@ class CoreProcessingUnit {
 
     // comparison
     private func compare(_ a: Byte, _ value: Word) {
-        regs.p.updateFor(a - value.rightByte())
+        regs.p.updateFor(a &- value.rightByte())
         regs.p.set(.carry, if: regs.a >= value)
     }
     private func cmp(_ value: Word, _ address: Word) { compare(regs.a, value) }
@@ -495,7 +497,7 @@ class CoreProcessingUnit {
     private func cpy(_ value: Word, _ address: Word) { compare(regs.y, value) }
 
     // branches
-    private func branch(to address: Word, if condition: Bool) { if condition { regs.pc = address } }
+    private func branch(to address: Word, if condition: Bool) { if condition { regs.pc = address } } // additionalCycles += 1 on success ?
     private func beq(_ value: Word, _ address: Word) { branch(to: address, if: regs.p.isSet(.zero)) }
     private func bne(_ value: Word, _ address: Word) { branch(to: address, if: !regs.p.isSet(.zero)) }
     private func bmi(_ value: Word, _ address: Word) { branch(to: address, if: regs.p.isSet(.negative)) }
@@ -506,7 +508,7 @@ class CoreProcessingUnit {
     private func bvc(_ value: Word, _ address: Word) { branch(to: address, if: !regs.p.isSet(.overflow)) }
 
     // jump
-    private func jmp(_ value: Word, _ address: Word) { regs.pc = value }
+    private func jmp(_ value: Word, _ address: Word) { regs.pc = address }
 
     // subroutines
     private func jsr(_ value: Word, _ address: Word) { stack.pushWord(data: regs.pc &- 1); regs.pc = address }
@@ -519,10 +521,8 @@ class CoreProcessingUnit {
     }
 
     private func brk(_ value: Word, _ address: Word) {
-        regs.p.set(.alwaysOne | .breaks)
-        self.interruptRequest = .irq
-        stack.pushWord(data: regs.pc &+ 1) // make sure pc is handled correctly
-        stack.pushByte(data: regs.p.value)
+        regs.p.set(.breaks)
+        self.interrupt(type: .irq)
     }
 
     // stack
@@ -532,11 +532,7 @@ class CoreProcessingUnit {
     private func plp(_ value: Word, _ address: Word) { regs.p &= stack.popByte() & ~Flag.breaks.rawValue | Flag.alwaysOne.rawValue }
 
     // loading
-    private func load(_ a: inout Byte, _ operand: Word) {
-        let value = operand.rightByte()
-        a = value
-        regs.p.updateFor(value)
-    }
+    private func load(_ a: inout Byte, _ operand: Word) { a = operand.rightByte(); regs.p.updateFor(a) }
     private func lda(_ value: Word, _ address: Word) { self.load(&regs.a, value) }
     private func ldx(_ value: Word, _ address: Word) { self.load(&regs.x, value) }
     private func ldy(_ value: Word, _ address: Word) { self.load(&regs.y, value) }
