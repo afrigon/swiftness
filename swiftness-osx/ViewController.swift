@@ -21,10 +21,24 @@
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //    SOFTWARE.
 //
+
 import Cocoa
 
+class Overlay: CATextLayer {
+    override init() {
+        super.init()
+        self.font = NSFont(name: "Menlo", size: 14)
+        self.fontSize = 14
+        self.foregroundColor = .white
+    }
+
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+    }
+}
+
 class ViewController: NSViewController, LogicLoopDelegate {
-    private let overlay = CATextLayer()
+    private let overlay = Overlay()
     private let renderer: MetalRenderer? = MetalRenderer()
     private var loop = CVDisplayLinkLoop()
     private var conductor: Conductor!
@@ -61,11 +75,9 @@ class ViewController: NSViewController, LogicLoopDelegate {
                                    drivenBy: self.loop,
                                    interactingWith: self.inputResponder)
         self.inputResponder.add(closure: self.toggleOverlay, forKey: 99)    // F3
-        self.inputResponder.add(closure: self.step, forKey: 100)    // F8
+        self.inputResponder.add(closure: self.step, forKey: 100)            // F8
         self.loop.delegate = self
-        self.overlay.font = NSFont(name: "Menlo", size: 14)
-        self.overlay.fontSize = 14
-        self.overlay.foregroundColor = .white
+
     }
 
     func logicLoop(loop: LogicLoop, didExecuteCallback deltaTime: Double) {

@@ -28,7 +28,6 @@
 		FE53C81D21834E08002BD71F /* bus.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C81C21834E08002BD71F /* bus.swift */; };
 		FE53C82221835789002BD71F /* addressing.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C82121835789002BD71F /* addressing.swift */; };
 		FE53C824218357A7002BD71F /* memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C823218357A7002BD71F /* memory.swift */; };
-		FE53C834218369ED002BD71F /* cpu-tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C833218369ED002BD71F /* cpu-tests.swift */; };
 		FE53C83C2183E5AF002BD71F /* InputResponder.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C83B2183E5AF002BD71F /* InputResponder.swift */; };
 		FE53C83D2183FAD3002BD71F /* cpu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741A217C47B50072530A /* cpu.swift */; };
 		FE53C83E2183FADC002BD71F /* addressing.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C82121835789002BD71F /* addressing.swift */; };
@@ -122,7 +121,6 @@
 		FE53C82121835789002BD71F /* addressing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = addressing.swift; sourceTree = "<group>"; };
 		FE53C823218357A7002BD71F /* memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = memory.swift; sourceTree = "<group>"; };
 		FE53C831218369ED002BD71F /* swiftness-osx-tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swiftness-osx-tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		FE53C833218369ED002BD71F /* cpu-tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "cpu-tests.swift"; sourceTree = "<group>"; };
 		FE53C835218369ED002BD71F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FE53C83B2183E5AF002BD71F /* InputResponder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputResponder.swift; sourceTree = "<group>"; };
 		FE82CB41219FD8AD00E08545 /* StartupOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupOptions.swift; sourceTree = "<group>"; };
@@ -205,7 +203,6 @@
 			isa = PBXGroup;
 			children = (
 				FEFA972321A7DEFD00FF74ED /* roms */,
-				FE53C833218369ED002BD71F /* cpu-tests.swift */,
 				FEFA971F21A7B98F00FF74ED /* cpu-tests-roms.swift */,
 				FE53C835218369ED002BD71F /* Info.plist */,
 			);
@@ -457,7 +454,6 @@
 				FEFA972021A7B98F00FF74ED /* cpu-tests-roms.swift in Sources */,
 				FE53C8452183FAE4002BD71F /* ppu.swift in Sources */,
 				FE53C8402183FADC002BD71F /* addressing.swift in Sources */,
-				FE53C834218369ED002BD71F /* cpu-tests.swift in Sources */,
 				FE53C84D2183FDCE002BD71F /* Renderer.swift in Sources */,
 				FE82CB6421A00BE800E08545 /* StartupOptions.swift in Sources */,
 				FE53C84C2183FDCE002BD71F /* Conductor.swift in Sources */,
