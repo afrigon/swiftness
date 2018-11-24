@@ -350,7 +350,7 @@ class CoreProcessingUnit {
         // Handle the bit 7 of PPU Control Register 1 ($2000)
         let isValidNmi: Bool = type == .nmi && Bool(self.memory.readByte(at: 0x2000) & 0b10000000)
 
-        guard isValidNmi || self.regs.p.isNotSet(.interrupt) else {
+        guard type == .irq || isValidNmi || self.regs.p.isNotSet(.interrupt) else {
             return 0
         }
 
@@ -514,14 +514,14 @@ class CoreProcessingUnit {
     private func jsr(_ value: Word, _ address: Word) { stack.pushWord(data: regs.pc &- 1); regs.pc = address }
     private func rts(_ value: Word, _ address: Word) { regs.pc = stack.popWord() &+ 1 }
 
-    // interuptions
+    // interruptions
     private func rti(_ value: Word, _ address: Word) {
         regs.p &= stack.popByte() | Flag.alwaysOne.rawValue
         regs.pc = stack.popWord()
     }
 
     private func brk(_ value: Word, _ address: Word) {
-        regs.p.set(.breaks)
+        self.regs.p.set(.breaks)
         self.interrupt(type: .irq)
     }
 

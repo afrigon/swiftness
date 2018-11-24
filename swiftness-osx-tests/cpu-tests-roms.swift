@@ -35,15 +35,6 @@ class CoreProcessingUnitTestsRoms: XCTestCase, BusDelegate {
         self.bus.delegate = self
     }
 
-    func isTraped() -> Word? {
-        guard self.program[self.cpu.registers.pc] == 0x4C else {
-            return nil
-        }
-
-        let address: Word = self.program[self.cpu.registers.pc + Word(1)].asWord() & self.program[self.cpu.registers.pc + Word(2)].asWord() << 8
-        return address == self.cpu.registers.pc ? address : nil
-    }
-
     func test_functional() {
         let programStart: Word = 0x0400
         let successAddress: Word = 0x3469
@@ -61,19 +52,17 @@ class CoreProcessingUnitTestsRoms: XCTestCase, BusDelegate {
             lastInstructions.append(self.cpu.registers.pc)
             lastInstructions.removeFirst()
 
-            if self.cpu.registers.pc == 0x9f7 {
-                let _ = 10 + 10
+            if self.cpu.registers.pc == 0xf1c {
+                print("checkpoint")
             }
 
             self.cpu.step()
         }
 
         XCTAssert(self.cpu.registers.pc == successAddress, """
-        The cpu got traped at 0x\(lastInstructions.last!.hex())
+        The cpu got trapped at 0x\(lastInstructions.last!.hex())
         Trace:
-        \(lastInstructions.reduce("", { (acc, n) -> String in
-            return "\(acc)0x\(n.hex())\n"
-        }))
+            \(lastInstructions.reduce("", { (acc, n) -> String in return "\(acc)0x\(n.hex())\n\t" }))
         """)
     }
 

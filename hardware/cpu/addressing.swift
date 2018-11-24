@@ -50,7 +50,7 @@ class ZeroPageAddressingOperandBuilder: AlteredOperandBuilder {
     override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
         let alterationValue: Byte = self.alteration != .none ? (self.alteration == .x ? regs.x : regs.y) : 0
         var operand = Operand()
-        operand.address = (memory.readByte(at: regs.pc) + alterationValue).asWord()
+        operand.address = memory.readByte(at: regs.pc).asWord() + alterationValue & 0xFF
         operand.value = memory.readByte(at: operand.address).asWord()
         regs.pc++
         return operand
@@ -61,7 +61,7 @@ class AbsoluteAddressingOperandBuilder: AlteredOperandBuilder {
     override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
         let alterationValue: Byte = self.alteration != .none ? (self.alteration == .x ? regs.x : regs.y) : 0
         var operand = Operand()
-        operand.address = memory.readWord(at: regs.pc) + alterationValue
+        operand.address = memory.readWord(at: regs.pc) &+ alterationValue
         operand.value = memory.readByte(at: operand.address).asWord()
         regs.pc += 2
         operand.additionalCycles = self.alteration != .none ? UInt8(regs.isAtSamePage(than: operand.address)) : 0
