@@ -36,7 +36,7 @@ class CoreProcessingUnitTestsRoms: XCTestCase, BusDelegate {
     }
 
     func test_functional() {
-        let programStart: Word = 0x0400
+        let startAddress: Word = 0x0400
         let successAddress: Word = 0x3469
 
         // load program
@@ -45,7 +45,7 @@ class CoreProcessingUnitTestsRoms: XCTestCase, BusDelegate {
         self.program = NesFile.loadRaw(path: path)
 
         // jump to start address
-        self.cpu.process(opcode: 0x4C, operand: Operand(value: programStart, address: programStart, additionalCycles: 0))
+        self.cpu.process(opcode: 0x4C, operand: Operand(value: 0, address: startAddress, additionalCycles: 0))
 
         var lastInstructions = [Word](repeating: 0, count: 50)
         while lastInstructions.last! != self.cpu.registers.pc {

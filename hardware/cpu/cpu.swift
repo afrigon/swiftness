@@ -488,9 +488,9 @@ class CoreProcessingUnit {
     private func sei(_ value: Word, _ address: Word) { regs.p.set(.interrupt) }
 
     // comparison
-    private func compare(_ a: Byte, _ value: Word) {
-        regs.p.updateFor(a &- value.rightByte())
-        regs.p.set(.carry, if: regs.a >= value)
+    private func compare(_ register: Byte, _ value: Word) {
+        regs.p.updateFor(register &- value.rightByte())
+        regs.p.set(.carry, if: register >= value)
     }
     private func cmp(_ value: Word, _ address: Word) { compare(regs.a, value) }
     private func cpx(_ value: Word, _ address: Word) { compare(regs.x, value) }
