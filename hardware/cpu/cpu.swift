@@ -419,8 +419,9 @@ class CoreProcessingUnit {
     private func ora(_ value: Word, _ address: Word) { regs.a |= value; regs.p.updateFor(regs.a) }
 
     private func bit(_ value: Word, _ address: Word) {
-        regs.p.set(.zero, if: Bool(regs.a & value))
-        regs.p.set((.overflow | .negative) & value)
+        regs.p.set(.zero, if: !Bool(regs.a & value))
+        regs.p.set(.overflow, if: Bool(Flag.overflow.rawValue & value))
+        regs.p.set(.negative, if: Bool(Flag.negative.rawValue & value))
     }
 
     private func asl(_ value: Word, _ address: Word) {
