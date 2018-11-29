@@ -99,10 +99,11 @@ class ImmediateAddressingOperandBuilder: OperandBuilder {
 
 class IndirectAddressingMode: AlteredOperandBuilder {
     override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
-        let addressPointer: Word = (self.alteration == .none
+        let addressPointer: Word = ((self.alteration == .none
             ? memory.readWord(at: regs.pc)
             : memory.readByte(at: regs.pc).asWord())
-        + (self.alteration == .x ? regs.x.asWord() : 0)
+        + (self.alteration == .x ? regs.x.asWord() : 0))
+        & (self.alteration == .none ? 0xFFFF : 0xFF)
 
         var operand = Operand()
         operand.address = memory.readWordGlitched(at: addressPointer) &+ (self.alteration == .y ? regs.y : 0)
