@@ -95,7 +95,7 @@ class CoreProcessingUnitMemory {
     func readWordGlitched(at address: Word) -> Word {
         // 6502 hardware bug, instead of reading from 0xC0FF/0xC100 it reads from 0xC0FF/0xC000
         if address.rightByte() == 0xFF {
-            return self.readByte(at: address & 0xFF00).asWord() << 8 + self.readByte(at: address)
+            return self.readByte(at: address).asWord() + self.readByte(at: address & 0xFF00).asWord() << 8
         }
 
         return self.readWord(at: address)

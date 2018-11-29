@@ -52,7 +52,7 @@ class CoreProcessingUnitTestsRoms: XCTestCase, BusDelegate {
             lastInstructions.append(self.cpu.registers.pc)
             lastInstructions.removeFirst()
 
-            if self.cpu.registers.pc == 0xf1c {
+            if self.cpu.registers.pc == 0x16e7 {
                 print("checkpoint")
             }
 
