@@ -119,6 +119,7 @@ extension UInt8 {
 }
 
 extension UInt16 {
+    init(_ value: Bool) { self.init(value ? 1 : 0 ) }
     static postfix func ++ (value: inout UInt16) { value &+= 1 }
     static postfix func -- (value: inout UInt16) { value &-= 1 }
     static func + (left: UInt16, right: UInt8) -> UInt16 { return left + right.asWord() }
@@ -133,7 +134,6 @@ extension UInt16 {
     func leftByte() -> UInt8 { return UInt8(self >> 8) }
     func rightByte() -> UInt8 { return UInt8(self & 0xFF) }
     func overflowsByte() -> Bool { return Bool(self & 0xFF00) }
-    func overflowsByteByOne() -> Bool { return Bool(self & 0x100) }
     func isSignBitOn() -> Bool { return Bool(self & 0b1000000000000000) }
     func isLeastSignificantBitOn() -> Bool { return Bool(self & 1) }
     func isMostSignificantBitOn() -> Bool { return self.isSignBitOn() }

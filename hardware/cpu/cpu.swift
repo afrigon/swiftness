@@ -439,8 +439,8 @@ class CoreProcessingUnit {
     }
 
     private func rol(_ value: Word, _ address: Word) {
-        let result: Word = value << 1 | regs.p.valueOf(.carry)
-        regs.p.set(.carry, if: result.overflowsByteByOne())
+        let result: Word = value << 1 | Word(regs.p.isSet(.carry))
+        regs.p.set(.carry, if: Bool(result & 0x100))
         memory.writeByte(result.rightByte(), at: address)
         regs.p.updateFor(result)
     }
@@ -467,13 +467,13 @@ class CoreProcessingUnit {
 
     private func rola(_ value: Word, _ address: Word) {
         let carry: Byte = regs.p.valueOf(.carry)
-        regs.p.set(.carry, if: Bool(regs.a.isSignBitOn()))
+        regs.p.set(.carry, if: regs.a.isSignBitOn())
         regs.a = regs.a << 1 | carry
         regs.p.updateFor(regs.a)
     }
 
     private func rora(_ value: Word, _ address: Word) {
-        let carry = regs.p.valueOf(.carry)
+        let carry: Byte = regs.p.valueOf(.carry)
         regs.p.set(.carry, if: regs.a.isLeastSignificantBitOn())
         regs.a = regs.a >> 1 | carry << 7
         regs.p.updateFor(regs.a)
