@@ -466,9 +466,9 @@ class CoreProcessingUnit {
     }
 
     private func rola(_ value: Word, _ address: Word) {
-        let result: Word = regs.a.asWord() << 1 | regs.p.valueOf(.carry)
-        regs.p.set(.carry, if: result.overflowsByteByOne())
-        regs.a = result.rightByte()
+        let carry: Byte = regs.p.valueOf(.carry)
+        regs.p.set(.carry, if: Bool(regs.a.isSignBitOn()))
+        regs.a = regs.a << 1 | carry
         regs.p.updateFor(regs.a)
     }
 
