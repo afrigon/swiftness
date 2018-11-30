@@ -119,7 +119,6 @@ extension UInt8 {
 }
 
 extension UInt16 {
-    init(_ value: Bool) { self.init(value ? 1 : 0 ) }
     static postfix func ++ (value: inout UInt16) { value &+= 1 }
     static postfix func -- (value: inout UInt16) { value &-= 1 }
     static func + (left: UInt16, right: UInt8) -> UInt16 { return left + right.asWord() }

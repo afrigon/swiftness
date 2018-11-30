@@ -439,7 +439,7 @@ class CoreProcessingUnit {
     }
 
     private func rol(_ value: Word, _ address: Word) {
-        let result: Word = value << 1 | Word(regs.p.isSet(.carry))
+        let result: Word = value << 1 | Word(regs.p.valueOf(.carry))
         regs.p.set(.carry, if: Bool(result & 0x100))
         memory.writeByte(result.rightByte(), at: address)
         regs.p.updateFor(result)
