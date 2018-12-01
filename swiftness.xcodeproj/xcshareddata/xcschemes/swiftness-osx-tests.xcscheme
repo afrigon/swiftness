@@ -23,15 +23,6 @@
             </BuildableReference>
          </TestableReference>
       </Testables>
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "FEA27407217C45F70072530A"
-            BuildableName = "swiftness-osx.app"
-            BlueprintName = "swiftness-osx"
-            ReferencedContainer = "container:swiftness.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
       <AdditionalOptions>
       </AdditionalOptions>
    </TestAction>
@@ -64,15 +55,6 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "FEA27407217C45F70072530A"
-            BuildableName = "swiftness-osx.app"
-            BlueprintName = "swiftness-osx"
-            ReferencedContainer = "container:swiftness.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

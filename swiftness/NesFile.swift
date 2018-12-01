@@ -74,6 +74,17 @@ class NesFile {
         return Cartridge(prg: prg, chr: chr, mapperType: mapperType, mirroring: mirroring, battery: battery)
     }
 
+    static func loadRaw(path: String) -> [Byte] {
+        guard let data: NSData = NSData(contentsOfFile: path) else {
+            fatalError("Could not open file at: \(path)")
+        }
+
+        var program = [Byte](repeating: 0x00, count: data.length)
+        data.getBytes(&program, range: NSRange(location: 0, length: data.length))
+
+        return program
+    }
+
     private static func validateFormat(_ header: Header) {
         guard NesFile.filetypeValue == DWord(bigEndian: header.filetype) else {
             fatalError("File is not .nes format")
