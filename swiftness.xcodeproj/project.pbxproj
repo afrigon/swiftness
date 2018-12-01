@@ -28,7 +28,6 @@
 		FE53C81D21834E08002BD71F /* bus.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C81C21834E08002BD71F /* bus.swift */; };
 		FE53C82221835789002BD71F /* addressing.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C82121835789002BD71F /* addressing.swift */; };
 		FE53C824218357A7002BD71F /* memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C823218357A7002BD71F /* memory.swift */; };
-		FE53C834218369ED002BD71F /* cpu-tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C833218369ED002BD71F /* cpu-tests.swift */; };
 		FE53C83C2183E5AF002BD71F /* InputResponder.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C83B2183E5AF002BD71F /* InputResponder.swift */; };
 		FE53C83D2183FAD3002BD71F /* cpu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741A217C47B50072530A /* cpu.swift */; };
 		FE53C83E2183FADC002BD71F /* addressing.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C82121835789002BD71F /* addressing.swift */; };
@@ -84,6 +83,8 @@
 		FEA2743D2181FCCA0072530A /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743C2181FCCA0072530A /* Renderer.swift */; };
 		FEA2743F2182014E0072530A /* LogicLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743E2182014E0072530A /* LogicLoop.swift */; };
 		FEA27452218208D30072530A /* ImageGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27451218208D30072530A /* ImageGenerator.swift */; };
+		FEA4865F21B288C600ADE1AF /* cpu-instructions-tests.lst in Resources */ = {isa = PBXBuildFile; fileRef = FEA4865D21B288C600ADE1AF /* cpu-instructions-tests.lst */; };
+		FEA4866321B28D5A00ADE1AF /* cpu-instructions-tests.bin in Resources */ = {isa = PBXBuildFile; fileRef = FEA4866221B28D5A00ADE1AF /* cpu-instructions-tests.bin */; };
 		FEBA1F3F21820D610044DC8B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEBA1F3E21820D610044DC8B /* AppDelegate.swift */; };
 		FEBA1F4121820D610044DC8B /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEBA1F4021820D610044DC8B /* ViewController.swift */; };
 		FEBA1F4621820D620044DC8B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FEBA1F4521820D620044DC8B /* Assets.xcassets */; };
@@ -92,6 +93,7 @@
 		FEC79C8921842789006C3096 /* NesFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8821842789006C3096 /* NesFile.swift */; };
 		FEC79C8B218459A7006C3096 /* mmc1.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8A218459A7006C3096 /* mmc1.swift */; };
 		FEC79C8D21845CF7006C3096 /* mmc3.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8C21845CF7006C3096 /* mmc3.swift */; };
+		FEFA972021A7B98F00FF74ED /* cpu-tests-roms.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEFA971F21A7B98F00FF74ED /* cpu-tests-roms.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -120,7 +122,6 @@
 		FE53C82121835789002BD71F /* addressing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = addressing.swift; sourceTree = "<group>"; };
 		FE53C823218357A7002BD71F /* memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = memory.swift; sourceTree = "<group>"; };
 		FE53C831218369ED002BD71F /* swiftness-osx-tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swiftness-osx-tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		FE53C833218369ED002BD71F /* cpu-tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "cpu-tests.swift"; sourceTree = "<group>"; };
 		FE53C835218369ED002BD71F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FE53C83B2183E5AF002BD71F /* InputResponder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputResponder.swift; sourceTree = "<group>"; };
 		FE82CB41219FD8AD00E08545 /* StartupOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupOptions.swift; sourceTree = "<group>"; };
@@ -141,6 +142,8 @@
 		FEA2743C2181FCCA0072530A /* Renderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Renderer.swift; sourceTree = "<group>"; };
 		FEA2743E2182014E0072530A /* LogicLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogicLoop.swift; sourceTree = "<group>"; };
 		FEA27451218208D30072530A /* ImageGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageGenerator.swift; sourceTree = "<group>"; };
+		FEA4865D21B288C600ADE1AF /* cpu-instructions-tests.lst */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "cpu-instructions-tests.lst"; sourceTree = "<group>"; };
+		FEA4866221B28D5A00ADE1AF /* cpu-instructions-tests.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = "cpu-instructions-tests.bin"; sourceTree = "<group>"; };
 		FEBA1F3C21820D610044DC8B /* swiftness-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "swiftness-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FEBA1F3E21820D610044DC8B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FEBA1F4021820D610044DC8B /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -150,6 +153,7 @@
 		FEC79C8821842789006C3096 /* NesFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NesFile.swift; sourceTree = "<group>"; };
 		FEC79C8A218459A7006C3096 /* mmc1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mmc1.swift; sourceTree = "<group>"; };
 		FEC79C8C21845CF7006C3096 /* mmc3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mmc3.swift; sourceTree = "<group>"; };
+		FEFA971F21A7B98F00FF74ED /* cpu-tests-roms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "cpu-tests-roms.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -200,7 +204,8 @@
 		FE53C832218369ED002BD71F /* swiftness-osx-tests */ = {
 			isa = PBXGroup;
 			children = (
-				FE53C833218369ED002BD71F /* cpu-tests.swift */,
+				FEFA972321A7DEFD00FF74ED /* roms */,
+				FEFA971F21A7B98F00FF74ED /* cpu-tests-roms.swift */,
 				FE53C835218369ED002BD71F /* Info.plist */,
 			);
 			path = "swiftness-osx-tests";
@@ -262,6 +267,15 @@
 			path = hardware;
 			sourceTree = "<group>";
 		};
+		FEA4864F21B2822B00ADE1AF /* cpu-instructions */ = {
+			isa = PBXGroup;
+			children = (
+				FEA4866221B28D5A00ADE1AF /* cpu-instructions-tests.bin */,
+				FEA4865D21B288C600ADE1AF /* cpu-instructions-tests.lst */,
+			);
+			path = "cpu-instructions";
+			sourceTree = "<group>";
+		};
 		FEBA1F3D21820D610044DC8B /* swiftness-ios */ = {
 			isa = PBXGroup;
 			children = (
@@ -290,6 +304,14 @@
 				FEA2741C217C546E0072530A /* IntegerExtensions.swift */,
 			);
 			path = swiftness;
+			sourceTree = "<group>";
+		};
+		FEFA972321A7DEFD00FF74ED /* roms */ = {
+			isa = PBXGroup;
+			children = (
+				FEA4864F21B2822B00ADE1AF /* cpu-instructions */,
+			);
+			path = roms;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -394,6 +416,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FEA4865F21B288C600ADE1AF /* cpu-instructions-tests.lst in Resources */,
+				FEA4866321B28D5A00ADE1AF /* cpu-instructions-tests.bin in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -439,9 +463,9 @@
 				FE3F925421859C1C0000B574 /* NesFile.swift in Sources */,
 				FE53C83D2183FAD3002BD71F /* cpu.swift in Sources */,
 				FE53C8522183FDCE002BD71F /* Color.swift in Sources */,
+				FEFA972021A7B98F00FF74ED /* cpu-tests-roms.swift in Sources */,
 				FE53C8452183FAE4002BD71F /* ppu.swift in Sources */,
 				FE53C8402183FADC002BD71F /* addressing.swift in Sources */,
-				FE53C834218369ED002BD71F /* cpu-tests.swift in Sources */,
 				FE53C84D2183FDCE002BD71F /* Renderer.swift in Sources */,
 				FE82CB6421A00BE800E08545 /* StartupOptions.swift in Sources */,
 				FE53C84C2183FDCE002BD71F /* Conductor.swift in Sources */,
@@ -559,6 +583,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swiftness-osx-tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ENFORCE_EXCLUSIVE_ACCESS = none;
 				SWIFT_VERSION = 4.2;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/swiftness-osx.app/Contents/MacOS/swiftness-osx";
 			};
@@ -581,6 +606,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swiftness-osx-tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ENFORCE_EXCLUSIVE_ACCESS = none;
 				SWIFT_VERSION = 4.2;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/swiftness-osx.app/Contents/MacOS/swiftness-osx";
 			};

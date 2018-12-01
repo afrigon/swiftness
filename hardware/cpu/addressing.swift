@@ -50,7 +50,7 @@ class ZeroPageAddressingOperandBuilder: AlteredOperandBuilder {
     override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
         let alterationValue: Byte = self.alteration != .none ? (self.alteration == .x ? regs.x : regs.y) : 0
         var operand = Operand()
-        operand.address = (memory.readByte(at: regs.pc) + alterationValue).asWord()
+        operand.address = (memory.readByte(at: regs.pc).asWord() + alterationValue) & 0xFF
         operand.value = memory.readByte(at: operand.address).asWord()
         regs.pc++
         return operand
@@ -72,13 +72,17 @@ class AbsoluteAddressingOperandBuilder: AlteredOperandBuilder {
 class RelativeAddressingOperandBuilder: OperandBuilder {
     func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
         var operand = Operand()
-        operand.address = memory.readByte(at: regs.pc).asWord()
 
-        if Bool(operand.address & 0x80) {
-            operand.address -= 0x100 + regs.pc
+        // transform the relative address into an absolute address
+        let value = memory.readByte(at: regs.pc)
+        regs.pc++
+        operand.address = regs.pc
+        if value.isSignBitOn() {
+            operand.address -= Word(128 - value & 0b01111111)
+        } else {
+            operand.address += value.asWord() & 0b01111111
         }
 
-        regs.pc++
         operand.additionalCycles = UInt8(regs.isAtSamePage(than: operand.address))
         return operand
     }
@@ -95,7 +99,11 @@ class ImmediateAddressingOperandBuilder: OperandBuilder {
 
 class IndirectAddressingMode: AlteredOperandBuilder {
     override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
-        let addressPointer: Word = memory.readWord(at: regs.pc) &+ (self.alteration == .x ? regs.x : 0)
+        let addressPointer: Word = ((self.alteration == .none
+            ? memory.readWord(at: regs.pc)
+            : memory.readByte(at: regs.pc).asWord())
+        + (self.alteration == .x ? regs.x.asWord() : 0))
+        & (self.alteration == .none ? 0xFFFF : 0xFF)
 
         var operand = Operand()
         operand.address = memory.readWordGlitched(at: addressPointer) &+ (self.alteration == .y ? regs.y : 0)

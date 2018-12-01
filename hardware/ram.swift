@@ -44,4 +44,6 @@ class RandomAccessMemory: BusConnectedComponent {
         }
         self.data[address % self.size] = data
     }
+
+    
 }
