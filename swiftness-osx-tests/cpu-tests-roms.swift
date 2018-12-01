@@ -35,13 +35,13 @@ class CoreProcessingUnitTestsRoms: XCTestCase, BusDelegate {
         self.bus.delegate = self
     }
 
-    func test_functional() {
+    func testInstructions() {
         let startAddress: Word = 0x0400
-        let successAddress: Word = 0x3469
+        let successAddress: Word = 0x33dc
 
         // load program
         let bundle = Bundle(for: type(of: self))
-        let path = bundle.path(forResource: "functional-tests", ofType: "6502")!
+        let path = bundle.path(forResource: "cpu-instructions-tests", ofType: "bin")!
         self.program = NesFile.loadRaw(path: path)
 
         // jump to start address
@@ -51,10 +51,6 @@ class CoreProcessingUnitTestsRoms: XCTestCase, BusDelegate {
         while lastInstructions.last! != self.cpu.registers.pc {
             lastInstructions.append(self.cpu.registers.pc)
             lastInstructions.removeFirst()
-
-            if self.cpu.registers.pc == 0x336d {
-                print("checkpoint")
-            }
 
             self.cpu.step()
         }

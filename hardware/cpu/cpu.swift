@@ -386,7 +386,7 @@ class CoreProcessingUnit {
     private func dey(_ value: Word, _ address: Word) { regs.y--; regs.p.updateFor(regs.y) }
 
     private func adc(_ value: Word, _ address: Word) {
-        let result = regs.a &+ value &+ regs.p.valueOf(.carry)
+        let result: Word = regs.a &+ value &+ regs.p.valueOf(.carry)
         regs.p.set(.carry, if: result.overflowsByte())
         regs.p.set(.overflow, if: Bool(~(regs.a ^ value) & (regs.a ^ result) & Flag.negative.rawValue))
         regs.a = result.rightByte()
@@ -394,7 +394,7 @@ class CoreProcessingUnit {
     }
 
     private func sbc(_ value: Word, _ address: Word) {
-        let result = regs.a &- value &- (1 - regs.p.valueOf(.carry))
+        let result: Word = regs.a &- value &- (1 - regs.p.valueOf(.carry))
         regs.p.set(.carry, if: !result.overflowsByte())
         regs.p.set(.overflow, if: Bool((regs.a ^ value) & (regs.a ^ result) & Flag.negative.rawValue))
         regs.a = result.rightByte()
