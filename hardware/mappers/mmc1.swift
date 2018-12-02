@@ -53,7 +53,7 @@ fileprivate class Registers {
     }
 }
 
-class MemoryManagmentController1: Mapper {
+class MMC1: Mapper {
     weak var delegate: MapperDelegate!
 
     private let bankSize: DWord = 0x4000
@@ -71,20 +71,20 @@ class MemoryManagmentController1: Mapper {
         // missing ppu reads
         switch address {
         case 0x6000..<0x8000:
-            return delegate.mapper(mapper: self, didReadAt: DWord(address - 0x6000), of: .sram)
+            return self.delegate.mapper(mapper: self, didReadAt: DWord(address - 0x6000), of: .sram)
         case 0x8000..<0xC000:
             let address: DWord = DWord(address - 0x8000) + DWord(self.lowerPrgIndex) * self.bankSize
-            return delegate.mapper(mapper: self, didReadAt: address, of: .prg)
+            return self.delegate.mapper(mapper: self, didReadAt: address, of: .prg)
         case 0xC000...0xFFFF:
             let address: DWord = DWord(address - 0xC000) + DWord(self.higherPrgIndex) * self.bankSize
-            return delegate.mapper(mapper: self, didReadAt: address, of: .prg)
+            return self.delegate.mapper(mapper: self, didReadAt: address, of: .prg)
         default: return 0x00
         }
     }
 
     func busWrite(_ data: Byte, at address: Word) {
         switch address {
-        case 0x6000..<0x8000: delegate.mapper(mapper: self, didWriteAt: address, of: .sram, data: data)
+        case 0x6000..<0x8000: self.delegate.mapper(mapper: self, didWriteAt: address, of: .sram, data: data)
         case 0x8000..<0xA000: self.registers.write(data, to: .control)
         case 0xA000..<0xC000: self.registers.write(data, to: .chrBank0)
         case 0xC000..<0xE000: self.registers.write(data, to: .chrBank1)
