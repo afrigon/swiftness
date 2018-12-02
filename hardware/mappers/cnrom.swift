@@ -22,18 +22,42 @@
 //    SOFTWARE.
 //
 
-class MMC3: Mapper {
+class CNROM: Mapper {
     weak var delegate: MapperDelegate!
+
+    let chrBankSize: Word = 0x2000
+    let prgBankSize: Word = 0x4000
+
+    var chrIndex: Word = 0
+    var prgMirrored: Bool = false   // A 16KB PRG ROM will be mirrored at 0xC000
 
     required init(_ delegate: MapperDelegate) {
         self.delegate = delegate
+        self.prgMirrored = self.delegate.programBankCount(for: self) == 1
     }
 
     func busRead(at address: Word) -> Byte {
-        return 0x00
+        switch address {
+        case 0..<0x2000:
+            let address: DWord = DWord(self.chrIndex * self.chrBankSize + address)
+            return self.delegate.mapper(mapper: self, didReadAt: address, of: .chr)
+        case 0x8000..<0xC000:
+            let address: DWord = DWord(address - 0x8000 + self.prgBankSize)
+            return self.delegate.mapper(mapper: self, didReadAt: address, of: .prg)
+        case 0xC000...0xFFFF:
+            let address: DWord = DWord(address - 0xC000)
+                + DWord(self.prgBankSize * (self.prgMirrored ? 0 : 1))
+            return self.delegate.mapper(mapper: self, didReadAt: address, of: .prg)
+        default:
+            print("CNROM mapper invalid read at 0x\(address.hex())")
+            return 0
+        }
     }
 
     func busWrite(_ data: Byte, at address: Word) {
-
+        switch address {
+        case 0x8000...0xFFFF: self.chrIndex = Word(data & 0b11)
+        default: print("CNROM mapper invalid write at 0x\(address.hex())")
+        }
     }
 }

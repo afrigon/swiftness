@@ -27,13 +27,6 @@ protocol BusConnectedComponent {
     func busWrite(_ data: Byte, at address: Word)
 }
 
-//class NullComponent: BusConnectedComponent {
-//    func busRead(at address: Word) -> Byte { return 0x00 }
-//    func busWrite(_ data: Byte, at address: Word) {
-//        fatalError("Illegal write address: \(address)")
-//    }
-//}
-
 class Bus {
     weak var delegate: BusDelegate?
 
