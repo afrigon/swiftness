@@ -33,8 +33,9 @@ protocol Mapper: BusConnectedComponent {
 class MapperFactory {
     static func create(_ type: MapperType, withDelegate delegate: MapperDelegate) -> Mapper {
         switch type {
-        case .mmc1: return MemoryManagmentController1(delegate)
-        case .mmc3: return MemoryManagmentController3(delegate)
+        case .mmc1: return MMC1(delegate)
+        case .cnrom: return CNROM(delegate)
+        case .mmc3: return MMC3(delegate)
         default:
             fatalError("Mapper (\(String(describing: type).uppercased())) is not implemented")
         }
