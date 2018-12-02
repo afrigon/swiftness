@@ -32,7 +32,8 @@ guard var options: StartupOptions = StartupOptions.parse(arguments) else {
 // options injection for debuging
 if options.mode != .test {
     options.filepath = "/Users/frigon/.nes/roms/donkey-kong.nes"
-    options.mode = .debug
+    //options.mode = .debug
+    options.mode = .normal
 }
 
 let delegate = AppDelegate(options)

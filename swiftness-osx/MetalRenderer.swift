@@ -49,7 +49,7 @@ class MetalRenderer: Renderer {
 
     private var vertexBufferObject: MTLBuffer! = nil
     private var samplerState: MTLSamplerState! = nil
-    private var textureDescriptor: MTLTextureDescriptor! = nil
+    private var textureDescriptor: MTLTextureDescriptor?
     private var textureRegion: MTLRegion! = nil
     private var texture: MTLTexture! = nil
     private var textureSize: Int = 2048
@@ -120,7 +120,7 @@ class MetalRenderer: Renderer {
         samplerDescriptor.sAddressMode = .clampToEdge
         samplerDescriptor.tAddressMode = .clampToEdge
         samplerDescriptor.minFilter = .nearest
-        samplerDescriptor.magFilter = .linear
+        samplerDescriptor.magFilter = .nearest
         samplerDescriptor.mipFilter = .linear
 
         guard let samplerState = self.device.makeSamplerState(descriptor: samplerDescriptor) else {
@@ -135,12 +135,13 @@ class MetalRenderer: Renderer {
                                                                           width: width,
                                                                           height: height,
                                                                           mipmapped: false)
+
         self.textureRegion = MTLRegionMake2D(0,
                                              0,
                                              width,
                                              height)
-
-        guard let texture = self.device.makeTexture(descriptor: self.textureDescriptor) else {
+        
+        guard let texture = self.device.makeTexture(descriptor: self.textureDescriptor!) else {
             fatalError("Could not create texture object for metal renderer")
         }
 
@@ -175,14 +176,14 @@ class MetalRenderer: Renderer {
     }
 
     func draw(_ image: FrameBuffer) {
-        if self.textureDescriptor.width != image.size.width || self.textureDescriptor.height != image.size.height {
+        if self.textureDescriptor == nil || self.textureDescriptor!.width != image.size.width || self.textureDescriptor!.height != image.size.height {
             self.configureTextureDescriptor(width: image.size.width, height: image.size.height)
         }
 
         self.texture.replace(region: self.textureRegion,
                              mipmapLevel: 0,
                              withBytes: image.data,
-                             bytesPerRow: image.size.width)
+                             bytesPerRow: 4 * image.size.width)
 
         self.createCommandEncoder { encoder in
             encoder.setRenderPipelineState(self.pipelineState)
