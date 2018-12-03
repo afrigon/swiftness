@@ -347,10 +347,8 @@ class CoreProcessingUnit {
     private func interrupt(type: InterruptType) -> UInt8 {
         self.interruptRequest = nil
 
-        // Handle the bit 7 of PPU Control Register 1 ($2000)
-        let isValidNmi: Bool = type == .nmi && Bool(self.memory.readByte(at: 0x2000) & 0b10000000)
-
-        guard type == .irq || isValidNmi || self.regs.p.isNotSet(.interrupt) else {
+        // seems wrong with the doc but the tests are ok with it (irq interrupt should not bypass the flag)
+        guard type == .irq || type == .nmi || self.regs.p.isNotSet(.interrupt) else {
             return 0
         }
 

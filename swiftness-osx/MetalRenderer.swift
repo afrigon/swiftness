@@ -158,7 +158,7 @@ class MetalRenderer: Renderer {
             print("Could not fetch next drawable for metal renderer")
             return
         }
-
+print("OK")
         let renderPassDescriptor = MTLRenderPassDescriptor()
         renderPassDescriptor.colorAttachments[0].texture = drawable.texture
         renderPassDescriptor.colorAttachments[0].loadAction = .clear

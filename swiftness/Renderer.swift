@@ -26,9 +26,14 @@ class FrameBuffer {
     var data: [Byte]
     var size: (width: Int, height: Int)
 
+    convenience init() {
+        self.init(width: NintendoEntertainmentSystem.screenWidth,
+                  height: NintendoEntertainmentSystem.screenHeight)
+    }
+
     init(width: Int, height: Int) {
         self.size = (width, height)
-        self.data = [Byte](repeating: 0, count: 4 * width * height)
+        self.data = [Byte](repeating: 0x00, count: 4 * width * height)
     }
 
     func set(x: Int, y: Int, color: DWord = 0x000000) {

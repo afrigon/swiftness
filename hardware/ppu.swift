@@ -24,21 +24,55 @@
 
 import Foundation
 
-enum NameTableAddress: Word {
-    case first = 0x2000
-    case second = 0x2400
-    case third = 0x2800
-    case fourth = 0x2C00
+fileprivate enum CycleType {
+    case visible, oam, pre, idle
+
+    init(_ value: UInt16) {
+        switch value {
+        case 1...256: self = .visible
+        case 257: self = .oam // ?
+        case 321...336: self = .pre
+        default: self = .idle
+        }
+    }
 }
 
-class Palette {
+fileprivate enum ScanlineType {
+    case visible, post, vblank, pre
+
+    init?(_ value: UInt16) {
+        switch value {
+        case 0...239: self = .visible
+        case 240: self = .post
+        case 241...260: self = .vblank
+        case 261: self = .pre
+        default: return nil
+        }
+    }
+}
+
+fileprivate enum DataFetchType {
+    case nameTable, attributeTable, lowTile, highTile, flush
+
+    init?(_ value: UInt16) {
+        switch value % 8 {
+        case 1: self = .nameTable
+        case 3: self = .attributeTable
+        case 4: self = .lowTile
+        case 7: self = .highTile
+        case 0: self = .flush
+        default: return nil
+        }
+    }
+}
+
+fileprivate class Palette {
     var grayscale: Bool = false
     var emphasisRed: Bool = false
     var emphasisGreen: Bool = false
     var emphasisBlue: Bool = false
 
-    // From http://nesdev.com//NESTechFAQ.htm
-    // Item #56: How do I get an accurate palette then?
+    // From http://nesdev.com//NESTechFAQ.htm#56
     private let colors: [DWord] = [
         0x808080, 0x003DA6, 0x0012B0, 0x440096,
         0xA1005E, 0xC70028, 0xBA0600, 0x8C1700,
@@ -71,7 +105,20 @@ class Palette {
     }
 }
 
-class MaskRegister {
+class ControlRegister { // 0x2000
+    private var value: Byte = 0
+    static func &= (left: inout ControlRegister, right: Byte) { left.value = right }
+
+    var nameTableAddress: Word { return 0x2000 + Word(value & 0b11) * 0x400 }       // 0: 0x2000; 1: 0x2400; 2: 0x2800; 3: 0x2C00
+    var increment: Byte { return Bool(self.value & 0b00000100) ? 32 : 1 }           // 0: add 1; 1: add 32
+    var spritePatternAddress: Word { return Word(value & 0b00001000) * 0x1000 }     // 0: $0000; 1: $1000; ignored in 8x16 mode
+    var backgroundPatternAddress: Word { return Word(value & 0b00010000) * 0x1000 } // 0: $0000; 1: $1000
+    var spriteSize: Byte { return Bool(self.value & 0b00010000) ? 16 : 8 }          // 0: 8x8; 1: 8x16
+    var masterSlave: Bool { return Bool(self.value & 0b01000000) }
+    var interruptEnabled: Bool { return Bool(self.value & 0b10000000) }
+}
+
+class MaskRegister { // 0x2001
     private var value: Byte = 0
     static func &= (left: inout MaskRegister, right: Byte) { left.value = right }
 
@@ -83,6 +130,12 @@ class MaskRegister {
     var emphasisRed: Bool { return Bool(self.value & 0b00100000) }
     var emphasisGreen: Bool { return Bool(self.value & 0b01000000) }
     var emphasisBlue: Bool { return Bool(self.value & 0b10000000) }
+
+    var renderingEnabled: Bool { return self.showBackground || self.showSprites }
+}
+
+fileprivate class Tile {
+
 }
 
 class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
@@ -90,26 +143,28 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
     private let cyclePerScanline: UInt16 = 341
     private let scanlinePerFrame: UInt16 = 262
 
-    private var frameBuffers = (
-        current: FrameBuffer(width: NintendoEntertainmentSystem.screenWidth,
-                             height: NintendoEntertainmentSystem.screenHeight),
-        rendered: FrameBuffer(width: NintendoEntertainmentSystem.screenWidth,
-                              height: NintendoEntertainmentSystem.screenHeight)
-    )
+    private var cycle: UInt16 = 0
+    private var scanline: UInt16 = 0
+    private var frame: UInt = 0
 
-    private var cycle: UInt16 = 0       // 341 per scanline
-    private var scanline: UInt16 = 0    // 262 per frame, 0->239: visible, 240: post, 241->260: vblank, 261: pre
+    private var vramPointer: Word = 0
 
-    private var controlRegister: Byte = 0       // 0x2000
-    private var maskRegister = MaskRegister()   // 0x2001
-    private var statusRegister: Byte = 0        // 0x2002
+    private var controlRegister = ControlRegister()
+    private var maskRegister = MaskRegister()
+    private var statusRegister: Byte = 0
+
+    private var paletteIndices = [Byte](repeating: 0x00, count: 32)
+    private var nameTable = [Byte](repeating: 0x00, count: 2048)
+    private var oam = [Byte](repeating: 0x00, count: 256)
 
     private let palette = Palette()
+    private var tilesData = (visible: Tile(), cached: Tile(), current: Tile())
+    private var frameBuffers = (rendered: FrameBuffer(), current: FrameBuffer())
 
     var status: String {
         return """
         |-------- PPU --------|
-         Cycle: \(self.cycle)  Scanline: \(self.scanline)
+         Cycle: \(self.cycle)   Scanline: \(self.scanline)
         """
     }
 
@@ -130,10 +185,8 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
 
         switch address {
         case 0x2002:
-            let value = self.statusRegister
-            self.statusRegister = self.statusRegister & 0b01111111
-            return value
-        case 0x2000, 0x2001: fallthrough
+            defer { self.statusRegister &= self.statusRegister }
+            return self.statusRegister
         default:
             return 0
         }
@@ -143,25 +196,93 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
         let address = self.normalize(address)
 
         switch address {
+        case 0x2000: self.controlRegister &= data
         case 0x2001:
             self.maskRegister &= data
             self.palette.grayscale = self.maskRegister.greyscale
             self.palette.emphasisRed = self.maskRegister.emphasisRed
             self.palette.emphasisGreen = self.maskRegister.emphasisGreen
             self.palette.emphasisBlue = self.maskRegister.emphasisBlue
-        case 0x2002: fallthrough
         default: return
         }
     }
 
-    func step() {
-        // cycle logic
+    private func verticalBlank() {
+        // Swap buffers and render
+        self.frameBuffers = (current: self.frameBuffers.rendered,
+                             rendered: self.frameBuffers.current)
+        self.bus.renderFrame(frameBuffer: self.frameBuffers.rendered)
 
-        // trigger nmi ?
+        // Trigger nmi interrupt if enabled
+        if self.controlRegister.interruptEnabled {
+            self.bus.triggerInterrupt(of: .nmi)
+        }
+    }
+
+    private func fetchData(type: DataFetchType?) {
+        guard let type = type else { return }
+
+        switch type {
+        case .nameTable:
+            break
+        case .attributeTable:
+            break
+        case .lowTile:
+            break
+        case .highTile:
+            break
+        case .flush:
+            self.tilesData = (visible: self.tilesData.cached,
+                              cached: self.tilesData.current,
+                              current: Tile())
+        }
+    }
+
+    private func render(x: UInt16, y: UInt16) {
+
+    }
+
+    func step() {
+        switch (ScanlineType(self.scanline)!, CycleType(self.cycle)) {
+        case (.visible, .visible):
+            if self.maskRegister.renderingEnabled {
+                self.render(x: self.cycle - 1, y: self.scanline)
+                fallthrough
+            }
+        case (.pre, .visible): fallthrough
+        case (.pre, .pre):
+            if self.maskRegister.renderingEnabled {
+                self.fetchData(type: DataFetchType(self.cycle))
+            }
+        case (.vblank, _):
+            if self.cycle == 1 { self.verticalBlank() }
+        default: break
+        }
 
         self.cycle = (self.cycle + 1) % self.cyclePerScanline
         if self.cycle == 0 {
             self.scanline = (self.scanline + 1) % self.scanlinePerFrame
+
+            if self.scanline == 0 {
+                // skipping idle cycle on odd frames
+                if self.frame % 2 != 0 { self.cycle++ }
+                self.frame++
+            }
         }
+    }
+
+    func reset() {
+        self.cycle = 321
+        self.scanline = 261
+        self.frame = 0
+        self.controlRegister &= 0
+        self.maskRegister &= 0
+        // set oam address to 0
+
+        self.tilesData = (visible: Tile(), cached: Tile(), current: Tile())
+        self.frameBuffers = (rendered: FrameBuffer(), current: FrameBuffer())
+        self.bus.renderFrame(frameBuffer: self.frameBuffers.rendered)
+
+        // preload 2 tiles of data ?
     }
 }

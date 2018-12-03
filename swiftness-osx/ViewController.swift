@@ -77,7 +77,7 @@ class ViewController: NSViewController, LogicLoopDelegate {
         self.inputResponder.add(closure: self.toggleOverlay, forKey: 99)    // F3
         self.inputResponder.add(closure: self.step, forKey: 100)            // F8
         self.loop.delegate = self
-
+        self.toggleOverlay()
     }
 
     func logicLoop(loop: LogicLoop, didExecuteCallback deltaTime: Double) {

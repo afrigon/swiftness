@@ -73,6 +73,9 @@ class Conductor: GuardStatus, EmulatorDelegate {
     private func loopClosure(_ deltaTime: Double) {
         self.processInput()
         self.update(deltaTime)
+        autoreleasepool {
+            self.render()
+        }
     }
 
     private func processInput() {
@@ -85,9 +88,11 @@ class Conductor: GuardStatus, EmulatorDelegate {
         }
     }
 
+    private func render() {
+        self.renderer.draw(self.nes.getFrameBuffer())
+    }
+
     func emulator(nes: NintendoEntertainmentSystem, shouldRenderFrame frameBuffer: FrameBuffer) {
-        autoreleasepool {
-            self.renderer.draw(frameBuffer)
-        }
+//        self.renderer.draw(frameBuffer)
     }
 }

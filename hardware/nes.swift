@@ -24,7 +24,7 @@
 
 class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     static let screenWidth: Int = 256
-    static let screenHeight: Int = 224
+    static let screenHeight: Int = 240
 
     private weak var delegate: EmulatorDelegate!
     private let cpu: CoreProcessingUnit
@@ -58,12 +58,18 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         self.cartridge = game
         self.frequency = self.cpu.frequency * 1e6   // MHz * 1e+6 == Hz
         self.bus.delegate = self
+        self.ppu.reset()
         self.cpu.requestInterrupt(type: .reset)
+    }
+
+    func getFrameBuffer() -> FrameBuffer {
+        return self.ppu.getFrameBuffer()
     }
 
     func reset() {
         // reset mapper
         // reset ram
+        self.ppu.reset()
         self.cpu.requestInterrupt(type: .reset)
     }
 
