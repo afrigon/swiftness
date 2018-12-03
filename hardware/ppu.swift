@@ -22,6 +22,53 @@
 //    SOFTWARE.
 //
 
+import Foundation
+
+enum NameTableAddress: Word {
+    case first = 0x2000
+    case second = 0x2400
+    case third = 0x2800
+    case fourth = 0x2C00
+}
+
+class Palette {
+    var grayscale: Bool = false
+    var emphasisRed: Bool = false
+    var emphasisGreen: Bool = false
+    var emphasisBlue: Bool = false
+
+    private let colors: [DWord] = [
+        0x808080, 0x003DA6, 0x0012B0, 0x440096,
+        0xA1005E, 0xC70028, 0xBA0600, 0x8C1700,
+        0x5C2F00, 0x104500, 0x054A00, 0x00472E,
+        0x004166, 0x000000, 0x050505, 0x050505,
+        0xC7C7C7, 0x0077FF, 0x2155FF, 0x8237FA,
+        0xEB2FB5, 0xFF2950, 0xFF2200, 0xD63200,
+        0xC46200, 0x358000, 0x058F00, 0x008A55,
+        0x0099CC, 0x212121, 0x090909, 0x090909,
+        0xFFFFFF, 0x0FD7FF, 0x69A2FF, 0xD480FF,
+        0xFF45F3, 0xFF618B, 0xFF8833, 0xFF9C12,
+        0xFABC20, 0x9FE30E, 0x2BF035, 0x0CF0A4,
+        0x05FBFF, 0x5E5E5E, 0x0D0D0D, 0x0D0D0D,
+        0xFFFFFF, 0xA6FCFF, 0xB3ECFF, 0xDAABEB,
+        0xFFA8F9, 0xFFABB3, 0xFFD2B0, 0xFFEFA6,
+        0xFFF79C, 0xD7E895, 0xA6EDAF, 0xA2F2DA,
+        0x99FFFC, 0xDDDDDD, 0x111111, 0x111111
+    ]
+
+    func get(_ index: Int) -> DWord {
+        guard index > 0 && index < 52 else { return 0 }
+
+        if self.grayscale {
+            return self.colors[Int(floor(Double(index) / 16)) * 16]
+        }
+
+        // TODO: handle emphasis modes
+
+        return self.colors[index]
+    }
+}
+
 class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
     private let bus: Bus
     private let cyclePerScanline: UInt16 = 341
@@ -34,9 +81,6 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
                               height: NintendoEntertainmentSystem.screenHeight)
     )
 
-    // should have a system to only draw when a new frame is ready to save on host performance
-    // or a way to actually push the frame buffer back to the conductor like a vblank delegate or some shit
-
     private var cycle: UInt16 = 0       // 341 per scanline
     private var scanline: UInt16 = 0    // 262 per frame, 0->239: visible, 240: post, 241->260: vblank, 261: pre
 
@@ -44,9 +88,12 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
     private var maskRegister: Byte = 0      // 0x2001
     private var statusRegister: Byte = 0    // 0x2002
 
+    private let palette = Palette()
+
     var status: String {
         return """
         |-------- PPU --------|
+         Cycle: \(self.cycle)  Scanline: \(self.scanline)
         """
     }
 

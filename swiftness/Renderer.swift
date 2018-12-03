@@ -29,26 +29,19 @@ class FrameBuffer {
     init(width: Int, height: Int) {
         self.size = (width, height)
         self.data = [Byte](repeating: 0, count: 4 * width * height)
-        for x in 0..<width {
-            for y in 0..<height {
-                self.set(x: Int(x), y: Int(y))
-            }
-        }
     }
 
-    func set(x: Int, y: Int, colos: DWord = 0x00000000) {
-        let color: DWord = DWord.random(in: 0...0xFFFFFFFF) | 0x000000FF
-
+    func set(x: Int, y: Int, color: DWord = 0x000000) {
         if x < 0 || y < 0 || x >= self.size.width || y >= self.size.height {
             print("invalid write to framebuffer at (\(x), \(y)) with color #\(color.hex())")
             return
         }
 
         let index = y * self.size.width * 4 + x * 4
-        self.data[index] = Byte(color >> 24)
-        self.data[index + 1] = Byte((color >> 16) & 0xFF)
-        self.data[index + 2] = Byte((color >> 8) & 0xFF)
-        self.data[index + 3] = Byte(color & 0xFF)
+        self.data[index] = Byte(color >> 16)
+        self.data[index + 1] = Byte((color >> 8) & 0xFF)
+        self.data[index + 2] = Byte(color & 0xFF)
+        self.data[index + 3] = 0xFF
     }
 }
 
