@@ -37,6 +37,8 @@ class Palette {
     var emphasisGreen: Bool = false
     var emphasisBlue: Bool = false
 
+    // From http://nesdev.com//NESTechFAQ.htm
+    // Item #56: How do I get an accurate palette then?
     private let colors: [DWord] = [
         0x808080, 0x003DA6, 0x0012B0, 0x440096,
         0xA1005E, 0xC70028, 0xBA0600, 0x8C1700,
@@ -69,6 +71,20 @@ class Palette {
     }
 }
 
+class MaskRegister {
+    private var value: Byte = 0
+    static func &= (left: inout MaskRegister, right: Byte) { left.value = right }
+
+    var greyscale: Bool { return Bool(self.value & 0b00000001) }
+    var clipBackground: Bool { return Bool(self.value & 0b00000010) }
+    var clipSprites: Bool { return Bool(self.value & 0b00000100) }
+    var showBackground: Bool { return Bool(self.value & 0b00001000) }
+    var showSprites: Bool { return Bool(self.value & 0b00010000) }
+    var emphasisRed: Bool { return Bool(self.value & 0b00100000) }
+    var emphasisGreen: Bool { return Bool(self.value & 0b01000000) }
+    var emphasisBlue: Bool { return Bool(self.value & 0b10000000) }
+}
+
 class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
     private let bus: Bus
     private let cyclePerScanline: UInt16 = 341
@@ -84,9 +100,9 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
     private var cycle: UInt16 = 0       // 341 per scanline
     private var scanline: UInt16 = 0    // 262 per frame, 0->239: visible, 240: post, 241->260: vblank, 261: pre
 
-    private var controlRegister: Byte = 0   // 0x2000
-    private var maskRegister: Byte = 0      // 0x2001
-    private var statusRegister: Byte = 0    // 0x2002
+    private var controlRegister: Byte = 0       // 0x2000
+    private var maskRegister = MaskRegister()   // 0x2001
+    private var statusRegister: Byte = 0        // 0x2002
 
     private let palette = Palette()
 
@@ -127,6 +143,12 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
         let address = self.normalize(address)
 
         switch address {
+        case 0x2001:
+            self.maskRegister &= data
+            self.palette.grayscale = self.maskRegister.greyscale
+            self.palette.emphasisRed = self.maskRegister.emphasisRed
+            self.palette.emphasisGreen = self.maskRegister.emphasisGreen
+            self.palette.emphasisBlue = self.maskRegister.emphasisBlue
         case 0x2002: fallthrough
         default: return
         }
