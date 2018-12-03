@@ -24,7 +24,11 @@
 
 import Foundation
 
-class Conductor: GuardStatus {
+protocol EmulatorDelegate: AnyObject {
+    func emulator(nes: NintendoEntertainmentSystem, shouldRenderFrame frameBuffer: FrameBuffer)
+}
+
+class Conductor: GuardStatus, EmulatorDelegate {
     private var nes: NintendoEntertainmentSystem! = nil
     private let renderer: Renderer
     private let loop: LogicLoop
@@ -55,7 +59,7 @@ class Conductor: GuardStatus {
 
         let game: Cartridge = NesFile.load(path: filepath)
         // * blows a bit into the cardridge *
-        self.nes = NintendoEntertainmentSystem(load: game)
+        self.nes = NintendoEntertainmentSystem(load: game, hostedBy: self)
 
         self.loop.start(closure: self.loopClosure)
     }
@@ -69,7 +73,6 @@ class Conductor: GuardStatus {
     private func loopClosure(_ deltaTime: Double) {
         self.processInput()
         self.update(deltaTime)
-        self.render()
     }
 
     private func processInput() {
@@ -82,9 +85,9 @@ class Conductor: GuardStatus {
         }
     }
 
-    private func render() {
+    func emulator(nes: NintendoEntertainmentSystem, shouldRenderFrame frameBuffer: FrameBuffer) {
         autoreleasepool {
-            self.renderer.draw(nes.getFrameBuffer())
+            self.renderer.draw(frameBuffer)
         }
     }
 }

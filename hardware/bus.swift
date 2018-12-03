@@ -51,24 +51,17 @@ class Bus {
         delegate.bus(bus: self, didSendWriteSignalAt: address, data: data)
     }
 
-    static func testsInstance() -> Bus {
-        return TestsBus()
+    func renderFrame(frameBuffer: FrameBuffer) {
+        guard let delegate = self.delegate else {
+            fatalError("A bus delegate must be assign before frames are sent over the bus")
+        }
+        delegate.bus(bus: self, shouldRenderFrame: frameBuffer)
     }
-}
-
-class TestsBus: Bus, BusDelegate {
-    override init() {
-        super.init()
-        self.delegate = self
-    }
-
-    func bus(bus: Bus, shouldTriggerInterrupt type: InterruptType) {}
-    func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte { return 0x40 }
-    func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte) {}
 }
 
 protocol BusDelegate: AnyObject {
     func bus(bus: Bus, shouldTriggerInterrupt type: InterruptType)
     func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte
     func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte)
+    func bus(bus: Bus, shouldRenderFrame frameBuffer: FrameBuffer)
 }

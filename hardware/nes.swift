@@ -26,6 +26,7 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     static let screenWidth: Int = 256
     static let screenHeight: Int = 224
 
+    private weak var delegate: EmulatorDelegate!
     private let cpu: CoreProcessingUnit
     private let ppu: PictureProcessingUnit
     private let apu = AudioProcessingUnit()
@@ -50,7 +51,8 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         """
     }
 
-    init(load game: Cartridge) {
+    init(load game: Cartridge, hostedBy delegate: EmulatorDelegate) {
+        self.delegate = delegate
         self.cpu = CoreProcessingUnit(using: self.bus)
         self.ppu = PictureProcessingUnit(using: self.bus)
         self.cartridge = game
@@ -97,8 +99,8 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         self.deficitCycles = cycles
     }
 
-    func getFrameBuffer() -> FrameBuffer {
-        return self.ppu.getFrameBuffer()
+    func bus(bus: Bus, shouldRenderFrame frameBuffer: FrameBuffer) {
+        self.delegate!.emulator(nes: self, shouldRenderFrame: frameBuffer)
     }
 
     func bus(bus: Bus, shouldTriggerInterrupt type: InterruptType) {
