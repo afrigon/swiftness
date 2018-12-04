@@ -30,6 +30,10 @@ protocol BusConnectedComponent {
 class Bus {
     weak var delegate: BusDelegate?
 
+    var mirroringMode: ScreenMirroring {
+        return self.delegate?.mirroringMode ?? .horizontal
+    }
+
     func triggerInterrupt(of type: InterruptType) {
         guard let delegate = self.delegate else {
             fatalError("A bus delegate must be assign before any interrupt signal is sent over the bus")
@@ -37,17 +41,27 @@ class Bus {
         delegate.bus(bus: self, shouldTriggerInterrupt: type)
     }
 
-    func readByte(at address: Word) -> Byte {
+    func readByte(at address: Word, of component: Component? = nil) -> Byte {
         guard let delegate = self.delegate else {
             fatalError("A bus delegate must be assign before any read or write signal is sent over the bus")
         }
+
+        if let component = component {
+            return delegate.bus(bus: self, didSendReadSignalAt: address, of: component)
+        }
+
         return delegate.bus(bus: self, didSendReadSignalAt: address)
     }
 
-    func writeByte(_ data: Byte, at address: Word) {
+    func writeByte(_ data: Byte, at address: Word, of component: Component? = nil) {
         guard let delegate = self.delegate else {
             fatalError("A bus delegate must be assign before any read or write signal is sent over the bus")
         }
+
+        if let component = component {
+            return delegate.bus(bus: self, didSendWriteSignalAt: address, of: component, data: data)
+        }
+
         delegate.bus(bus: self, didSendWriteSignalAt: address, data: data)
     }
 
@@ -60,8 +74,12 @@ class Bus {
 }
 
 protocol BusDelegate: AnyObject {
+    var mirroringMode: ScreenMirroring { get }
+
     func bus(bus: Bus, shouldTriggerInterrupt type: InterruptType)
+    func bus(bus: Bus, shouldRenderFrame frameBuffer: FrameBuffer)
     func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte
     func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte)
-    func bus(bus: Bus, shouldRenderFrame frameBuffer: FrameBuffer)
+    func bus(bus: Bus, didSendReadSignalAt address: Word, of component: Component) -> Byte
+    func bus(bus: Bus, didSendWriteSignalAt address: Word, of component: Component, data: Byte)
 }

@@ -56,6 +56,9 @@ class CNROM: Mapper {
 
     func busWrite(_ data: Byte, at address: Word) {
         switch address {
+        case 0..<0x2000:
+            let address = Word(self.chrIndex * self.chrBankSize + address)
+            self.delegate.mapper(mapper: self, didWriteAt: address, of: .chr, data: data)
         case 0x8000...0xFFFF: self.chrIndex = Word(data & 0b11)
         default: print("CNROM mapper invalid write at 0x\(address.hex())")
         }

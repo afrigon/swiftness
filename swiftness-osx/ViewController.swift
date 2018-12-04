@@ -41,7 +41,7 @@ class ViewController: NSViewController, LogicLoopDelegate {
     private let overlay = Overlay()
     private let renderer: MetalRenderer? = MetalRenderer()
     private var loop = CVDisplayLinkLoop()
-    private var conductor: Conductor!
+    private var conductor: Conductor?
     var inputResponder = InputResponder()
 
     private let overlayRefreshDelay: Double = 0.5
@@ -74,7 +74,14 @@ class ViewController: NSViewController, LogicLoopDelegate {
                                    with: renderer,
                                    drivenBy: self.loop,
                                    interactingWith: self.inputResponder)
+
+        guard self.conductor != nil else {
+            // dismiss view and return to menu
+            return
+        }
+
         self.inputResponder.add(closure: self.toggleOverlay, forKey: 99)    // F3
+        self.inputResponder.add(closure: self.stepFrame, forKey: 98)        // F7
         self.inputResponder.add(closure: self.step, forKey: 100)            // F8
         self.loop.delegate = self
         self.toggleOverlay()
@@ -85,7 +92,7 @@ class ViewController: NSViewController, LogicLoopDelegate {
             self.elapsedTime += deltaTime
             if self.elapsedTime >= self.overlayRefreshDelay {
                 self.elapsedTime = 0
-                self.overlay.string = self.conductor.status
+                self.overlay.string = self.conductor?.status
             }
         }
     }
@@ -97,6 +104,10 @@ class ViewController: NSViewController, LogicLoopDelegate {
     }
 
     private func step() {
-        self.conductor.step()
+        self.conductor?.step()
+    }
+
+    private func stepFrame() {
+        self.conductor?.stepFrame()
     }
 }

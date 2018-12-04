@@ -69,4 +69,9 @@ class CoreProcessingUnitTestsRoms: XCTestCase, BusDelegate {
     func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte) {
         self.program[address] = data
     }
+
+    func bus(bus: Bus, shouldTriggerInterrupt type: InterruptType) {}
+    func bus(bus: Bus, shouldRenderFrame frameBuffer: FrameBuffer) {}
+    func bus(bus: Bus, didSendReadSignalAt address: Word, of component: Component) -> Byte { return 0 }
+    func bus(bus: Bus, didSendWriteSignalAt address: Word, of component: Component, data: Byte) {}
 }

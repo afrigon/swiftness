@@ -22,7 +22,7 @@
 //    SOFTWARE.
 //
 
-class AudioProcessingUnit: GuardStatus {
+class AudioProcessingUnit: GuardStatus, BusConnectedComponent {
     var status: String {
         return """
         |-------- APU --------|
@@ -30,6 +30,14 @@ class AudioProcessingUnit: GuardStatus {
     }
 
     func step() {
+
+    }
+
+    func busRead(at address: Word) -> Byte {
+        return 0
+    }
+
+    func busWrite(_ data: Byte, at address: Word) {
 
     }
 }

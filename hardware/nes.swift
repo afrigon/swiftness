@@ -22,6 +22,10 @@
 //    SOFTWARE.
 //
 
+enum Component {
+    case cpu, ppu, apu, controller1, controller2, cartridge
+}
+
 class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     static let screenWidth: Int = 256
     static let screenHeight: Int = 240
@@ -51,6 +55,10 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         """
     }
 
+    var mirroringMode: ScreenMirroring {
+        return self.cartridge.mirroring
+    }
+
     init(load game: Cartridge, hostedBy delegate: EmulatorDelegate) {
         self.delegate = delegate
         self.cpu = CoreProcessingUnit(using: self.bus)
@@ -58,12 +66,11 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         self.cartridge = game
         self.frequency = self.cpu.frequency * 1e6   // MHz * 1e+6 == Hz
         self.bus.delegate = self
-        self.ppu.reset()
-        self.cpu.requestInterrupt(type: .reset)
+        self.reset()
     }
 
     func getFrameBuffer() -> FrameBuffer {
-        return self.ppu.getFrameBuffer()
+        return self.ppu.frameBuffer
     }
 
     func reset() {
@@ -96,13 +103,18 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
 
     // TODO: what to do when the emulation is running behind
     func run(for deltaTime: Double) {
-        var cycles: Int64 = Int64(self.frequency * deltaTime) + self.deficitCycles
+        var cycles: Int64 = Int64(self.frequency * deltaTime) //+ self.deficitCycles
 
         while cycles > 0 {
             cycles -= Int64(self.step())
         }
 
-        self.deficitCycles = cycles
+        self.deficitCycles = cycles * -1
+    }
+
+    func stepFrame(_ count: Int64 = 1) {
+        let endFrame = self.ppu.frameCount + count
+        while self.ppu.frameCount < endFrame { self.step() }
     }
 
     func bus(bus: Bus, shouldRenderFrame frameBuffer: FrameBuffer) {
@@ -114,20 +126,42 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     }
 
     func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte {
-        return self.getComponent(at: address).busRead(at: address)
+        return self.bus(bus: bus, didSendReadSignalAt: address, of: self.getComponent(at: address))
     }
 
     func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte) {
-        self.getComponent(at: address).busWrite(data, at: address)
+        self.bus(bus: bus, didSendWriteSignalAt: address, of: self.getComponent(at: address), data: data)
     }
 
-    private func getComponent(at address: Word) -> BusConnectedComponent {
+    func bus(bus: Bus, didSendReadSignalAt address: Word, of component: Component) -> Byte {
+        switch component {
+        case .cpu: return self.ram.busRead(at: address)
+        case .ppu: return self.ppu.busRead(at: address)
+        case .apu: return self.apu.busRead(at: address)
+        case .controller1: return self.controller1.busRead(at: address)
+        case .controller2: return self.controller2.busRead(at: address)
+        case .cartridge: return self.cartridge.busRead(at: address)
+        }
+    }
+
+    func bus(bus: Bus, didSendWriteSignalAt address: Word, of component: Component, data: Byte) {
+        switch component {
+        case .cpu: self.ram.busWrite(data, at: address)
+        case .ppu: self.ppu.busWrite(data, at: address)
+        case .apu: self.apu.busWrite(data, at: address)
+        case .controller1: self.controller1.busWrite(data, at: address)
+        case .controller2: self.controller2.busWrite(data, at: address)
+        case .cartridge: self.cartridge.busWrite(data, at: address)
+        }
+    }
+
+    private func getComponent(at address: Word) -> Component {
         switch address {
-        case 0x0000..<0x2000: return self.ram
-        case 0x2000..<0x4000, 0x4014: return self.ppu
-        case 0x4016: return self.controller1
-        case 0x4017: return self.controller2
-        case 0x6000...0xFFFF: return self.cartridge
+        case 0x0000..<0x2000: return .cpu
+        case 0x2000..<0x4000, 0x4014: return .ppu
+        case 0x4016: return .controller1
+        case 0x4017: return .controller2
+        case 0x6000...0xFFFF: return .cartridge
         default: fatalError("Not implemented or invalid read/write at 0x\(address.hex())")
         }
     }

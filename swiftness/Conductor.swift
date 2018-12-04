@@ -44,7 +44,7 @@ class Conductor: GuardStatus, EmulatorDelegate {
         """
     }
 
-    init(use options: StartupOptions,
+    init?(use options: StartupOptions,
          with renderer: Renderer,
          drivenBy loop: LogicLoop,
          interactingWith inputManager: InputManager) {
@@ -54,10 +54,10 @@ class Conductor: GuardStatus, EmulatorDelegate {
         self.inputManager = inputManager
 
         guard self.options.mode != .test, let filepath = self.options.filepath else {
-            return
+            return nil
         }
 
-        let game: Cartridge = NesFile.load(path: filepath)
+        guard let game: Cartridge = NesFile.load(path: filepath) else { return nil }
         // * blows a bit into the cardridge *
         self.nes = NintendoEntertainmentSystem(load: game, hostedBy: self)
 
@@ -67,6 +67,12 @@ class Conductor: GuardStatus, EmulatorDelegate {
     func step() {
         if self.options.mode == .debug {
             self.nes.step()
+        }
+    }
+
+    func stepFrame(_ count: Int64 = 1) {
+        if self.options.mode == .debug {
+            self.nes.stepFrame(count)
         }
     }
 

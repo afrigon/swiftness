@@ -29,11 +29,18 @@ fileprivate enum CycleType {
 
     init(_ value: UInt16) {
         switch value {
-        case 1...256: self = .visible
+        case 2...256: self = .visible
         case 257: self = .oam // ?
-        case 321...336: self = .pre
+        case 1, 321...336: self = .pre
         default: self = .idle
         }
+
+//        switch value {
+//        case 1...256: self = .visible
+//        case 257: self = .oam // ?
+//        case 321...336: self = .pre
+//        default: self = .idle
+//        }
     }
 }
 
@@ -110,7 +117,7 @@ class ControlRegister { // 0x2000
     static func &= (left: inout ControlRegister, right: Byte) { left.value = right }
 
     var nameTableAddress: Word { return 0x2000 + Word(value & 0b11) * 0x400 }       // 0: 0x2000; 1: 0x2400; 2: 0x2800; 3: 0x2C00
-    var increment: Byte { return Bool(self.value & 0b00000100) ? 32 : 1 }           // 0: add 1; 1: add 32
+    var increment: Word { return Bool(self.value & 0b00000100) ? 32 : 1 }           // 0: add 1; 1: add 32
     var spritePatternAddress: Word { return Word(value & 0b00001000) * 0x1000 }     // 0: $0000; 1: $1000; ignored in 8x16 mode
     var backgroundPatternAddress: Word { return Word(value & 0b00010000) * 0x1000 } // 0: $0000; 1: $1000
     var spriteSize: Byte { return Bool(self.value & 0b00010000) ? 16 : 8 }          // 0: 8x8; 1: 8x16
@@ -134,8 +141,23 @@ class MaskRegister { // 0x2001
     var renderingEnabled: Bool { return self.showBackground || self.showSprites }
 }
 
-fileprivate class Tile {
+class StatusRegister { // 0x2002
+    var lastWrite: Byte = 0
+    var spriteOverflow: Bool = false
+    var spriteZeroHit: Bool = false
+    var vblank: Bool = false
 
+    var value: Byte {
+        defer { self.vblank = false }
+        return Byte(self.lastWrite & 0x1F)
+            | Byte(self.spriteOverflow) << 5
+            | Byte(self.spriteZeroHit) << 6
+            | Byte(self.vblank) << 7
+    }
+}
+
+fileprivate struct Tile {
+    var paletteIndex: Byte = 0 // ?
 }
 
 class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
@@ -145,13 +167,15 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
 
     private var cycle: UInt16 = 0
     private var scanline: UInt16 = 0
-    private var frame: UInt = 0
+    private var frame: Int64 = 0
 
     private var vramPointer: Word = 0
+    private var vramTempPointer: Word = 0
+    private var vramBufferedData: Byte = 0
 
     private var controlRegister = ControlRegister()
     private var maskRegister = MaskRegister()
-    private var statusRegister: Byte = 0
+    private var statusRegister = StatusRegister()
 
     private var paletteIndices = [Byte](repeating: 0x00, count: 32)
     private var nameTable = [Byte](repeating: 0x00, count: 2048)
@@ -164,17 +188,15 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
     var status: String {
         return """
         |-------- PPU --------|
-         Cycle: \(self.cycle)   Scanline: \(self.scanline)
+         Scanline: \(self.scanline)   Cycle: \(self.cycle)
+         Frame:    \(self.frame)
         """
     }
 
-    init(using bus: Bus) {
-        self.bus = bus
-    }
+    var frameBuffer: FrameBuffer { return self.frameBuffers.rendered }
+    var frameCount: Int64 { return self.frame }
 
-    func getFrameBuffer() -> FrameBuffer {
-        return self.frameBuffers.rendered
-    }
+    init(using bus: Bus) { self.bus = bus }
 
     private func normalize(_ address: Word) -> Word {
         return (address - 0x2000) % 8 + 0x2000
@@ -185,8 +207,15 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
 
         switch address {
         case 0x2002:
-            defer { self.statusRegister &= self.statusRegister }
-            return self.statusRegister
+            self.vramTempPointer = 0
+            return self.statusRegister.value
+        case 0x2007:
+            defer {
+                self.vramBufferedData = self.vramRead(at: address)
+                self.vramPointer += self.controlRegister.increment
+            }
+            if self.vramPointer >= 0x3F00 { return self.vramRead(at: self.vramPointer) }
+            return self.vramBufferedData
         default:
             return 0
         }
@@ -194,6 +223,7 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
 
     func busWrite(_ data: Byte, at address: Word) {
         let address = self.normalize(address)
+        self.statusRegister.lastWrite = data
 
         switch address {
         case 0x2000: self.controlRegister &= data
@@ -203,6 +233,37 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
             self.palette.emphasisRed = self.maskRegister.emphasisRed
             self.palette.emphasisGreen = self.maskRegister.emphasisGreen
             self.palette.emphasisBlue = self.maskRegister.emphasisBlue
+        case 0x2006:
+            // the least significant bit of vramTempPointer is used to keep track of first vs second write
+            if !Bool(self.vramTempPointer & Word(1)) {
+                self.vramTempPointer = Word(data << 8) | Word(1)
+            } else {
+                self.vramPointer = self.vramTempPointer & 0x3F00 | data
+                self.vramTempPointer = 0
+            }
+        case 0x2007:
+            self.vramWrite(data, at: self.vramPointer)
+            self.vramPointer += self.controlRegister.increment
+        default: return
+        }
+    }
+
+    private func vramRead(at address: Word) -> Byte {
+        let address: Word = address % 0x4000
+        switch address {
+        case 0..<0x2000: return self.bus.readByte(at: address, of: .cartridge)
+        case 0x2000..<0x3F00: return self.nameTable[address % 2048] // handle mirroring stuff
+        case 0x3F00..<0x4000: return self.paletteIndices[address % 32]
+        default: return 0
+        }
+    }
+
+    private func vramWrite(_ data: Byte, at address: Word) {
+        let address: Word = address % 0x4000
+        switch address {
+        case 0..<0x2000: self.bus.writeByte(data, at: address, of: .cartridge)
+        case 0x2000..<0x3F00: self.nameTable[address % 2048] = data
+        case 0x3F00..<0x4000: self.paletteIndices[address % 32] = data
         default: return
         }
     }
@@ -212,6 +273,8 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
         self.frameBuffers = (current: self.frameBuffers.rendered,
                              rendered: self.frameBuffers.current)
         self.bus.renderFrame(frameBuffer: self.frameBuffers.rendered)
+
+        self.statusRegister.vblank = true
 
         // Trigger nmi interrupt if enabled
         if self.controlRegister.interruptEnabled {
@@ -246,7 +309,7 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
         switch (ScanlineType(self.scanline)!, CycleType(self.cycle)) {
         case (.visible, .visible):
             if self.maskRegister.renderingEnabled {
-                self.render(x: self.cycle - 1, y: self.scanline)
+                self.render(x: self.cycle - 2, y: self.scanline)
                 fallthrough
             }
         case (.pre, .visible): fallthrough
@@ -256,6 +319,8 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
             }
         case (.vblank, _):
             if self.cycle == 1 { self.verticalBlank() }
+        case (.pre, _):
+            if self.cycle == 1 { self.statusRegister.vblank = false }
         default: break
         }
 
@@ -266,7 +331,7 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
             if self.scanline == 0 {
                 // skipping idle cycle on odd frames
                 if self.frame % 2 != 0 { self.cycle++ }
-                self.frame++
+                self.frame &+= 1
             }
         }
     }
@@ -274,7 +339,7 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
     func reset() {
         self.cycle = 321
         self.scanline = 261
-        self.frame = 0
+        self.frame = -1
         self.controlRegister &= 0
         self.maskRegister &= 0
         // set oam address to 0
@@ -282,7 +347,5 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
         self.tilesData = (visible: Tile(), cached: Tile(), current: Tile())
         self.frameBuffers = (rendered: FrameBuffer(), current: FrameBuffer())
         self.bus.renderFrame(frameBuffer: self.frameBuffers.rendered)
-
-        // preload 2 tiles of data ?
     }
 }

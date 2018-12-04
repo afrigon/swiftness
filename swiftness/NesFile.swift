@@ -24,28 +24,44 @@
 
 import Foundation
 
-fileprivate struct Header {
-    let filetype: DWord = 0
-    let prgSize: Byte = 0   // * (16KB -> 16384)
-    let chrSize: Byte = 0   // * (8KB -> 8192)
-    let control1: Byte = 0
-    let control2: Byte = 0
-    let ramSize: Byte = 0   // * (8KB -> 8192)
-    let padding = [Byte](repeating: 0x00, count: 7)
-    static var size: Int = 16
-}
-
 class NesFile {
-    static let filetypeValue: DWord = 0x4E45531A    // NES^
+    private struct Header {
+        let prgSize: Byte   // unit: 16384 bytes
+        let chrSize: Byte   // unit: 8192 bytes
+        let control1: Byte
+        let control2: Byte
+        let ramSize: Byte   // unit: 8192 bytes     not handled yet
+        let padding = [Byte](repeating: 0x00, count: 7)
 
-    static func load(path: String) -> Cartridge {
+        init?(_ values: [Byte]) {
+            guard values.count == Header.size &&
+                UInt32(values[3] << 24)
+                | UInt32(values[2] << 16)
+                | UInt32(values[1] << 8)
+                | UInt32(values[0]) == 0x4E45531A else {    // NES^
+                    return nil
+            }
+
+            self.prgSize = values[4]
+            self.chrSize = values[5]
+            self.control1 = values[6]
+            self.control2 = values[7]
+            self.ramSize = values[8]
+        }
+
+        static var size: Int = 16
+    }
+
+    static func load(path: String) -> Cartridge? {
         guard let data: NSData = NSData(contentsOfFile: path) else {
             fatalError("Could not open file at: \(path)")
         }
 
-        var header: Header = Header()
-        data.getBytes(&header, length: Header.size)
-        NesFile.validateFormat(header)
+        var headerData = [UInt8](repeating:0, count: Header.size)
+        data.getBytes(&headerData, length: Header.size)
+        guard let header = Header(headerData) else {
+            return nil
+        }
 
         let battery = Bool(header.control1 & 0b10)
         let mirroring: ScreenMirroring = !Bool(header.control1 & 0b1000)
@@ -83,11 +99,5 @@ class NesFile {
         data.getBytes(&program, range: NSRange(location: 0, length: data.length))
 
         return program
-    }
-
-    private static func validateFormat(_ header: Header) {
-        guard NesFile.filetypeValue == DWord(bigEndian: header.filetype) else {
-            fatalError("File is not .nes format")
-        }
     }
 }

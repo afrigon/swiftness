@@ -31,10 +31,10 @@ enum CartridgeRegion {
 }
 
 class Cartridge: GuardStatus, BusConnectedComponent, MapperDelegate {
-    private let mirroring: ScreenMirroring
     private let battery: Bool
     private let mapperType: MapperType
     private var mapper: Mapper!
+    let mirroring: ScreenMirroring
 
     private var programRom: [Byte]
     private var characterRom: [Byte]
