@@ -41,6 +41,20 @@ class Bus {
         delegate.bus(bus: self, shouldTriggerInterrupt: type)
     }
 
+    func renderFrame(frameBuffer: FrameBuffer) {
+        guard let delegate = self.delegate else {
+            fatalError("A bus delegate must be assign before frames are sent over the bus")
+        }
+        delegate.bus(bus: self, shouldRenderFrame: frameBuffer)
+    }
+
+    func block(cycle: UInt16) {
+        guard let delegate = self.delegate else {
+            fatalError("A bus delegate must be assign before using the bus")
+        }
+        delegate.bus(bus: self, didBlockFor: cycle)
+    }
+
     func readByte(at address: Word, of component: Component? = nil) -> Byte {
         guard let delegate = self.delegate else {
             fatalError("A bus delegate must be assign before any read or write signal is sent over the bus")
@@ -64,13 +78,6 @@ class Bus {
 
         delegate.bus(bus: self, didSendWriteSignalAt: address, data: data)
     }
-
-    func renderFrame(frameBuffer: FrameBuffer) {
-        guard let delegate = self.delegate else {
-            fatalError("A bus delegate must be assign before frames are sent over the bus")
-        }
-        delegate.bus(bus: self, shouldRenderFrame: frameBuffer)
-    }
 }
 
 protocol BusDelegate: AnyObject {
@@ -78,6 +85,7 @@ protocol BusDelegate: AnyObject {
 
     func bus(bus: Bus, shouldTriggerInterrupt type: InterruptType)
     func bus(bus: Bus, shouldRenderFrame frameBuffer: FrameBuffer)
+    func bus(bus: Bus, didBlockFor cycle: UInt16)
     func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte
     func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte)
     func bus(bus: Bus, didSendReadSignalAt address: Word, of component: Component) -> Byte

@@ -27,6 +27,7 @@ import Cocoa
 class AppDelegate: NSObject, NSApplicationDelegate {
     let options: StartupOptions
     private let scale: Int = 3
+    private var windowController: NSWindowController!
     private var window: NSWindow!
     private var viewController: ViewController!
 
@@ -52,13 +53,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                                backing: .buffered,
                                defer: false)
         self.window.title = "Swiftness"
+        NSApplication.shared.mainMenu = Menu()
 
         self.viewController = ViewController()
         self.viewController.view.frame = CGRect(origin: .zero, size: frame.size)
         self.window.contentView?.addSubview(self.viewController.view)
-
-        NSApplication.shared.mainMenu = Menu()
-        self.window.makeKeyAndOrderFront(nil)
         self.window.makeFirstResponder(self.viewController.inputResponder)
+
+        self.windowController = NSWindowController(window: self.window)
+        self.windowController.showWindow(self)
     }
 }

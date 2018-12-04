@@ -117,12 +117,16 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         while self.ppu.frameCount < endFrame { self.step() }
     }
 
+    func bus(bus: Bus, shouldTriggerInterrupt type: InterruptType) {
+        self.cpu.requestInterrupt(type: type)
+    }
+
     func bus(bus: Bus, shouldRenderFrame frameBuffer: FrameBuffer) {
         self.delegate!.emulator(nes: self, shouldRenderFrame: frameBuffer)
     }
 
-    func bus(bus: Bus, shouldTriggerInterrupt type: InterruptType) {
-        self.cpu.requestInterrupt(type: type)
+    func bus(bus: Bus, didBlockFor cycle: UInt16) {
+        self.cpu.stallCycle += cycle
     }
 
     func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte {
@@ -159,6 +163,7 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         switch address {
         case 0x0000..<0x2000: return .cpu
         case 0x2000..<0x4000, 0x4014: return .ppu
+        case 0x4000...0x4013, 0x4015: return .apu
         case 0x4016: return .controller1
         case 0x4017: return .controller2
         case 0x6000...0xFFFF: return .cartridge

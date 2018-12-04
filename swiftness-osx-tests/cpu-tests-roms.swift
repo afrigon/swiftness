@@ -70,8 +70,10 @@ class CoreProcessingUnitTestsRoms: XCTestCase, BusDelegate {
         self.program[address] = data
     }
 
+    var mirroringMode: ScreenMirroring { return .horizontal }
     func bus(bus: Bus, shouldTriggerInterrupt type: InterruptType) {}
     func bus(bus: Bus, shouldRenderFrame frameBuffer: FrameBuffer) {}
+    func bus(bus: Bus, didBlockFor cycle: UInt16) {}
     func bus(bus: Bus, didSendReadSignalAt address: Word, of component: Component) -> Byte { return 0 }
     func bus(bus: Bus, didSendWriteSignalAt address: Word, of component: Component, data: Byte) {}
 }

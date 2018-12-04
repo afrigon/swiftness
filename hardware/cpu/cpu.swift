@@ -132,6 +132,7 @@ class CoreProcessingUnit {
     private var interruptRequest: InterruptType?
 
     var registers: RegisterSet { return self.regs }
+    var stallCycle: UInt16 = 0
 
     var status: String {
         return """
@@ -326,6 +327,11 @@ class CoreProcessingUnit {
 
     @discardableResult
     func step() -> UInt8 {
+        if self.stallCycle > 0 {
+            self.stallCycle--
+            return 1
+        }
+
         if let interrupt = self.interruptRequest {
             return self.interrupt(type: interrupt)
         }

@@ -41,8 +41,15 @@ class Menu: NSMenu, NSMenuItemValidation, NSMenuDelegate {
         fileMenu.addItem(withTitle: "Open", action: nil, keyEquivalent: "o")
         file.submenu = fileMenu
 
+        // tools
+        let tools = NSMenuItem(title: "Tools", action: nil, keyEquivalent: "")
+        let toolsMenu = NSMenu(title: "Tools")
+        toolsMenu.addItem(withTitle: "Debugger", action: #selector(self.debugger), keyEquivalent: "d")
+        tools.submenu = toolsMenu
+
         self.addItem(swiftness)
         self.addItem(file)
+        self.addItem(tools)
         self.delegate = self
     }
 
@@ -58,5 +65,9 @@ class Menu: NSMenu, NSMenuItemValidation, NSMenuDelegate {
 
     @objc func quit() {
         NSApplication.shared.terminate(nil)
+    }
+
+    @objc func debugger() {
+        
     }
 }

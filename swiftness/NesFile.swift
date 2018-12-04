@@ -35,10 +35,10 @@ class NesFile {
 
         init?(_ values: [Byte]) {
             guard values.count == Header.size &&
-                UInt32(values[3] << 24)
-                | UInt32(values[2] << 16)
-                | UInt32(values[1] << 8)
-                | UInt32(values[0]) == 0x4E45531A else {    // NES^
+                UInt32(values[0]) << 24
+                | UInt32(values[1]) << 16
+                | UInt32(values[2]) << 8
+                | UInt32(values[3]) == 0x4E45531A else {    // NES^
                     return nil
             }
 

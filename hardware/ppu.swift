@@ -27,20 +27,21 @@ import Foundation
 fileprivate enum CycleType {
     case visible, oam, pre, idle
 
-    init(_ value: UInt16) {
-        switch value {
-        case 2...256: self = .visible
-        case 257: self = .oam // ?
-        case 1, 321...336: self = .pre
-        default: self = .idle
-        }
 
+    init(_ value: UInt16) {
 //        switch value {
-//        case 1...256: self = .visible
+//        case 2...256: self = .visible
 //        case 257: self = .oam // ?
-//        case 321...336: self = .pre
+//        case 1, 321...336: self = .pre
 //        default: self = .idle
 //        }
+//
+        switch value {
+        case 1...256: self = .visible
+        case 257: self = .oam // ?
+        case 321...336: self = .pre
+        default: self = .idle
+        }
     }
 }
 
@@ -99,7 +100,7 @@ fileprivate class Palette {
         0x99FFFC, 0xDDDDDD, 0x111111, 0x111111
     ]
 
-    func get(_ index: Int) -> DWord {
+    func get(_ index: Byte) -> DWord {
         guard index > 0 && index < 52 else { return 0 }
 
         if self.grayscale {
@@ -154,10 +155,28 @@ class StatusRegister { // 0x2002
             | Byte(self.spriteZeroHit) << 6
             | Byte(self.vblank) << 7
     }
+
+    func clear() {
+        self.spriteOverflow = false
+        self.spriteZeroHit = false
+        self.vblank = false
+    }
 }
 
 fileprivate struct Tile {
-    var paletteIndex: Byte = 0 // ?
+    // Pointer to tile pattern
+    var nameTable: Byte = 0
+    var attributeTable: Byte = 0
+    var lowTileData: Byte = 0
+    var highTileData: Byte = 0
+
+    func getPaletteIndex(_ index: Byte) -> Byte {
+        let high: Byte = self.highTileData >> (Byte(7) - index) & Byte(1)
+        let low: Byte = self.lowTileData >> (Byte(7) - index) & Byte(1)
+        let paletteOffset: Byte = high << 1 | low
+
+        return self.attributeTable << 2 | paletteOffset
+    }
 }
 
 class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
@@ -172,6 +191,8 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
     private var vramPointer: Word = 0
     private var vramTempPointer: Word = 0
     private var vramBufferedData: Byte = 0
+
+    private var oamPointer: Byte = 0
 
     private var controlRegister = ControlRegister()
     private var maskRegister = MaskRegister()
@@ -199,6 +220,7 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
     init(using bus: Bus) { self.bus = bus }
 
     private func normalize(_ address: Word) -> Word {
+        if address >= 0x4000 { return address }
         return (address - 0x2000) % 8 + 0x2000
     }
 
@@ -209,6 +231,8 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
         case 0x2002:
             self.vramTempPointer = 0
             return self.statusRegister.value
+        case 0x2004:
+            return self.oam[self.oamPointer]
         case 0x2007:
             defer {
                 self.vramBufferedData = self.vramRead(at: address)
@@ -216,8 +240,7 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
             }
             if self.vramPointer >= 0x3F00 { return self.vramRead(at: self.vramPointer) }
             return self.vramBufferedData
-        default:
-            return 0
+        default: return 0
         }
     }
 
@@ -233,6 +256,11 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
             self.palette.emphasisRed = self.maskRegister.emphasisRed
             self.palette.emphasisGreen = self.maskRegister.emphasisGreen
             self.palette.emphasisBlue = self.maskRegister.emphasisBlue
+        case 0x2003: self.oamPointer = data
+        case 0x2004:
+            self.oam[self.oamPointer] = data
+            self.oamPointer++
+        case 0x2005: break // TODO: scroll
         case 0x2006:
             // the least significant bit of vramTempPointer is used to keep track of first vs second write
             if !Bool(self.vramTempPointer & Word(1)) {
@@ -244,6 +272,13 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
         case 0x2007:
             self.vramWrite(data, at: self.vramPointer)
             self.vramPointer += self.controlRegister.increment
+        case 0x4014:
+            for i: UInt16 in 0..<256 {
+                self.oam[self.oamPointer] = self.bus.readByte(at: Word(data) << 8 | i)
+                self.oamPointer++
+            }
+            // might be 513 and 514 on odd cycles
+            self.bus.block(cycle: 512)
         default: return
         }
     }
@@ -272,8 +307,7 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
         // Swap buffers and render
         self.frameBuffers = (current: self.frameBuffers.rendered,
                              rendered: self.frameBuffers.current)
-        self.bus.renderFrame(frameBuffer: self.frameBuffers.rendered)
-
+        //self.bus.renderFrame(frameBuffer: self.frameBuffers.rendered)
         self.statusRegister.vblank = true
 
         // Trigger nmi interrupt if enabled
@@ -287,13 +321,20 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
 
         switch type {
         case .nameTable:
-            break
+            let address: Word = 0x2000 | (self.vramPointer & 0x0FFF)
+            self.tilesData.current.nameTable = self.vramRead(at: address)
         case .attributeTable:
-            break
+            let address: Word = 0x23C0 | (self.vramPointer & 0x0C00) | ((self.vramPointer >> 4) & 0x38) | ((self.vramPointer >> 2) & 0x07)
+            let shift: Word = ((self.vramPointer >> 4) & 4) | (self.vramPointer & 2)
+            self.tilesData.current.attributeTable = ((self.vramRead(at: address) >> shift) & Word(3)) << 2
         case .lowTile:
-            break
+            let fineY: Word = self.vramPointer >> 12 & 7
+            let address: Word = self.controlRegister.backgroundPatternAddress + self.tilesData.current.nameTable * 16 + fineY
+            self.tilesData.current.lowTileData = self.vramRead(at: address)
         case .highTile:
-            break
+            let fineY: Word = self.vramPointer >> 12 & 7
+            let address: Word = self.controlRegister.backgroundPatternAddress + self.tilesData.current.nameTable * 16 + fineY
+            self.tilesData.current.lowTileData = self.vramRead(at: address + 8)
         case .flush:
             self.tilesData = (visible: self.tilesData.cached,
                               cached: self.tilesData.current,
@@ -302,25 +343,28 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
     }
 
     private func render(x: UInt16, y: UInt16) {
-
+        let paletteIndex: Byte = self.paletteIndices[self.tilesData.visible.getPaletteIndex(Byte(x % 8))]
+        let color: DWord = self.palette.get(paletteIndex)
+        self.frameBuffers.current.set(x: Int(x), y: Int(y), color: color)
     }
 
     func step() {
         switch (ScanlineType(self.scanline)!, CycleType(self.cycle)) {
-        case (.visible, .visible):
-            if self.maskRegister.renderingEnabled {
-                self.render(x: self.cycle - 2, y: self.scanline)
-                fallthrough
-            }
-        case (.pre, .visible): fallthrough
-        case (.pre, .pre):
-            if self.maskRegister.renderingEnabled {
-                self.fetchData(type: DataFetchType(self.cycle))
-            }
-        case (.vblank, _):
-            if self.cycle == 1 { self.verticalBlank() }
-        case (.pre, _):
-            if self.cycle == 1 { self.statusRegister.vblank = false }
+        case (.visible, .visible) where self.maskRegister.renderingEnabled:
+            self.render(x: self.cycle - 1, y: self.scanline)
+            self.fetchData(type: DataFetchType(self.cycle))
+
+        case (.pre, .visible) where self.maskRegister.renderingEnabled:
+            self.fetchData(type: DataFetchType(self.cycle))
+
+        case (.pre, .pre) where self.maskRegister.renderingEnabled:
+            self.fetchData(type: DataFetchType(self.cycle))
+
+        case (.vblank, _) where self.scanline == 241 && self.cycle == 1:
+            self.verticalBlank()
+
+        case (.pre, _) where self.cycle == 1:
+            self.statusRegister.clear()
         default: break
         }
 
