@@ -58,14 +58,6 @@ class DebuggerTableCellView: NSView {
     }
 }
 
-fileprivate extension NSTouchBar.CustomizationIdentifier {
-    static let debuggerTouchBar = NSTouchBar.CustomizationIdentifier("debugger-touchbar")
-}
-
-fileprivate extension NSTouchBarItem.Identifier {
-    static let stepItem = NSTouchBarItem.Identifier("step-item")
-}
-
 class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NSTableViewDataSource {
     private let debugger: Debugger!
     private var dump: [String]?
@@ -137,23 +129,40 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         self.pc = pc
         self.dump = dump
         self.tableView.reloadData()
-
-        let rowsOnScreen = (self.contentView?.bounds.height ?? 0) / rowHeight
-        self.tableView.scrollRowToVisible(max(self.pc - Int(rowsOnScreen / 3), 0))
+        self.tableView.scrollRowToVisible(self.pc)
     }
 
     @objc func step(_ sender: AnyObject) {
         self.debugger.step()
     }
+
+    @objc func run(_ sender: AnyObject) {
+        self.debugger.run()
+    }
+
+    @objc func pause(_ sender: AnyObject) {
+        self.debugger.pause()
+    }
 }
 
+@available(OSX 10.12.2, *)
+fileprivate extension NSTouchBar.CustomizationIdentifier {
+    static let debuggerTouchBar = NSTouchBar.CustomizationIdentifier("debugger-touchbar")
+}
+
+@available(OSX 10.12.2, *)
+fileprivate extension NSTouchBarItem.Identifier {
+    static let stepItem = NSTouchBarItem.Identifier("step-item")
+    static let runItem = NSTouchBarItem.Identifier("run-item")
+}
+
+@available(OSX 10.12.2, *)
 extension DebuggerWindow: NSTouchBarDelegate {
     override func makeTouchBar() -> NSTouchBar? {
         let touchBar = NSTouchBar()
         touchBar.delegate = self
         touchBar.customizationIdentifier = .debuggerTouchBar
-        touchBar.defaultItemIdentifiers = [.stepItem]
-        touchBar.customizationAllowedItemIdentifiers = [.stepItem]
+        touchBar.defaultItemIdentifiers = [.runItem, .stepItem]
         return touchBar
     }
 
@@ -162,9 +171,16 @@ extension DebuggerWindow: NSTouchBarDelegate {
 
         switch identifier {
         case .stepItem:
-            let button = NSButton(title: "Step", target: self, action: #selector(step(_:)))
-            button.bezelColor = self.tintColor
+            let button = NSButton(image: NSImage(named: "step")!, target: self, action: #selector(self.step(_:)))
             customViewItem.view = button
+        case .runItem:
+            if self.debugger.running {
+                let button = NSButton(image: NSImage(named: "pause")!, target: self, action: #selector(self.pause(_:)))
+                customViewItem.view = button
+            } else {
+                let button = NSButton(image: NSImage(named: "run")!, target: self, action: #selector(self.run(_:)))
+                customViewItem.view = button
+            }
         default: return nil
         }
 

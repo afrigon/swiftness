@@ -46,8 +46,12 @@ class Debugger {
     }
     var breakpoints = [Breakpoint]()
 
+    private var _running: Bool = false
+    var running: Bool {
+        return self._running
+    }
+
     private var nes: NintendoEntertainmentSystem!
-    private var running: Bool = false
 
     init(nes: NintendoEntertainmentSystem) {
         self.nes = nes
@@ -60,25 +64,25 @@ class Debugger {
     func loopClosure(_ deltaTime: Double) {
         var cycles: Int64 = Int64(self.nes.frequency * deltaTime) + self.nes.deficitCycles
 
-        guard self.running else {
+        guard self._running else {
             return
         }
 
-        while cycles > 0 && self.running == true {
+        while cycles > 0 && self._running == true {
             self.checkBreakpoints()
             cycles -= Int64(self.nes.step())
         }
 
-        self.nes.deficitCycles = self.running ? cycles : 0
-        if !self.running { self.dumpMemory() }
+        self.nes.deficitCycles = self._running ? cycles : 0
+        if !self._running { self.dumpMemory() }
     }
 
     func run() {
-        self.running = true
+        self._running = true
     }
 
     func pause() {
-        self.running = false
+        self._running = false
     }
 
     func step() {
@@ -91,11 +95,11 @@ class Debugger {
             if !breakpoint.enabled { continue }
 
             if let address = breakpoint.address {
-                self.running = self.nes.cpuRegisters.pc == address
+                self._running = self.nes.cpuRegisters.pc == address
             }
 
             if let cycles = breakpoint.cycles {
-                self.running = self.nes.cpuCycle >= cycles
+                self._running = self.nes.cpuCycle >= cycles
             }
         }
     }
