@@ -22,7 +22,7 @@
 //    SOFTWARE.
 //
 
-class Controller: BusConnectedComponent, GuardStatus {
+class Controller: BusConnectedComponent {
     private let player: Player
     private var strobe: Byte = 0
     private var index: Byte = 1
@@ -41,19 +41,6 @@ class Controller: BusConnectedComponent, GuardStatus {
 
     enum Player: UInt8 {
         case primary = 1, secondary = 2
-    }
-
-    var status: String {
-        var buttonString = ""
-        for i in 0..<8 {
-            buttonString += " \(String(describing: Button(rawValue: 1 << i)!))"
-            buttonString += ": \(Bool(self.buttons & 1 << i))\n"
-        }
-
-        return """
-        |------ Input \(self.player.rawValue) ------|
-        \(buttonString)
-        """
     }
 
     init(_ player: Player = .primary) {

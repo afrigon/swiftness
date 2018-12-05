@@ -22,13 +22,7 @@
 //    SOFTWARE.
 //
 
-class AudioProcessingUnit: GuardStatus {
-    var status: String {
-        return """
-        |-------- APU --------|
-        """
-    }
-
+class AudioProcessingUnit {
     func step() {
 
     }

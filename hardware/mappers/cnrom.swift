@@ -41,6 +41,9 @@ class CNROM: Mapper {
         case 0..<0x2000:
             let address: DWord = DWord(self.chrIndex * self.chrBankSize + address)
             return self.delegate.mapper(mapper: self, didReadAt: address, of: .chr)
+        case 0x6000..<0x8000:
+            let address: DWord = DWord(address - 0x6000)
+            return self.delegate.mapper(mapper: self, didReadAt: address, of: .sram)
         case 0x8000..<0xC000:
             let address: DWord = DWord(address - 0x8000 + self.prgBankSize)
             return self.delegate.mapper(mapper: self, didReadAt: address, of: .prg)

@@ -30,7 +30,7 @@ enum CartridgeRegion {
     case prg, chr, sram
 }
 
-class Cartridge: GuardStatus, BusConnectedComponent, MapperDelegate {
+class Cartridge: BusConnectedComponent, MapperDelegate {
     private let mirroring: ScreenMirroring
     private let battery: Bool
     private let mapperType: MapperType
@@ -40,16 +40,6 @@ class Cartridge: GuardStatus, BusConnectedComponent, MapperDelegate {
     private var characterRom: [Byte]
     private var saveRam = [Byte](repeating: 0x00, count: 0x2000)
     // should probably be assigned only when supported by the mapper ?
-
-    var status: String {
-        return """
-        |-------- ROM --------|
-         PRG:  \(self.programRom.count / 1024)KB   CHR: \(self.characterRom.count / 1024)KB
-         SRAM: \(self.saveRam.count / 1024)KB   Battery: \(self.battery)
-         Mirroring:  \(String(describing: self.mirroring).capitalized)
-         Mapper:     \(String(describing: self.mapperType).uppercased())
-        """
-    }
 
     init(prg: [Byte], chr: [Byte], mapperType: MapperType, mirroring: ScreenMirroring, battery: Bool) {
         self.programRom = prg

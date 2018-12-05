@@ -22,26 +22,10 @@
 //    SOFTWARE.
 //
 
-class Stack: GuardStatus {
+class Stack {
     private let bus: Bus
     private var sp: UnsafeMutablePointer<StackPointerRegister>
     let size: Word = 0x100
-
-    var status: String {
-        let size: UInt8 = 10
-        let pointer: Word = self.sp.pointee.asWord() + self.size
-        var stackString: String = ""
-
-        for i in stride(from: pointer + 1, to: pointer + size, by: 1) {
-            if i >= 0x200 { break }
-            stackString += " 0x\(Word(i).hex()): 0x\(self.bus.readByte(at: i).hex())\n"
-        }
-
-        return """
-        |------- Stack -------|
-        \(stackString)
-        """
-    }
 
     init(using bus: Bus, sp: UnsafeMutablePointer<StackPointerRegister>) {
         self.bus = bus

@@ -22,7 +22,7 @@
 //    SOFTWARE.
 //
 
-class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
+class NintendoEntertainmentSystem: BusDelegate {
     let screenWidth: UInt16 = 256
     let screenHeight: UInt16 = 240
 
@@ -33,21 +33,20 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     private let controller1 = Controller(.primary)
     private let controller2 = Controller(.secondary)
     private let cartridge: Cartridge
-    private let bus = Bus()
+    let bus = Bus()
 
-    private let frequency: Double
     private var totalCycles: UInt64 = 0
-    private var deficitCycles: Int64 = 0
 
-    var status: String {
-        return """
-         Cycles: \(self.totalCycles)
-        \(self.cpu.status)
-        \(self.ppu.status)
-        \(self.apu.status)
-        \(self.cartridge.status)
-        \(self.controller1.status)
-        """
+    var deficitCycles: Int64 = 0
+    let frequency: Double
+
+    var cpuCycle: UInt64 { return self.totalCycles }
+    var cpuRegisters: RegisterSet { return self.cpu.registers }
+    var ppuScanline: UInt16 { return 0 }//self.ppu.cycle }
+    var ppuCycle: UInt16 { return 0 }//self.ppu.cycle }
+
+    func opcodeInfo(for opcode: Byte) -> (String, AddressingMode) {
+        return self.cpu.opcodeInfo(for: opcode)
     }
 
     init(load game: Cartridge) {
@@ -97,21 +96,21 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     }
 
     func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte {
-        return self.getComponent(at: address).busRead(at: address)
+        return self.getComponent(at: address)?.busRead(at: address) ?? 0
     }
 
     func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte) {
-        self.getComponent(at: address).busWrite(data, at: address)
+        self.getComponent(at: address)?.busWrite(data, at: address)
     }
 
-    private func getComponent(at address: Word) -> BusConnectedComponent {
+    private func getComponent(at address: Word) -> BusConnectedComponent? {
         switch address {
         case 0x0000..<0x2000: return self.ram
         case 0x2000..<0x4000: return self.ppu
         case 0x4016: return self.controller1
         case 0x4017: return self.controller2
         case 0x6000...0xFFFF: return self.cartridge
-        default: fatalError("Not implemented or invalid read/write at 0x\(address.hex())")
+        default: return nil
         }
     }
 }
