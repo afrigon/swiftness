@@ -72,8 +72,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let debugger = self.conductor.attach()
         DebuggerWindow(debugger: debugger).getWindowController().showWindow(self)
-        debugger.step()
-        //self.window.addChildWindow(debug, ordered: .below)
     }
 }
 
