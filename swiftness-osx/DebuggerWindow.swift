@@ -158,6 +158,10 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
     @objc func run(_ sender: AnyObject) {
         self.debugger.running ? self.debugger.pause() : self.debugger.run()
         self.debuggerToolbar.runButton.image = NSImage(named: self.debugger.running ? "pause" : "run")
+
+        if #available(OSX 10.12.2, *) {
+            self.touchBar = self.makeTouchBar()
+        }
     }
 
     override func keyDown(with event: NSEvent) {
@@ -171,7 +175,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
 
 fileprivate class DebuggerToolbar: NSView {
     fileprivate class Button: NSImageView {
-        init(image: NSImage?, target: AnyObject?, action: Selector?, keyEquivalent: String = "") {
+        init(image: NSImage?, target: AnyObject?, action: Selector?) {
             super.init(frame: .zero)
             self.image = image
             self.target = target
@@ -198,12 +202,10 @@ fileprivate class DebuggerToolbar: NSView {
     init(debugger: DebuggerWindow) {
         self.stepButton = DebuggerToolbar.Button(image: NSImage(named: "step"),
                                                  target: debugger,
-                                                 action: #selector(debugger.step(_:)),
-                                                 keyEquivalent: "a")
+                                                 action: #selector(debugger.step(_:)))
         self.runButton = DebuggerToolbar.Button(image: NSImage(named: "run"),
                                                 target: debugger,
-                                                action: #selector(debugger.run(_:)),
-                                                keyEquivalent: "F5")
+                                                action: #selector(debugger.run(_:)))
         super.init(frame: .zero)
 
         self.wantsLayer = true
@@ -258,16 +260,9 @@ extension DebuggerWindow: NSTouchBarDelegate {
 
         switch identifier {
         case .stepItem:
-            let button = NSButton(image: NSImage(named: "step")!, target: self, action: #selector(self.step(_:)))
-            customViewItem.view = button
+            customViewItem.view = NSButton(image: NSImage(named: "step")!, target: self, action: #selector(self.step(_:)))
         case .runItem:
-            if self.debugger.running {
-                let button = NSButton(image: NSImage(named: "pause")!, target: self, action: #selector(self.run(_:)))
-                customViewItem.view = button
-            } else {
-                let button = NSButton(image: NSImage(named: "run")!, target: self, action: #selector(self.run(_:)))
-                customViewItem.view = button
-            }
+            customViewItem.view = NSButton(image: NSImage(named: self.debugger.running ? "pause" : "run")!, target: self, action: #selector(self.run(_:)))
         default: return nil
         }
 
