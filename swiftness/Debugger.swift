@@ -22,6 +22,8 @@
 //    SOFTWARE.
 //
 
+import Foundation
+
 class Breakpoint {
     var enabled: Bool = true
     var address: Word?
@@ -33,6 +35,10 @@ class Breakpoint {
 
 protocol DebuggerDelegate: AnyObject {
     func debugger(debugger: Debugger, didDumpMemory dump: [String], pc: Int)
+    func debugger(debugger: Debugger, didUpdate pc: Int)
+    func step(_ sender: AnyObject)
+    func run(_ sender: AnyObject)
+    func pause(_ sender: AnyObject)
 }
 
 class Debugger {
@@ -87,7 +93,7 @@ class Debugger {
 
     func step() {
         self.nes.step()
-        self.dumpMemory()
+        self.update()
     }
 
     private func checkBreakpoints() {
@@ -154,7 +160,15 @@ class Debugger {
 
                 operand += value.hex()
             case .indirect(let alteration):
-                // TODO: stuff
+                let lowByte = self.nes.bus.readByte(at: Word(pc))
+                operand += "\(lowByte.hex())"
+
+                if alteration == .none {
+                    let highByte = self.nes.bus.readByte(at: Word(pc) &+ 1)
+                    operand += "\(highByte.hex())"
+                }
+
+                instruction += "indirect"
                 pc += alteration == .none ? 2 : 1
             case .immediate:
                 let value = self.nes.bus.readByte(at: Word(pc)).hex()
@@ -170,5 +184,32 @@ class Debugger {
         } while pc <= 0xFFFF
 
         delegate.debugger(debugger: self, didDumpMemory: dump, pc: dumpIndex)
+    }
+
+    private func update() {
+        guard let delegate = self._delegate else {
+            return
+        }
+
+        var pc: DWord = 0
+        var dumpIndex: Int = 0
+        while pc < self.nes.cpuRegisters.pc {
+            let opcode = self.nes.bus.readByte(at: Word(pc))
+            let (_, addressingMode) = self.nes.opcodeInfo(for: opcode)
+            pc++
+
+            switch addressingMode {
+            case .zeroPage(_): pc++
+            case .absolute(_): pc += 2
+            case .relative: pc++
+            case .indirect(let alteration): pc += alteration == .none ? 2 : 1
+            case .immediate: pc++
+            case .accumulator, .implied: break
+            }
+
+            dumpIndex++
+        }
+        
+        delegate.debugger(debugger: self, didUpdate: dumpIndex)
     }
 }

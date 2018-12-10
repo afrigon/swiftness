@@ -83,6 +83,7 @@
 		FEA2743F2182014E0072530A /* LogicLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743E2182014E0072530A /* LogicLoop.swift */; };
 		FEA4865F21B288C600ADE1AF /* cpu-instructions-tests.lst in Resources */ = {isa = PBXBuildFile; fileRef = FEA4865D21B288C600ADE1AF /* cpu-instructions-tests.lst */; };
 		FEA4866321B28D5A00ADE1AF /* cpu-instructions-tests.bin in Resources */ = {isa = PBXBuildFile; fileRef = FEA4866221B28D5A00ADE1AF /* cpu-instructions-tests.bin */; };
+		FEB8D31F21BC72D700A42E99 /* NSColorExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEB8D31E21BC72D700A42E99 /* NSColorExtensions.swift */; };
 		FEBA1F3F21820D610044DC8B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEBA1F3E21820D610044DC8B /* AppDelegate.swift */; };
 		FEBA1F4121820D610044DC8B /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEBA1F4021820D610044DC8B /* ViewController.swift */; };
 		FEBA1F4621820D620044DC8B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FEBA1F4521820D620044DC8B /* Assets.xcassets */; };
@@ -142,6 +143,7 @@
 		FEA2743E2182014E0072530A /* LogicLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogicLoop.swift; sourceTree = "<group>"; };
 		FEA4865D21B288C600ADE1AF /* cpu-instructions-tests.lst */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "cpu-instructions-tests.lst"; sourceTree = "<group>"; };
 		FEA4866221B28D5A00ADE1AF /* cpu-instructions-tests.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = "cpu-instructions-tests.bin"; sourceTree = "<group>"; };
+		FEB8D31E21BC72D700A42E99 /* NSColorExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSColorExtensions.swift; sourceTree = "<group>"; };
 		FEBA1F3C21820D610044DC8B /* swiftness-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "swiftness-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FEBA1F3E21820D610044DC8B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FEBA1F4021820D610044DC8B /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -244,6 +246,7 @@
 				FEA2740B217C45F70072530A /* AppDelegate.swift */,
 				FEA274352180D0EA0072530A /* Menu.swift */,
 				FEA274332180CB970072530A /* main.swift */,
+				FEB8D31E21BC72D700A42E99 /* NSColorExtensions.swift */,
 				FEA2740D217C45F90072530A /* Assets.xcassets */,
 				FEA27412217C45F90072530A /* Info.plist */,
 				FEA27413217C45F90072530A /* swiftness.entitlements */,
@@ -475,6 +478,7 @@
 			files = (
 				FE53C8122182474F002BD71F /* InputManager.swift in Sources */,
 				FEA2743D2181FCCA0072530A /* Renderer.swift in Sources */,
+				FEB8D31F21BC72D700A42E99 /* NSColorExtensions.swift in Sources */,
 				FE8CD47921B8068400C68C8D /* DebuggerWindow.swift in Sources */,
 				FEC79C8921842789006C3096 /* NesFile.swift in Sources */,
 				FE8CD47721B800FB00C68C8D /* ConsoleWindow.swift in Sources */,

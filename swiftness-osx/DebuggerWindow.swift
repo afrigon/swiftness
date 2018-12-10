@@ -63,13 +63,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
     private var dump: [String]?
     private var pc: Int = 0
 
-    //private let tintColor = NSColor(red: 0.678, green: 0.341, blue: 0.309, alpha: 1.0)
-    //private let tintColor = NSColor(red: 158/255.0, green: 80/255.0, blue: 80/255.0, alpha: 1.0)
-    private let tintColor = NSColor(red: 196/255.0,
-                                    green: 122/255.0,
-                                    blue: 49/255.0,
-                                    alpha: 1.0)
-    private let background = NSColor(red: 28/255.0, green: 28/255.0, blue: 28/255.0, alpha: 1.0)
+    private let toolbarHeight: CGFloat = 30.0
     private let rowHeight: CGFloat = 20.0
     private let scrollView = NSScrollView()
     private let tableView: NSTableView = {
@@ -82,6 +76,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         tableView.addTableColumn(column)
         return tableView
     }()
+    private var debuggerToolbar: DebuggerToolbar!
 
     init(debugger: Debugger) {
         self.debugger = debugger
@@ -89,7 +84,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         super.init(width: CGFloat(1080), height: CGFloat(720), styleMask: [.closable, .miniaturizable, .resizable, .titled])
         self.title = "Swiftness - Debugger"
 
-        self.tableView.backgroundColor = self.background
+        self.tableView.backgroundColor = .dark
 
         self.scrollView.documentView = self.tableView
         self.scrollView.hasVerticalScroller = true
@@ -98,10 +93,26 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         self.tableView.dataSource = self
         self.tableView.delegate = self
         self.debugger.delegate = self
+
+        self.debuggerToolbar = DebuggerToolbar(debugger: self)
+        self.contentView?.addSubview(self.debuggerToolbar)
     }
 
     override func layoutIfNeeded() {
-        self.scrollView.frame = self.contentView?.bounds ?? .zero
+        guard let view = self.contentView else {
+            self.scrollView.frame = .zero
+            self.debuggerToolbar.frame = .zero
+            return
+        }
+
+        self.scrollView.frame = NSRect(x: 0,
+                                       y: self.toolbarHeight,
+                                       width: view.bounds.width,
+                                       height: view.bounds.height - self.toolbarHeight)
+        self.debuggerToolbar.frame = NSRect(x: 0,
+                                            y: 0,
+                                            width: view.bounds.width,
+                                            height: self.toolbarHeight)
     }
 
     func numberOfRows(in tableView: NSTableView) -> Int {
@@ -119,7 +130,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
             view = DebuggerTableCellView()
         }
 
-        view!.textField.backgroundColor = self.pc == row ? self.tintColor : self.background
+        view!.textField.backgroundColor = self.pc == row ? .primary : .dark
         view!.textField.stringValue = self.dump?[row] ?? ""
 
         return view
@@ -128,7 +139,16 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
     func debugger(debugger: Debugger, didDumpMemory dump: [String], pc: Int) {
         self.pc = pc
         self.dump = dump
+
         self.tableView.reloadData()
+        self.tableView.scrollRowToVisible(self.pc)
+    }
+
+    func debugger(debugger: Debugger, didUpdate pc: Int) {
+        let oldpc = self.pc
+        self.pc = pc
+
+        self.tableView.reloadData(forRowIndexes: [oldpc, self.pc], columnIndexes: [0])
         self.tableView.scrollRowToVisible(self.pc)
     }
 
@@ -142,6 +162,69 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
 
     @objc func pause(_ sender: AnyObject) {
         self.debugger.pause()
+    }
+}
+
+fileprivate class DebuggerToolbar: NSView {
+    fileprivate class Button: NSControl {
+        var image: NSImage? = nil
+
+        init(image: NSImage?, target: AnyObject?, action: Selector?, keyEquivalent: String = "") {
+            super.init(frame: .zero)
+            self.image = image
+            self.target = target
+            self.action = action
+
+            self.isEnabled = true
+            self.appearance = NSAppearance(named: .aqua)
+        }
+
+        required init?(coder: NSCoder) { super.init(coder: coder) }
+
+        override func draw(_ dirtyRect: NSRect) {
+            self.image?.draw(in: NSRect(x: 0, y: 0, width: 30, height: 30))
+        }
+    }
+
+    private let buttonSize: CGFloat = 30.0
+
+    private let stepButton: DebuggerToolbar.Button!
+    private let runButton: DebuggerToolbar.Button!
+
+    init(debugger: DebuggerWindow) {
+        self.stepButton = DebuggerToolbar.Button(image: NSImage(named: "step"),
+                                                 target: debugger,
+                                                 action: #selector(debugger.step(_:)),
+                                                 keyEquivalent: "a")
+        self.runButton = DebuggerToolbar.Button(image: NSImage(named: "run"),
+                                                target: debugger,
+                                                action: #selector(debugger.run(_:)),
+                                                keyEquivalent: "F5")
+        super.init(frame: .zero)
+
+        self.wantsLayer = true
+        self.layer?.borderWidth = 1
+        self.layer?.borderColor = .black
+        self.layer?.backgroundColor = NSColor.dark.cgColor
+
+        self.addSubview(self.runButton)
+        self.addSubview(self.stepButton)
+    }
+
+    required init?(coder decoder: NSCoder) {
+        self.stepButton = nil
+        self.runButton = nil
+        super.init(coder: decoder)
+    }
+
+    override func resizeSubviews(withOldSize oldSize: NSSize) {
+        super.resizeSubviews(withOldSize: oldSize)
+        for i in 0..<self.subviews.count {
+            self.subviews[i].frame = NSRect(x: self.buttonSize * CGFloat(i),
+                                            y: 0,
+                                            width: self.buttonSize,
+                                            height: self.buttonSize)
+        }
     }
 }
 
