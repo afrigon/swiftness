@@ -153,7 +153,8 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
     }
 
     @objc func step(_ sender: AnyObject) {
-        self.debugger.step()
+        let cycles = self.debugger.step()
+        self.debuggerToolbar.cycleLabel.stringValue = "Cycles: \(self.debugger.totalCycles) (+\(cycles))"
     }
 
     @objc func run(_ sender: AnyObject) {
@@ -194,11 +195,30 @@ fileprivate class DebuggerToolbar: NSView {
         }
     }
 
-    private let buttonSize: CGFloat = 20.0
-    private let buttonPadding: CGFloat = 5.0
+    fileprivate class Label: NSTextField {
+        init() {
+            super.init(frame: .zero)
+            self.backgroundColor = .darkContainer
+            self.textColor = .white
+            self.isBezeled = false
+            self.isEditable = false
+            self.canDrawSubviewsIntoLayer = true
+            self.alignment = .right
+            self.stringValue = "Cycles: 0"
 
+            self.font = NSFont.systemFont(ofSize: 13)
+        }
+
+        required init?(coder: NSCoder) { super.init(coder: coder) }
+    }
+
+    private let buttonSize: CGFloat = 20.0
+    private let buttonPadding: CGFloat = 10.0
+
+    private let buttonView = NSView()
     private let stepButton: DebuggerToolbar.Button!
     let runButton: DebuggerToolbar.Button!
+    let cycleLabel: DebuggerToolbar.Label!
 
     init(debugger: DebuggerWindow) {
         self.stepButton = DebuggerToolbar.Button(image: NSImage(named: "step"),
@@ -207,6 +227,7 @@ fileprivate class DebuggerToolbar: NSView {
         self.runButton = DebuggerToolbar.Button(image: NSImage(named: "run"),
                                                 target: debugger,
                                                 action: #selector(debugger.run(_:)))
+        self.cycleLabel = DebuggerToolbar.Label()
         super.init(frame: .zero)
 
         self.wantsLayer = true
@@ -214,21 +235,33 @@ fileprivate class DebuggerToolbar: NSView {
         self.layer?.borderColor = .black
         self.layer?.backgroundColor = NSColor.darkContainer.cgColor
 
-        self.addSubview(self.runButton)
-        self.addSubview(self.stepButton)
+        self.buttonView.addSubview(self.runButton)
+        self.buttonView.addSubview(self.stepButton)
+        self.addSubview(self.buttonView)
+        self.addSubview(self.cycleLabel)
     }
 
     required init?(coder decoder: NSCoder) {
         self.stepButton = nil
         self.runButton = nil
+        self.cycleLabel = nil
         super.init(coder: decoder)
     }
 
     override func resizeSubviews(withOldSize oldSize: NSSize) {
         super.resizeSubviews(withOldSize: oldSize)
-        for i in 0..<self.subviews.count {
-            self.subviews[i].frame = NSRect(x: (self.buttonPadding * 2 + self.buttonSize) * CGFloat(i) + self.buttonPadding * 2,
-                                            y: self.buttonPadding,
+        self.buttonView.frame = NSRect(x: 0,
+                                       y: 0,
+                                       width: self.buttonPadding + (self.buttonPadding + self.buttonSize) * CGFloat(self.buttonView.subviews.count),
+                                       height: self.bounds.height)
+        self.cycleLabel.frame = NSRect(x: self.buttonView.bounds.width,
+                                       y: (self.bounds.height - 13) / 2,
+                                       width: self.bounds.width - self.buttonView.bounds.width - self.buttonPadding,
+                                       height: self.bounds.height - 13)
+
+        for i in 0..<self.buttonView.subviews.count {
+            self.buttonView.subviews[i].frame = NSRect(x: (self.buttonPadding + self.buttonSize) * CGFloat(i) + self.buttonPadding,
+                                            y: self.buttonPadding / 2,
                                             width: self.buttonSize,
                                             height: self.buttonSize)
         }

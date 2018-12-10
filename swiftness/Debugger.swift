@@ -112,6 +112,7 @@ class Debugger {
 
     private var _running: Bool = false
     var running: Bool { return self._running }
+    var totalCycles: UInt64 { return self.nes.cpuCycle }
 
     private var nes: NintendoEntertainmentSystem!
 
@@ -158,9 +159,9 @@ class Debugger {
         self._running = false
     }
 
-    func step() {
-        self.nes.step()
-        self.updateMemoryDump()
+    func step() -> UInt8 {
+        defer { self.updateMemoryDump() }
+        return self.nes.step()
     }
 
     private func checkBreakpoints() {
