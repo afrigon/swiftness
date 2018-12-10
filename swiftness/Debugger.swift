@@ -103,12 +103,6 @@ class MemoryDump {
     }
 }
 
-extension Dictionary where Value == DebuggerInfo {
-    subscript(i: Int) -> (key: Key, value: DebuggerInfo) {
-        get { return self[self.index(self.startIndex, offsetBy: i)] }
-    }
-}
-
 class Debugger {
     private weak var _delegate: DebuggerDelegate?
     var delegate: DebuggerDelegate? {
