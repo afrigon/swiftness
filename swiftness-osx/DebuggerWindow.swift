@@ -82,6 +82,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         self.debugger = debugger
 
         super.init(width: CGFloat(1080), height: CGFloat(720), styleMask: [.closable, .miniaturizable, .resizable, .titled])
+        self.minSize = NSSize(width: CGFloat(360), height: CGFloat(240))
         self.title = "Swiftness - Debugger"
 
         self.tableView.backgroundColor = .darkContent
