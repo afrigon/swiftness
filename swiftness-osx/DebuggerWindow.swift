@@ -60,8 +60,7 @@ class DebuggerTableCellView: NSView {
 
 class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NSTableViewDataSource {
     private let debugger: Debugger!
-    private var dump: [String]?
-    private var pc: Int = 0
+    private var currentLine: Int = 0
 
     private let toolbarHeight: CGFloat = 30.0
     private let rowHeight: CGFloat = 20.0
@@ -116,7 +115,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
     }
 
     func numberOfRows(in tableView: NSTableView) -> Int {
-        return self.dump?.count ?? 0
+        return self.debugger.memoryDump.count
     }
 
     func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
@@ -130,26 +129,23 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
             view = DebuggerTableCellView()
         }
 
-        view!.textField.backgroundColor = self.pc == row ? .primary : .dark
-        view!.textField.stringValue = self.dump?[row] ?? ""
+        view!.textField.backgroundColor = self.currentLine == row ? .primary : .dark
+        view!.textField.stringValue = self.debugger.memoryDump.getInfo(forLine: Word(row))?.string ?? ""
 
         return view
     }
 
-    func debugger(debugger: Debugger, didDumpMemory dump: [String], pc: Int) {
-        self.pc = pc
-        self.dump = dump
-
+    func debugger(debugger: Debugger, didDumpMemory memoryDump: MemoryDump, programCounter: Word) {
+        self.currentLine = Int(self.debugger.memoryDump.convert(addressToLine: programCounter) ?? 0)
         self.tableView.reloadData()
-        self.tableView.scrollRowToVisible(self.pc)
+        self.tableView.scrollRowToVisible(self.currentLine)
     }
 
-    func debugger(debugger: Debugger, didUpdate pc: Int) {
-        let oldpc = self.pc
-        self.pc = pc
-
-        self.tableView.reloadData(forRowIndexes: [oldpc, self.pc], columnIndexes: [0])
-        self.tableView.scrollRowToVisible(self.pc)
+    func debugger(debugger: Debugger, didMoveTo programCounter: Word) {
+        let oldLine: Int = self.currentLine
+        self.currentLine = Int(self.debugger.memoryDump.convert(addressToLine: programCounter) ?? 0)
+        self.tableView.reloadData(forRowIndexes: [oldLine, self.currentLine], columnIndexes: [0])
+        self.tableView.scrollRowToVisible(self.currentLine)
     }
 
     @objc func step(_ sender: AnyObject) {

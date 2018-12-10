@@ -34,11 +34,79 @@ class Breakpoint {
 }
 
 protocol DebuggerDelegate: AnyObject {
-    func debugger(debugger: Debugger, didDumpMemory dump: [String], pc: Int)
-    func debugger(debugger: Debugger, didUpdate pc: Int)
+    func debugger(debugger: Debugger, didDumpMemory memoryDump: MemoryDump, programCounter: Word)
+    func debugger(debugger: Debugger, didMoveTo programCounter: Word)
     func step(_ sender: AnyObject)
     func run(_ sender: AnyObject)
     func pause(_ sender: AnyObject)
+}
+
+class DebuggerInfo {
+    let lineNumber: Word
+    let addressPointer: Word
+    var opcode: Byte = 0
+    var operand: String = ""
+    var instruction: String = ""
+
+    var string: String {
+        let value = "\(self.opcode.hex())\(self.operand)".padding(toLength: 6, withPad: " ", startingAt: 0)
+        return "\(self.addressPointer.hex()) : \(value)\t\t\(self.instruction)"
+    }
+
+    init(atLine lineNumber: Word, addressPointer: DWord) {
+        self.lineNumber = lineNumber
+        self.addressPointer = Word(addressPointer)
+    }
+}
+
+class MemoryDump {
+    private var dump = [DebuggerInfo]()
+    private var lineSymbols = [Word: Int]()
+    private var addressSymbols = [Word: Int]()
+
+    var count: Int { return self.dump.count }
+
+    func append(_ info: DebuggerInfo) {
+        self.lineSymbols[info.lineNumber] = self.dump.count
+        self.addressSymbols[info.addressPointer] = self.dump.count
+        self.dump.append(info)
+    }
+
+    func removeAll() {
+        self.dump.removeAll()
+        self.lineSymbols.removeAll()
+        self.addressSymbols.removeAll()
+    }
+
+    func getInfo(forLine line: Word) -> DebuggerInfo? {
+        guard let index = self.lineSymbols[line] else { return nil }
+        return self.dump[index]
+    }
+
+    func getInfo(forAddress address: Word) -> DebuggerInfo? {
+        guard let index = self.addressSymbols[address] else { return nil }
+        return self.dump[index]
+    }
+
+    func convert(lineToAddress line: Word) -> Word? {
+        guard let info = self.getInfo(forLine: line) else { return nil }
+        return info.addressPointer
+    }
+
+    func convert(addressToLine address: Word) -> Word? {
+        guard let info = self.getInfo(forAddress: address) else { return nil }
+        return info.lineNumber
+    }
+
+    subscript(i: Int) -> DebuggerInfo? {
+        get { return self.getInfo(forLine: Word(i)) }
+    }
+}
+
+extension Dictionary where Value == DebuggerInfo {
+    subscript(i: Int) -> (key: Key, value: DebuggerInfo) {
+        get { return self[self.index(self.startIndex, offsetBy: i)] }
+    }
 }
 
 class Debugger {
@@ -47,20 +115,21 @@ class Debugger {
         get { return self._delegate }
         set {
             self._delegate = newValue
-            self.dumpMemory()
+            self._delegate!.debugger(debugger: self, didDumpMemory: self.memoryDump, programCounter: self.nes.cpuRegisters.pc)
         }
     }
-    var breakpoints = [Breakpoint]()
 
     private var _running: Bool = false
-    var running: Bool {
-        return self._running
-    }
+    var running: Bool { return self._running }
 
     private var nes: NintendoEntertainmentSystem!
 
+    var breakpoints = [Breakpoint]()
+    let memoryDump = MemoryDump()
+
     init(nes: NintendoEntertainmentSystem) {
         self.nes = nes
+        self.disassembleMemory()
     }
 
     static func attach(conductor: Conductor) -> Debugger {
@@ -80,7 +149,14 @@ class Debugger {
         }
 
         self.nes.deficitCycles = self._running ? cycles : 0
-        if !self._running { self.dumpMemory() }
+        if !self._running {
+            guard let delegate = self.delegate else {
+                return
+            }
+
+            self.disassembleMemory()
+            delegate.debugger(debugger: self, didDumpMemory: self.memoryDump, programCounter: self.nes.cpuRegisters.pc)
+        }
     }
 
     func run() {
@@ -93,7 +169,7 @@ class Debugger {
 
     func step() {
         self.nes.step()
-        self.update()
+        self.updateMemoryDump()
     }
 
     private func checkBreakpoints() {
@@ -110,106 +186,81 @@ class Debugger {
         }
     }
 
-    private func dumpMemory() {
-        guard let delegate = self._delegate else {
-            return
-        }
-
-        var dump = [String]()
-        var pc: DWord = 0
-        var dumpIndex: Int = 0
+    private func disassembleMemory() {
+        self.memoryDump.removeAll()
+        var lineNumber: Word = 0
+        var localProgramCounter: DWord = 0
 
         repeat {
-            let prepc = Word(pc)
-            let opcode = self.nes.bus.readByte(at: Word(pc))
-            let (name, addressingMode) = self.nes.opcodeInfo(for: opcode)
+            let info: DebuggerInfo = DebuggerInfo(atLine: lineNumber, addressPointer: localProgramCounter)
+            info.opcode = self.nes.bus.readByte(at: Word(localProgramCounter))
 
-            if self.nes.cpuRegisters.pc == pc { dumpIndex = dump.count }
-            pc++
+            let (name, addressingMode) = self.nes.opcodeInfo(for: info.opcode)
+            info.instruction = "\(name) "
 
-            var instruction: String = "\(name) "
-            var operand: String = ""
+            localProgramCounter++
 
             switch addressingMode {
             case .zeroPage(let alteration):
-                let value = self.nes.bus.readByte(at: Word(pc)).hex()
-                instruction += "$\(value)"
-                instruction += alteration == .none ? "" : ",\(String(describing: alteration))"
-                operand += value
-                pc++
+                let value = self.nes.bus.readByte(at: Word(localProgramCounter)).hex()
+                info.instruction += "$\(value)"
+                info.instruction += alteration == .none ? "" : ",\(String(describing: alteration))"
+                info.operand += value
+                localProgramCounter++
             case .absolute(let alteration):
-                let lowByte = self.nes.bus.readByte(at: Word(pc))
-                let highByte = self.nes.bus.readByte(at: Word(pc) &+ 1)
-                instruction += "$\(highByte.hex())\(lowByte.hex())"
-                instruction += alteration == .none ? "" : ",\(String(describing: alteration))"
-                operand += "\(lowByte.hex())\(highByte.hex())"
-                pc += 2
+                let lowByte = self.nes.bus.readByte(at: Word(localProgramCounter))
+                let highByte = self.nes.bus.readByte(at: Word(localProgramCounter) &+ 1)
+                info.instruction += "$\(highByte.hex())\(lowByte.hex())"
+                info.instruction += alteration == .none ? "" : ",\(String(describing: alteration))"
+                info.operand += "\(lowByte.hex())\(highByte.hex())"
+                localProgramCounter += 2
             case .relative:
-                let value = self.nes.bus.readByte(at: Word(pc))
+                let value = self.nes.bus.readByte(at: Word(localProgramCounter))
                 let offset = (value.isSignBitOn() ? Word(128 - value & 0b01111111) : value.asWord() & 0b01111111)
-                instruction += "\(value.isSignBitOn() ? "-" : "+")$\(offset)"
-                pc++
+                info.instruction += "\(value.isSignBitOn() ? "-" : "+")$\(offset)"
+                localProgramCounter++
 
-                var address = Word(pc)
+                var address = Word(localProgramCounter)
                 if value.isSignBitOn() {
                     address = address &- offset
                 } else {
-                    address =  address &+ offset
+                    address = address &+ offset
                 }
-                instruction += " ($\(address.hex()))"
+                info.instruction += " ($\(address.hex()))"
 
-                operand += value.hex()
+                info.operand += value.hex()
             case .indirect(let alteration):
-                let lowByte = self.nes.bus.readByte(at: Word(pc))
-                operand += "\(lowByte.hex())"
+                let lowByte = self.nes.bus.readByte(at: Word(localProgramCounter))
+                info.operand += "\(lowByte.hex())"
 
                 if alteration == .none {
-                    let highByte = self.nes.bus.readByte(at: Word(pc) &+ 1)
-                    operand += "\(highByte.hex())"
+                    let highByte = self.nes.bus.readByte(at: Word(localProgramCounter) &+ 1)
+                    info.operand += "\(highByte.hex())"
                 }
 
-                instruction += "indirect"
-                pc += alteration == .none ? 2 : 1
+                info.instruction += "indirect"
+                localProgramCounter += alteration == .none ? 2 : 1
             case .immediate:
-                let value = self.nes.bus.readByte(at: Word(pc)).hex()
-                instruction += "#$\(value)"
-                operand += value
-                pc++
-            case .accumulator: instruction += "a"
+                let value = self.nes.bus.readByte(at: Word(localProgramCounter)).hex()
+                info.instruction += "#$\(value)"
+                info.operand += value
+                localProgramCounter++
+            case .accumulator: info.instruction += "a"
             case .implied: break
             }
 
-            let value = "\(opcode.hex())\(operand)".padding(toLength: 6, withPad: " ", startingAt: 0)
-            dump.append("\(prepc.hex()) : \(value)\t\t\(instruction)")
-        } while pc <= 0xFFFF
-
-        delegate.debugger(debugger: self, didDumpMemory: dump, pc: dumpIndex)
+            lineNumber++
+            self.memoryDump.append(info)
+        } while (localProgramCounter <= 0xFFFF)
     }
 
-    private func update() {
-        guard let delegate = self._delegate else {
+    private func updateMemoryDump() {
+        guard let delegate = self.delegate else {
             return
         }
 
-        var pc: DWord = 0
-        var dumpIndex: Int = 0
-        while pc < self.nes.cpuRegisters.pc {
-            let opcode = self.nes.bus.readByte(at: Word(pc))
-            let (_, addressingMode) = self.nes.opcodeInfo(for: opcode)
-            pc++
+        // should probably refresh stack and stuff
 
-            switch addressingMode {
-            case .zeroPage(_): pc++
-            case .absolute(_): pc += 2
-            case .relative: pc++
-            case .indirect(let alteration): pc += alteration == .none ? 2 : 1
-            case .immediate: pc++
-            case .accumulator, .implied: break
-            }
-
-            dumpIndex++
-        }
-        
-        delegate.debugger(debugger: self, didUpdate: dumpIndex)
+        delegate.debugger(debugger: self, didMoveTo: self.nes.cpuRegisters.pc)
     }
 }
