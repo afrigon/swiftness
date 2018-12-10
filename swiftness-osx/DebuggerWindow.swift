@@ -141,11 +141,13 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         self.tableView.scrollRowToVisible(self.currentLine)
     }
 
-    func debugger(debugger: Debugger, didMoveTo programCounter: Word) {
+    func debugger(debugger: Debugger, didUpdate registers: RegisterSet) {
         let oldLine: Int = self.currentLine
-        self.currentLine = Int(self.debugger.memoryDump.convert(addressToLine: programCounter) ?? 0)
+        self.currentLine = Int(self.debugger.memoryDump.convert(addressToLine: registers.pc) ?? 0)
         self.tableView.reloadData(forRowIndexes: [oldLine, self.currentLine], columnIndexes: [0])
         self.tableView.scrollRowToVisible(self.currentLine)
+
+        // update regs in ui
     }
 
     @objc func step(_ sender: AnyObject) {
@@ -162,27 +164,27 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
 }
 
 fileprivate class DebuggerToolbar: NSView {
-    fileprivate class Button: NSControl {
-        var image: NSImage? = nil
-
+    fileprivate class Button: NSImageView {
         init(image: NSImage?, target: AnyObject?, action: Selector?, keyEquivalent: String = "") {
             super.init(frame: .zero)
             self.image = image
             self.target = target
             self.action = action
 
-            self.isEnabled = true
-            self.appearance = NSAppearance(named: .aqua)
+            if #available(OSX 10.14, *) {
+                self.contentTintColor = .white
+            }
         }
 
         required init?(coder: NSCoder) { super.init(coder: coder) }
 
-        override func draw(_ dirtyRect: NSRect) {
-            self.image?.draw(in: NSRect(x: 0, y: 0, width: 30, height: 30))
+        override func mouseUp(with event: NSEvent) {
+            self.sendAction(self.action, to: self.target)
         }
     }
 
-    private let buttonSize: CGFloat = 30.0
+    private let buttonSize: CGFloat = 20.0
+    private let buttonPadding: CGFloat = 5.0
 
     private let stepButton: DebuggerToolbar.Button!
     private let runButton: DebuggerToolbar.Button!
@@ -216,8 +218,8 @@ fileprivate class DebuggerToolbar: NSView {
     override func resizeSubviews(withOldSize oldSize: NSSize) {
         super.resizeSubviews(withOldSize: oldSize)
         for i in 0..<self.subviews.count {
-            self.subviews[i].frame = NSRect(x: self.buttonSize * CGFloat(i),
-                                            y: 0,
+            self.subviews[i].frame = NSRect(x: (self.buttonPadding * 2 + self.buttonSize) * CGFloat(i) + self.buttonPadding * 2,
+                                            y: self.buttonPadding,
                                             width: self.buttonSize,
                                             height: self.buttonSize)
         }

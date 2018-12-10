@@ -35,7 +35,7 @@ class Breakpoint {
 
 protocol DebuggerDelegate: AnyObject {
     func debugger(debugger: Debugger, didDumpMemory memoryDump: MemoryDump, programCounter: Word)
-    func debugger(debugger: Debugger, didMoveTo programCounter: Word)
+    func debugger(debugger: Debugger, didUpdate registers: RegisterSet)
     func step(_ sender: AnyObject)
     func run(_ sender: AnyObject)
     func pause(_ sender: AnyObject)
@@ -144,7 +144,7 @@ class Debugger {
 
         self.nes.deficitCycles = self._running ? cycles : 0
         if !self._running {
-            guard let delegate = self.delegate else {
+            guard let delegate = self._delegate else {
                 return
             }
 
@@ -249,12 +249,12 @@ class Debugger {
     }
 
     private func updateMemoryDump() {
-        guard let delegate = self.delegate else {
+        guard let delegate = self._delegate else {
             return
         }
 
         // should probably refresh stack and stuff
 
-        delegate.debugger(debugger: self, didMoveTo: self.nes.cpuRegisters.pc)
+        delegate.debugger(debugger: self, didUpdate: self.nes.cpuRegisters)
     }
 }
