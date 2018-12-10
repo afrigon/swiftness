@@ -64,6 +64,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
 
     private let toolbarHeight: CGFloat = 30.0
     private let rowHeight: CGFloat = 20.0
+    
     private let scrollView = NSScrollView()
     private let tableView: NSTableView = {
         let column = NSTableColumn(identifier: .debuggerColumn)
@@ -83,7 +84,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         super.init(width: CGFloat(1080), height: CGFloat(720), styleMask: [.closable, .miniaturizable, .resizable, .titled])
         self.title = "Swiftness - Debugger"
 
-        self.tableView.backgroundColor = .dark
+        self.tableView.backgroundColor = .darkContent
 
         self.scrollView.documentView = self.tableView
         self.scrollView.hasVerticalScroller = true
@@ -129,7 +130,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
             view = DebuggerTableCellView()
         }
 
-        view!.textField.backgroundColor = self.currentLine == row ? .primary : .dark
+        view!.textField.backgroundColor = self.currentLine == row ? .primary : self.tableView.backgroundColor
         view!.textField.stringValue = self.debugger.memoryDump.getInfo(forLine: Word(row))?.string ?? ""
 
         return view
@@ -155,11 +156,16 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
     }
 
     @objc func run(_ sender: AnyObject) {
-        self.debugger.run()
+        self.debugger.running ? self.debugger.pause() : self.debugger.run()
+        self.debuggerToolbar.runButton.image = NSImage(named: self.debugger.running ? "pause" : "run")
     }
 
-    @objc func pause(_ sender: AnyObject) {
-        self.debugger.pause()
+    override func keyDown(with event: NSEvent) {
+        switch event.keyCode {
+        case 96: self.run(self)
+        case 109: self.step(self)
+        default: break
+        }
     }
 }
 
@@ -187,7 +193,7 @@ fileprivate class DebuggerToolbar: NSView {
     private let buttonPadding: CGFloat = 5.0
 
     private let stepButton: DebuggerToolbar.Button!
-    private let runButton: DebuggerToolbar.Button!
+    let runButton: DebuggerToolbar.Button!
 
     init(debugger: DebuggerWindow) {
         self.stepButton = DebuggerToolbar.Button(image: NSImage(named: "step"),
@@ -203,7 +209,7 @@ fileprivate class DebuggerToolbar: NSView {
         self.wantsLayer = true
         self.layer?.borderWidth = 1
         self.layer?.borderColor = .black
-        self.layer?.backgroundColor = NSColor.dark.cgColor
+        self.layer?.backgroundColor = NSColor.darkContainer.cgColor
 
         self.addSubview(self.runButton)
         self.addSubview(self.stepButton)
@@ -256,7 +262,7 @@ extension DebuggerWindow: NSTouchBarDelegate {
             customViewItem.view = button
         case .runItem:
             if self.debugger.running {
-                let button = NSButton(image: NSImage(named: "pause")!, target: self, action: #selector(self.pause(_:)))
+                let button = NSButton(image: NSImage(named: "pause")!, target: self, action: #selector(self.run(_:)))
                 customViewItem.view = button
             } else {
                 let button = NSButton(image: NSImage(named: "run")!, target: self, action: #selector(self.run(_:)))

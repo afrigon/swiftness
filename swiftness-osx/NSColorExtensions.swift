@@ -28,12 +28,31 @@ extension NSColor {
 //    static let tintColor = NSColor(red: 196/255.0, green: 122/255.0, blue: 49/255.0, alpha: 1.0)
 //    static let backgroundColor = NSColor(red: 28/255.0, green: 28/255.0, blue: 28/255.0, alpha: 1.0)
     static let primary = NSColor(hex: 0xC47A31)
-    static let dark = NSColor(hex: 0x1C1C1C)
+    static let darkContent = NSColor(hex: 0x242428)
+    static let darkContainer = NSColor(hex: 0x343131)
 
     convenience init(hex: UInt32) {
         let red = CGFloat(hex >> 16 & 0xFF)
         let green = CGFloat(hex >> 8 & 0xFF)
         let blue = CGFloat(hex & 0xFF)
         self.init(red: red / 255.0, green: green / 255.0, blue: blue / 255.0, alpha: 255.0)
+    }
+
+    var lighterColor: NSColor {
+        return self.shiftBrightness(-0.2)
+    }
+
+    var darkerColor: NSColor {
+        return self.shiftBrightness(0.2)
+    }
+
+    func shiftBrightness(_ value: CGFloat) -> NSColor {
+        var hue: CGFloat = 0
+        var saturation: CGFloat = 0
+        var brightness: CGFloat = 0
+        var alpha: CGFloat = 0
+        self.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
+
+        return NSColor(hue: hue, saturation: saturation, brightness: max(min(brightness + value, 0.0), 1.0), alpha: alpha)
     }
 }

@@ -38,7 +38,6 @@ protocol DebuggerDelegate: AnyObject {
     func debugger(debugger: Debugger, didUpdate registers: RegisterSet)
     func step(_ sender: AnyObject)
     func run(_ sender: AnyObject)
-    func pause(_ sender: AnyObject)
 }
 
 class DebuggerInfo {
