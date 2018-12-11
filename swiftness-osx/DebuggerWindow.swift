@@ -26,19 +26,22 @@ import Cocoa
 
 fileprivate extension NSUserInterfaceItemIdentifier {
     static let debuggerCell = NSUserInterfaceItemIdentifier("debugger-cell")
+    static let debuggerBreakpointCell = NSUserInterfaceItemIdentifier("debugger-breakpoint-cell")
+
     static let debuggerColumn = NSUserInterfaceItemIdentifier("debugger-column")
+    static let debuggerBreakpointColumn = NSUserInterfaceItemIdentifier("debugger-breakpoint-column")
 }
 
 class DebuggerTableCellView: NSView {
+    let fontSize: CGFloat = 11
+
     let textField: NSTextField = {
         let textField = NSTextField()
-        textField.drawsBackground = true
+        textField.drawsBackground = false
         textField.isBordered = false
         textField.isSelectable = false
         textField.isEditable = false
-        textField.focusRingType = .none
-        textField.textColor = .white
-        textField.font = NSFont(name: "menlo", size: 12)
+        textField.textColor = .gray
 
         return textField
     }()
@@ -46,7 +49,10 @@ class DebuggerTableCellView: NSView {
     init() {
         super.init(frame: .zero)
         self.identifier = .debuggerCell
-        self.focusRingType = .none
+
+        self.wantsLayer = true
+        self.textField.font = NSFont(name: "menlo", size: fontSize)
+
         self.addSubview(self.textField)
     }
 
@@ -54,25 +60,85 @@ class DebuggerTableCellView: NSView {
 
     override func resizeSubviews(withOldSize oldSize: NSSize) {
         super.resizeSubviews(withOldSize: oldSize)
-        self.textField.frame = self.frame
+        let textFieldHeight = self.textField.attributedStringValue.size().height
+        self.textField.frame = NSRect(x: 10,
+                                      y: (self.bounds.height - textFieldHeight) / 2.0 + 1,
+                                      width: self.bounds.width - 10,
+                                      height: textFieldHeight + 2)
+    }
+}
+
+class DebuggerTableCellViewBreakpoint: DebuggerTableCellView {
+    private let thingyWidth: CGFloat = 5.0
+
+    private var _breakpoint: Breakpoint?
+    var breakpoint: Breakpoint? {
+        get { return self._breakpoint }
+        set {
+            self._breakpoint = newValue
+            self.textField.textColor = newValue == nil ? .gray : .white
+        }
+    }
+
+    private lazy var path: NSBezierPath = {
+        let path = NSBezierPath()
+        path.move(to: .zero)
+        path.line(to: NSPoint(x: self.bounds.width - self.thingyWidth, y: 0))
+        path.line(to: NSPoint(x: self.bounds.width, y: self.bounds.height / 2))
+        path.line(to: NSPoint(x: self.bounds.width - self.thingyWidth, y: self.bounds.height))
+        path.line(to: NSPoint(x: 0, y: self.bounds.height))
+        path.close()
+        return path
+    }()
+
+    override init() {
+        super.init()
+        self.identifier = .debuggerBreakpointCell
+
+        self.textField.alignment = .right
+    }
+
+    required init?(coder: NSCoder) { super.init(coder: coder) }
+
+    override func resizeSubviews(withOldSize oldSize: NSSize) {
+        super.resizeSubviews(withOldSize: oldSize)
+        let textFieldHeight = self.textField.attributedStringValue.size().height
+        self.textField.frame = NSRect(x: 0,
+                                      y: (self.bounds.height - textFieldHeight) / 2.0 + 1,
+                                      width: self.bounds.width - self.thingyWidth * 2,
+                                      height: textFieldHeight)
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        if let breakpoint = self._breakpoint {
+            DebuggerWindow.Theme.primary.withAlphaComponent(breakpoint.enabled ? 1.0 : 0.4).setFill()
+            self.path.fill()
+        }
+
+        super.draw(dirtyRect)
     }
 }
 
 class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NSTableViewDataSource {
     private let debugger: Debugger!
-    private var currentLine: Int = 0
+    private var currentLine: Int? = 0
 
     private let toolbarHeight: CGFloat = 30.0
-    private let rowHeight: CGFloat = 20.0
+    private let rowHeight: CGFloat = 18.0
     
     private let scrollView = NSScrollView()
     private let tableView: NSTableView = {
+        let breakpointColumn = NSTableColumn(identifier: .debuggerBreakpointColumn)
+        breakpointColumn.width = 60
+
         let column = NSTableColumn(identifier: .debuggerColumn)
         column.width = 1
 
         let tableView = NSTableView()
         tableView.headerView = nil
-        tableView.focusRingType = .none
+        tableView.intercellSpacing = .zero
+        tableView.backgroundColor = Theme.background
+        tableView.addTableColumn(breakpointColumn)
         tableView.addTableColumn(column)
         return tableView
     }()
@@ -81,11 +147,9 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
     init(debugger: Debugger) {
         self.debugger = debugger
 
-        super.init(width: CGFloat(1080), height: CGFloat(720), styleMask: [.closable, .miniaturizable, .resizable, .titled])
+        super.init(width: CGFloat(720), height: CGFloat(480), styleMask: [.closable, .miniaturizable, .resizable, .titled])
         self.minSize = NSSize(width: CGFloat(360), height: CGFloat(240))
         self.title = "Swiftness - Debugger"
-
-        self.tableView.backgroundColor = .darkContent
 
         self.scrollView.documentView = self.tableView
         self.scrollView.hasVerticalScroller = true
@@ -97,6 +161,9 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
 
         self.debuggerToolbar = DebuggerToolbar(debugger: self)
         self.contentView?.addSubview(self.debuggerToolbar)
+
+        self.tableView.target = self
+        self.tableView.action = #selector(self.setBreakpoint(_:))
     }
 
     override func layoutIfNeeded() {
@@ -125,29 +192,92 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
     }
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
-        var view = self.tableView.makeView(withIdentifier: .debuggerCell, owner: self) as? DebuggerTableCellView
-
-        if view == nil {
-            view = DebuggerTableCellView()
+        guard let column = tableColumn else {
+            return nil
         }
 
-        view!.textField.backgroundColor = self.currentLine == row ? .primary : self.tableView.backgroundColor
-        view!.textField.stringValue = self.debugger.memoryDump.getInfo(forLine: Word(row))?.string ?? ""
+        switch column.identifier {
+        case .debuggerColumn:
+            var view = self.tableView.makeView(withIdentifier: .debuggerCell, owner: self) as? DebuggerTableCellView
+            if view == nil { view = DebuggerTableCellView() }
 
-        return view
+            view!.layer?.backgroundColor = (self.currentLine ?? -1) == row
+                ? Theme.breakpoint.cgColor
+                : Theme.background.cgColor
+
+            guard let info = self.debugger.memoryDump.getInfo(forLine: Word(row)) else {
+                return view!
+            }
+
+            let string = NSMutableAttributedString(string: info.string)
+            string.setColor(forString: info.raw, withColor: Theme.textRaw)
+            string.setColor(forString: info.name, withColor: Theme.textKeywords)
+            string.setColor(forString: info.textOperand, withColor: Theme.textNumbers)
+            string.setColor(forStrings: [",x", ",y", ",a", " a"], withColor: Theme.textRegisters)
+            string.setColor(forStrings: [",", "(", ")", "+", "-", "#"], withColor: Theme.textRegular)
+            string.setColor(forStrings: ["indirect", "undefined"], withColor: Theme.textLowKey)
+            view!.textField.attributedStringValue = string
+
+            return view
+        case .debuggerBreakpointColumn:
+            var view = self.tableView.makeView(withIdentifier: .debuggerBreakpointCell, owner: self) as? DebuggerTableCellViewBreakpoint
+            if view == nil { view = DebuggerTableCellViewBreakpoint() }
+
+            view!.layer?.backgroundColor = (self.currentLine ?? -1) == row
+                ? Theme.breakpoint.cgColor
+                : Theme.background.cgColor
+
+            guard let info = self.debugger.memoryDump.getInfo(forLine: Word(row)) else {
+                return view!
+            }
+            view!.textField.stringValue = info.addressPointer.hex()
+            view!.breakpoint = self.debugger.breakpoints[info.addressPointer]
+
+            return view
+        default: return nil
+        }
+    }
+
+    @objc func setBreakpoint(_ sender: AnyObject) {
+        guard self.tableView.clickedColumn == 0 else {
+            return
+        }
+
+        guard self.tableView.clickedRow != -1,
+            let info = self.debugger.memoryDump.getInfo(forLine: Word(self.tableView.clickedRow)) else {
+            return
+        }
+
+        if self.debugger.breakpoints.find(at: info.addressPointer) {
+            //self.debugger.breakpoints.toggle(at: info.addressPointer)
+            self.debugger.breakpoints.remove(at: info.addressPointer)
+        } else {
+            self.debugger.breakpoints.append(Breakpoint(address: info.addressPointer))
+        }
+
+        self.tableView.reloadData(forRowIndexes: [self.tableView.clickedRow], columnIndexes: [0])
+    }
+
+    func tableView(_ tableView: NSTableView, shouldSelectRow row: Int) -> Bool {
+        return false
     }
 
     func debugger(debugger: Debugger, didDumpMemory memoryDump: MemoryDump, programCounter: Word) {
         self.currentLine = Int(self.debugger.memoryDump.convert(addressToLine: programCounter) ?? 0)
         self.tableView.reloadData()
-        self.tableView.scrollRowToVisible(self.currentLine)
+        self.tableView.scrollRowToVisible(self.currentLine!)
     }
 
     func debugger(debugger: Debugger, didUpdate registers: RegisterSet) {
-        let oldLine: Int = self.currentLine
+        var lines = IndexSet()
+        if let oldLine = self.currentLine {
+            lines.insert(oldLine)
+        }
         self.currentLine = Int(self.debugger.memoryDump.convert(addressToLine: registers.pc) ?? 0)
-        self.tableView.reloadData(forRowIndexes: [oldLine, self.currentLine], columnIndexes: [0])
-        self.tableView.scrollRowToVisible(self.currentLine)
+        lines.insert(self.currentLine!)
+
+        self.tableView.reloadData(forRowIndexes: lines, columnIndexes: [0, 1])
+        self.tableView.scrollRowToVisible(self.currentLine!)
 
         // update regs in ui
     }
@@ -158,6 +288,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
     }
 
     @objc func run(_ sender: AnyObject) {
+        self.currentLine = nil
         self.debugger.running ? self.debugger.pause() : self.debugger.run()
         self.debuggerToolbar.runButton.image = NSImage(named: self.debugger.running ? "pause" : "run")
 
@@ -172,6 +303,19 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         case 109: self.step(self)
         default: break
         }
+    }
+
+    class Theme {
+        static let primary = NSColor(hex: 0xC47A31)
+        static let background = NSColor(hex: 0x242428)
+        static let toolbar = NSColor(hex: 0x343131)
+        static let breakpoint = NSColor(hex: 0x3E5141)
+        static let textKeywords = NSColor(hex: 0xFF6EA9)
+        static let textRegisters = NSColor(hex: 0x91DB60)
+        static let textNumbers = NSColor(hex: 0x9399FF)
+        static let textRaw = NSColor(hex: 0xC47A31)
+        static let textRegular = NSColor.white
+        static let textLowKey = NSColor.gray
     }
 }
 
@@ -198,7 +342,7 @@ fileprivate class DebuggerToolbar: NSView {
     fileprivate class Label: NSTextField {
         init() {
             super.init(frame: .zero)
-            self.backgroundColor = .darkContainer
+            self.backgroundColor = DebuggerWindow.Theme.toolbar
             self.textColor = .white
             self.isBezeled = false
             self.isEditable = false
@@ -233,7 +377,7 @@ fileprivate class DebuggerToolbar: NSView {
         self.wantsLayer = true
         self.layer?.borderWidth = 1
         self.layer?.borderColor = .black
-        self.layer?.backgroundColor = NSColor.darkContainer.cgColor
+        self.layer?.backgroundColor = DebuggerWindow.Theme.toolbar.cgColor
 
         self.buttonView.addSubview(self.runButton)
         self.buttonView.addSubview(self.stepButton)
@@ -254,16 +398,17 @@ fileprivate class DebuggerToolbar: NSView {
                                        y: 0,
                                        width: self.buttonPadding + (self.buttonPadding + self.buttonSize) * CGFloat(self.buttonView.subviews.count),
                                        height: self.bounds.height)
+        let cycleLabelHeight = self.cycleLabel.attributedStringValue.size().height
         self.cycleLabel.frame = NSRect(x: self.buttonView.bounds.width,
-                                       y: (self.bounds.height - 13) / 2,
+                                       y: (self.bounds.height - cycleLabelHeight) / 2,
                                        width: self.bounds.width - self.buttonView.bounds.width - self.buttonPadding,
-                                       height: self.bounds.height - 13)
+                                       height: cycleLabelHeight)
 
         for i in 0..<self.buttonView.subviews.count {
             self.buttonView.subviews[i].frame = NSRect(x: (self.buttonPadding + self.buttonSize) * CGFloat(i) + self.buttonPadding,
-                                            y: self.buttonPadding / 2,
-                                            width: self.buttonSize,
-                                            height: self.buttonSize)
+                                                       y: self.buttonPadding / 2,
+                                                       width: self.buttonSize,
+                                                       height: self.buttonSize)
         }
     }
 }

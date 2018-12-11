@@ -24,29 +24,15 @@
 
 import Cocoa
 
-extension NSColor {
-    convenience init(hex: UInt32) {
-        let red = CGFloat(hex >> 16 & 0xFF)
-        let green = CGFloat(hex >> 8 & 0xFF)
-        let blue = CGFloat(hex & 0xFF)
-        self.init(red: red / 255.0, green: green / 255.0, blue: blue / 255.0, alpha: 255.0)
+extension NSMutableAttributedString {
+    func setColor(forString string: String, withColor color: NSColor) {
+        let range: NSRange = self.mutableString.range(of: string, options: .literal)
+        self.addAttribute(.foregroundColor, value: color, range: range)
     }
 
-    var lighterColor: NSColor {
-        return self.shiftBrightness(-0.2)
-    }
-
-    var darkerColor: NSColor {
-        return self.shiftBrightness(0.2)
-    }
-
-    func shiftBrightness(_ value: CGFloat) -> NSColor {
-        var hue: CGFloat = 0
-        var saturation: CGFloat = 0
-        var brightness: CGFloat = 0
-        var alpha: CGFloat = 0
-        self.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
-
-        return NSColor(hue: hue, saturation: saturation, brightness: max(min(brightness + value, 0.0), 1.0), alpha: alpha)
+    func setColor(forStrings strings: [String], withColor color: NSColor) {
+        for string in strings {
+            self.setColor(forString: string, withColor: color)
+        }
     }
 }

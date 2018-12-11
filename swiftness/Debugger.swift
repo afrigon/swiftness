@@ -24,11 +24,42 @@
 
 class Breakpoint {
     var enabled: Bool = true
-    var address: Word?
-    var cycles: UInt64?
+    var address: Word
 
     init(address: Word) { self.address = address }
-    init(cycles: UInt64) { self.cycles = cycles }
+}
+
+class Breakpoints {
+    private var breakpoints = [Word: Breakpoint]()
+
+    var count: Int { return self.breakpoints.count }
+    var rawArray: [Word: Breakpoint] { return self.breakpoints }
+    
+    func append(_ newElement: Breakpoint) {
+        self.breakpoints[newElement.address] = newElement
+    }
+
+    subscript(address: Word) -> Breakpoint? {
+        return self.breakpoints[address]
+    }
+
+    func find(at address: Word) -> Bool {
+        return self.breakpoints[address] != nil
+    }
+
+    func toggle(at address: Word) {
+        guard self.find(at: address) else { return }
+        self.breakpoints[address]!.enabled = !self.breakpoints[address]!.enabled
+    }
+
+    func remove(at address: Word) {
+        guard let index = self.breakpoints.index(forKey: address) else { return }
+        self.breakpoints.remove(at: index)
+    }
+
+    func removeAll() {
+        self.breakpoints.removeAll()
+    }
 }
 
 protocol DebuggerDelegate: AnyObject {
@@ -43,11 +74,16 @@ class DebuggerInfo {
     let addressPointer: Word
     var opcode: Byte = 0
     var operand: String = ""
-    var instruction: String = ""
+    var textOperand: String = ""
+    var name: String = ""
+    var addressingMode: AddressingMode = .implied
+
+    var raw: String {
+        return "\(self.opcode.hex())\(self.operand)".padding(toLength: 6, withPad: " ", startingAt: 0)
+    }
 
     var string: String {
-        let value = "\(self.opcode.hex())\(self.operand)".padding(toLength: 6, withPad: " ", startingAt: 0)
-        return "\(self.addressPointer.hex()) : \(value)\t\t\(self.instruction)"
+        return "\(self.raw)\t\t\(self.name) \(self.textOperand)"
     }
 
     init(atLine lineNumber: Word, addressPointer: DWord) {
@@ -116,7 +152,7 @@ class Debugger {
 
     private var nes: NintendoEntertainmentSystem!
 
-    var breakpoints = [Breakpoint]()
+    var breakpoints = Breakpoints()
     let memoryDump = MemoryDump()
 
     init(nes: NintendoEntertainmentSystem) {
@@ -165,16 +201,10 @@ class Debugger {
     }
 
     private func checkBreakpoints() {
-        for breakpoint in self.breakpoints {
-            if !breakpoint.enabled { continue }
+        for (_, breakpoint) in self.breakpoints.rawArray {
+            guard breakpoint.enabled else { continue }
 
-            if let address = breakpoint.address {
-                self._running = self.nes.cpuRegisters.pc == address
-            }
-
-            if let cycles = breakpoint.cycles {
-                self._running = self.nes.cpuCycle >= cycles
-            }
+            self._running = self.nes.cpuRegisters.pc == breakpoint.address
         }
     }
 
@@ -188,28 +218,29 @@ class Debugger {
             info.opcode = self.nes.bus.readByte(at: Word(localProgramCounter))
 
             let (name, addressingMode) = self.nes.opcodeInfo(for: info.opcode)
-            info.instruction = "\(name) "
+            info.name = name
+            info.addressingMode = addressingMode
 
             localProgramCounter++
 
             switch addressingMode {
             case .zeroPage(let alteration):
                 let value = self.nes.bus.readByte(at: Word(localProgramCounter)).hex()
-                info.instruction += "$\(value)"
-                info.instruction += alteration == .none ? "" : ",\(String(describing: alteration))"
+                info.textOperand += "$\(value)"
+                info.textOperand += alteration == .none ? "" : ",\(String(describing: alteration))"
                 info.operand += value
                 localProgramCounter++
             case .absolute(let alteration):
                 let lowByte = self.nes.bus.readByte(at: Word(localProgramCounter))
                 let highByte = self.nes.bus.readByte(at: Word(localProgramCounter) &+ 1)
-                info.instruction += "$\(highByte.hex())\(lowByte.hex())"
-                info.instruction += alteration == .none ? "" : ",\(String(describing: alteration))"
+                info.textOperand += "$\(highByte.hex())\(lowByte.hex())"
+                info.textOperand += alteration == .none ? "" : ",\(String(describing: alteration))"
                 info.operand += "\(lowByte.hex())\(highByte.hex())"
                 localProgramCounter += 2
             case .relative:
                 let value = self.nes.bus.readByte(at: Word(localProgramCounter))
                 let offset = (value.isSignBitOn() ? Word(128 - value & 0b01111111) : value.asWord() & 0b01111111)
-                info.instruction += "\(value.isSignBitOn() ? "-" : "+")$\(offset)"
+                info.textOperand += "\(value.isSignBitOn() ? "-" : "+")$\(offset)"
                 localProgramCounter++
 
                 var address = Word(localProgramCounter)
@@ -218,7 +249,7 @@ class Debugger {
                 } else {
                     address = address &+ offset
                 }
-                info.instruction += " ($\(address.hex()))"
+                info.textOperand += " ($\(address.hex()))"
 
                 info.operand += value.hex()
             case .indirect(let alteration):
@@ -230,14 +261,14 @@ class Debugger {
                     info.operand += "\(highByte.hex())"
                 }
 
-                info.instruction += "indirect"
+                info.textOperand += "indirect"
                 localProgramCounter += alteration == .none ? 2 : 1
             case .immediate:
                 let value = self.nes.bus.readByte(at: Word(localProgramCounter)).hex()
-                info.instruction += "#$\(value)"
+                info.textOperand += "#$\(value)"
                 info.operand += value
                 localProgramCounter++
-            case .accumulator: info.instruction += "a"
+            case .accumulator: info.textOperand += "a"
             case .implied: break
             }
 
