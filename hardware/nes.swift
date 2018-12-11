@@ -95,6 +95,10 @@ class NintendoEntertainmentSystem: BusDelegate {
         self.deficitCycles = cycles
     }
 
+    func stepFrame() -> UInt64 {
+        return 10
+    }
+
     func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte {
         return self.getComponent(at: address)?.busRead(at: address) ?? 0
     }

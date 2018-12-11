@@ -65,8 +65,9 @@ class Breakpoints {
 protocol DebuggerDelegate: AnyObject {
     func debugger(debugger: Debugger, didDumpMemory memoryDump: MemoryDump, programCounter: Word)
     func debugger(debugger: Debugger, didUpdate registers: RegisterSet)
-    func step(_ sender: AnyObject)
     func run(_ sender: AnyObject)
+    func step(_ sender: AnyObject)
+    func stepFrame(_ sender: AnyObject)
 }
 
 class DebuggerInfo {
@@ -171,8 +172,10 @@ class Debugger {
             return
         }
 
+        cycles -= Int64(self.nes.step())
         while cycles > 0 && self._running == true {
-            self.checkBreakpoints()
+            self._running = !self.shouldBreak()
+            if !self._running { break }
             cycles -= Int64(self.nes.step())
         }
 
@@ -200,12 +203,18 @@ class Debugger {
         return self.nes.step()
     }
 
-    private func checkBreakpoints() {
+    func stepFrame() -> UInt64 {
+        defer { self.updateMemoryDump() }
+        return self.nes.stepFrame()
+    }
+
+    private func shouldBreak() -> Bool {
         for (_, breakpoint) in self.breakpoints.rawArray {
             guard breakpoint.enabled else { continue }
 
-            self._running = self.nes.cpuRegisters.pc == breakpoint.address
+            if self.nes.cpuRegisters.pc == breakpoint.address { return true }
         }
+        return false
     }
 
     private func disassembleMemory() {

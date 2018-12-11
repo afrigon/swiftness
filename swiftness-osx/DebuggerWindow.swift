@@ -207,14 +207,56 @@ fileprivate class DebuggerTableCellViewBreakpoint: MenloTableCellView {
     }
 }
 
-class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NSTableViewDataSource {
+class DebugView: NSView {
+    fileprivate let debuggerToolbar: DebuggerToolbar!
+
+    init(debugger: DebuggerWindow) {
+        self.debuggerToolbar = DebuggerToolbar(debugger: debugger)
+        super.init(frame: .zero)
+        self.addSubview(self.debuggerToolbar)
+        self.wantsLayer = true
+        self.layer?.masksToBounds = false
+    }
+
+    required init?(coder decoder: NSCoder) {
+        self.debuggerToolbar = nil
+        super.init(coder: decoder)
+    }
+
+    override func resizeSubviews(withOldSize oldSize: NSSize) {
+        super.resizeSubviews(withOldSize: oldSize)
+        self.debuggerToolbar.frame = NSRect(x: 0, y: self.bounds.height - 30, width: self.bounds.width, height: 30)
+    }
+}
+
+class DebuggerSplitView: NSSplitView {
+    override var dividerColor: NSColor {
+        return DebuggerWindow.Theme.background
+    }
+
+    init() {
+        super.init(frame: .zero)
+        self.autosaveName = "debugger-splitview"
+        self.dividerStyle = .thin
+        self.isVertical = false
+    }
+
+    required init?(coder decoder: NSCoder) { super.init(coder: decoder) }
+}
+
+class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NSTableViewDataSource, NSSplitViewDelegate {
     private let debugger: Debugger!
     private var currentLine: Int? = 0
 
-    private let toolbarHeight: CGFloat = 30.0
     private let rowHeight: CGFloat = 18.0
-    
-    private let scrollView = NSScrollView()
+    private let splitViewThreshold: CGFloat = 150.0
+
+    private let splitView = DebuggerSplitView()
+    private let scrollView: NSScrollView = {
+        let scrollView = NSScrollView()
+        scrollView.hasVerticalScroller = true
+        return scrollView
+    }()
     private let tableView: NSTableView = {
         let breakpointColumn = NSTableColumn(identifier: .debuggerBreakpointColumn)
         breakpointColumn.width = 60
@@ -230,7 +272,12 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         tableView.addTableColumn(column)
         return tableView
     }()
-    private var debuggerToolbar: DebuggerToolbar!
+    private var debugView: DebugView!
+    private let variableView: NSScrollView = {
+        let scrollView = NSScrollView()
+        scrollView.hasVerticalScroller = true
+        return scrollView
+    }()
 
     init(debugger: Debugger) {
         self.debugger = debugger
@@ -240,15 +287,22 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         self.title = "Swiftness - Debugger"
 
         self.scrollView.documentView = self.tableView
-        self.scrollView.hasVerticalScroller = true
-        self.contentView?.addSubview(scrollView)
+        self.splitView.addSubview(self.scrollView)
+
+        self.debugView = DebugView(debugger: self)
+        self.debugView.addSubview(self.variableView)
+        self.splitView.addSubview(self.debugView)
 
         self.tableView.dataSource = self
         self.tableView.delegate = self
+        self.splitView.delegate = self
         self.debugger.delegate = self
 
-        self.debuggerToolbar = DebuggerToolbar(debugger: self)
-        self.contentView?.addSubview(self.debuggerToolbar)
+
+
+        self.contentView?.addSubview(self.splitView)
+
+        self.splitView.adjustSubviews()
 
         self.tableView.target = self
         self.tableView.action = #selector(self.setBreakpoint(_:))
@@ -256,19 +310,14 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
 
     override func layoutIfNeeded() {
         guard let view = self.contentView else {
-            self.scrollView.frame = .zero
-            self.debuggerToolbar.frame = .zero
+            self.splitView.frame = .zero
             return
         }
 
-        self.scrollView.frame = NSRect(x: 0,
-                                       y: self.toolbarHeight,
-                                       width: view.bounds.width,
-                                       height: view.bounds.height - self.toolbarHeight)
-        self.debuggerToolbar.frame = NSRect(x: 0,
-                                            y: 0,
-                                            width: view.bounds.width,
-                                            height: self.toolbarHeight)
+        self.splitView.frame = NSRect(x: 0,
+                                      y: 0,
+                                      width: view.bounds.width,
+                                      height: view.bounds.height)
     }
 
     func numberOfRows(in tableView: NSTableView) -> Int {
@@ -352,10 +401,27 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         return false
     }
 
+    func splitView(_ splitView: NSSplitView, canCollapseSubview subview: NSView) -> Bool {
+        return true
+    }
+
+    func splitView(_ splitView: NSSplitView, shouldCollapseSubview subview: NSView, forDoubleClickOnDividerAt dividerIndex: Int) -> Bool {
+        return true
+    }
+
+    func splitView(_ splitView: NSSplitView, constrainMinCoordinate proposedMinimumPosition: CGFloat, ofSubviewAt dividerIndex: Int) -> CGFloat {
+        return proposedMinimumPosition + self.splitViewThreshold
+    }
+
+    func splitView(_ splitView: NSSplitView, constrainMaxCoordinate proposedMaximumPosition: CGFloat, ofSubviewAt dividerIndex: Int) -> CGFloat {
+        return proposedMaximumPosition - self.splitViewThreshold
+    }
+
     func debugger(debugger: Debugger, didDumpMemory memoryDump: MemoryDump, programCounter: Word) {
         self.currentLine = Int(self.debugger.memoryDump.convert(addressToLine: programCounter) ?? 0)
         self.tableView.reloadData()
         self.tableView.scrollRowToVisible(self.currentLine!)
+        self.updateToolbar()
     }
 
     func debugger(debugger: Debugger, didUpdate registers: RegisterSet) {
@@ -372,16 +438,31 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         // update regs in ui
     }
 
-    @objc func step(_ sender: AnyObject) {
-        let cycles = self.debugger.step()
-        self.debuggerToolbar.cycleLabel.stringValue = "Cycles: \(self.debugger.totalCycles) (+\(cycles))"
+    @objc func run(_ sender: AnyObject) {
+        var lines = IndexSet()
+        if let oldLine = self.currentLine {
+            lines.insert(oldLine)
+        }
+        self.currentLine = nil
+        self.tableView.reloadData(forRowIndexes: lines, columnIndexes: [0, 1])
+        self.debugger.running ? self.debugger.pause() : self.debugger.run()
+        self.updateToolbar()
     }
 
-    @objc func run(_ sender: AnyObject) {
-        self.currentLine = nil
-        self.debugger.running ? self.debugger.pause() : self.debugger.run()
-        self.debuggerToolbar.runButton.image = NSImage(named: self.debugger.running ? "pause" : "run")
-        self.debuggerToolbar.runButton.toolTip = "\(self.debugger.running ? "Pause" : "Continue") program execution"
+    @objc func step(_ sender: AnyObject) {
+        let cycles = self.debugger.step()
+        self.debugView.debuggerToolbar.cycleLabel.stringValue = "Cycles: \(self.debugger.totalCycles) (+\(cycles))"
+    }
+
+    @objc func stepFrame(_ sender: AnyObject) {
+        let cycles = self.debugger.stepFrame()
+        self.debugView.debuggerToolbar.cycleLabel.stringValue = "Cycles: \(self.debugger.totalCycles) (+\(cycles))"
+    }
+
+    func updateToolbar() {
+        self.debugView.debuggerToolbar.cycleLabel.stringValue = "Cycles: \(self.debugger.totalCycles)"
+        self.debugView.debuggerToolbar.runButton.image = NSImage(named: self.debugger.running ? "pause" : "run")
+        self.debugView.debuggerToolbar.runButton.toolTip = "\(self.debugger.running ? "Pause" : "Continue") program execution (F5)"
 
         if #available(OSX 10.12.2, *) {
             self.touchBar = self.makeTouchBar()
@@ -391,8 +472,9 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
     override func keyDown(with event: NSEvent) {
         switch event.keyCode {
         case 96: self.run(self)
+        case 101: self.stepFrame(self)
         case 109: self.step(self)
-        default: break
+        default: print(event.keyCode)
         }
     }
 
@@ -468,6 +550,7 @@ fileprivate class DebuggerToolbar: NSView {
 
     private let buttonView = NSView()
     private let stepButton: DebuggerToolbar.Button!
+    private let stepFrameButton: DebuggerToolbar.Button!
     let runButton: DebuggerToolbar.Button!
     let cycleLabel: DebuggerToolbar.Label!
 
@@ -475,11 +558,15 @@ fileprivate class DebuggerToolbar: NSView {
         self.runButton = DebuggerToolbar.Button(image: NSImage(named: "run"),
                                                 target: debugger,
                                                 action: #selector(debugger.run(_:)),
-                                                toolTip: "Continue program execution")
+                                                toolTip: "Continue program execution (F5)")
         self.stepButton = DebuggerToolbar.Button(image: NSImage(named: "step"),
                                                  target: debugger,
                                                  action: #selector(debugger.step(_:)),
-                                                 toolTip: "Step into")
+                                                 toolTip: "Step into (F10)")
+        self.stepFrameButton = DebuggerToolbar.Button(image: NSImage(named: "step"),
+                                                      target: debugger,
+                                                      action: #selector(debugger.stepFrame(_:)),
+                                                      toolTip: "Step frame (F9)")
         self.cycleLabel = DebuggerToolbar.Label()
         super.init(frame: .zero)
 
@@ -490,12 +577,14 @@ fileprivate class DebuggerToolbar: NSView {
 
         self.buttonView.addSubview(self.runButton)
         self.buttonView.addSubview(self.stepButton)
+        self.buttonView.addSubview(self.stepFrameButton)
         self.addSubview(self.buttonView)
         self.addSubview(self.cycleLabel)
     }
 
     required init?(coder decoder: NSCoder) {
         self.stepButton = nil
+        self.stepFrameButton = nil
         self.runButton = nil
         self.cycleLabel = nil
         super.init(coder: decoder)
