@@ -32,8 +32,44 @@ fileprivate extension NSUserInterfaceItemIdentifier {
     static let debuggerBreakpointColumn = NSUserInterfaceItemIdentifier("debugger-breakpoint-column")
 }
 
-class DebuggerTableCellView: NSView {
-    let fontSize: CGFloat = 11
+fileprivate enum MemoryRegion: String {
+    case zeroPage = "Zero Page"
+    case ram = "RAM"
+    case stack = "Stack"
+    case io = "IO Registers"
+    case expansion = "Expansion RAM"
+    case save = "Save RAM"
+    case romLow = "Lower Bank"
+    case romHigh = "Higher Bank"
+    case mirror = "Mirrors"
+    case none = ""
+
+    init(at address: Word) {
+        switch address {
+        case 0..<0x100: self = .zeroPage
+        case 0x200..<0x800: self = .ram
+        case 0x100..<0x200: self = .stack
+        case 0x2000..<0x2008, 0x4000..<0x4020: self = .io
+        case 0x4020..<0x6000: self = .expansion
+        case 0x6000..<0x8000: self = .save
+        case 0x8000..<0xC000: self = .romLow
+        case 0xC000...0xFFFF: self = .romHigh
+        case 0x800..<0x2000, 0x2008..<0x4000: self = .mirror
+        default: self = .none
+        }
+    }
+
+    static func getType(at address: Word) -> DebuggerTableCellView.IndicatorType {
+        switch address {
+        case 0x0, 0x200, 0x100, 0x2000, 0x2008, 0x4000, 0x4020, 0x6000, 0x8000, 0xC000: return .top
+        case 0xFF, 0x7FF, 0x1FF, 0x2007, 0x401F, 0x5FFF, 0x7FFF, 0xFFFF, 0x1FFF, 0x3FFF: return .bottom
+        default: return .middle
+        }
+    }
+}
+
+fileprivate class MenloTableCellView: NSView {
+    let fontSize: CGFloat = 11.0
 
     let textField: NSTextField = {
         let textField = NSTextField()
@@ -48,7 +84,6 @@ class DebuggerTableCellView: NSView {
 
     init() {
         super.init(frame: .zero)
-        self.identifier = .debuggerCell
 
         self.wantsLayer = true
         self.textField.font = NSFont(name: "menlo", size: fontSize)
@@ -68,7 +103,61 @@ class DebuggerTableCellView: NSView {
     }
 }
 
-class DebuggerTableCellViewBreakpoint: DebuggerTableCellView {
+fileprivate class DebuggerTableCellView: MenloTableCellView {
+    let rightPadding: CGFloat = 10.0
+    let indicatorWidth: CGFloat = 6.0
+    let indicatorView = NSView()
+
+    fileprivate enum IndicatorType { case top, middle, bottom }
+
+    override init() {
+        super.init()
+        self.identifier = .debuggerCell
+        self.addSubview(self.indicatorView)
+    }
+
+    required init?(coder: NSCoder) { super.init(coder: coder) }
+
+    func setSectionIndicator(to type: IndicatorType, for section: MemoryRegion) {
+        let layer = CAShapeLayer()
+        let path = CGMutablePath()
+        path.move(to: CGPoint(x: 0, y: 0))
+
+        switch type {
+        case .middle:
+            path.addRect(CGRect(x: 0, y: 0, width: self.indicatorWidth, height: self.bounds.height))
+        case .top:
+            path.addRect(CGRect(x: 0, y: 0, width: self.indicatorWidth, height: self.bounds.height / 2))
+            path.move(to: CGPoint(x: 0, y: self.bounds.height / 2))
+            path.addCurve(to: CGPoint(x: self.indicatorWidth, y: self.bounds.height / 2),
+                          control1: CGPoint(x: 0, y: self.bounds.height - 2),
+                          control2: CGPoint(x: self.indicatorWidth, y: self.bounds.height - 2))
+        case .bottom:
+            path.addRect(CGRect(x: 0, y: self.bounds.height / 2, width: self.indicatorWidth, height: self.bounds.height / 2))
+            path.move(to: CGPoint(x: 0, y: self.bounds.height / 2))
+            path.addCurve(to: CGPoint(x: self.indicatorWidth, y: self.bounds.height / 2),
+                          control1: CGPoint(x: 0, y: 2),
+                          control2: CGPoint(x: self.indicatorWidth, y: 2))
+        }
+
+        layer.path = path
+        layer.fillColor = DebuggerWindow.Theme.color(for: section).withAlphaComponent(0.7).cgColor
+        // this effect has potential but is glitchy
+        // self.indicatorView.layer = layer
+
+        self.indicatorView.toolTip = section.rawValue
+    }
+
+    override func resizeSubviews(withOldSize oldSize: NSSize) {
+        super.resizeSubviews(withOldSize: oldSize)
+        self.indicatorView.frame = NSRect(x: self.bounds.width - self.indicatorWidth - self.rightPadding,
+                                          y: 0,
+                                          width: self.indicatorWidth + self.rightPadding,
+                                          height: self.bounds.height)
+    }
+}
+
+fileprivate class DebuggerTableCellViewBreakpoint: MenloTableCellView {
     private let thingyWidth: CGFloat = 5.0
 
     private var _breakpoint: Breakpoint?
@@ -80,7 +169,7 @@ class DebuggerTableCellViewBreakpoint: DebuggerTableCellView {
         }
     }
 
-    private lazy var path: NSBezierPath = {
+    private lazy var breakpointPath: NSBezierPath = {
         let path = NSBezierPath()
         path.move(to: .zero)
         path.line(to: NSPoint(x: self.bounds.width - self.thingyWidth, y: 0))
@@ -94,7 +183,6 @@ class DebuggerTableCellViewBreakpoint: DebuggerTableCellView {
     override init() {
         super.init()
         self.identifier = .debuggerBreakpointCell
-
         self.textField.alignment = .right
     }
 
@@ -112,7 +200,7 @@ class DebuggerTableCellViewBreakpoint: DebuggerTableCellView {
     override func draw(_ dirtyRect: NSRect) {
         if let breakpoint = self._breakpoint {
             DebuggerWindow.Theme.primary.withAlphaComponent(breakpoint.enabled ? 1.0 : 0.4).setFill()
-            self.path.fill()
+            self.breakpointPath.fill()
         }
 
         super.draw(dirtyRect)
@@ -218,6 +306,8 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
             string.setColor(forStrings: ["indirect", "undefined"], withColor: Theme.textLowKey)
             view!.textField.attributedStringValue = string
 
+            view!.setSectionIndicator(to: MemoryRegion.getType(at: info.addressPointer), for: MemoryRegion(at: info.addressPointer))
+
             return view
         case .debuggerBreakpointColumn:
             var view = self.tableView.makeView(withIdentifier: .debuggerBreakpointCell, owner: self) as? DebuggerTableCellViewBreakpoint
@@ -291,6 +381,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         self.currentLine = nil
         self.debugger.running ? self.debugger.pause() : self.debugger.run()
         self.debuggerToolbar.runButton.image = NSImage(named: self.debugger.running ? "pause" : "run")
+        self.debuggerToolbar.runButton.toolTip = "\(self.debugger.running ? "Pause" : "Continue") program execution"
 
         if #available(OSX 10.12.2, *) {
             self.touchBar = self.makeTouchBar()
@@ -305,7 +396,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         }
     }
 
-    class Theme {
+    fileprivate class Theme {
         static let primary = NSColor(hex: 0xC47A31)
         static let background = NSColor(hex: 0x242428)
         static let toolbar = NSColor(hex: 0x343131)
@@ -316,16 +407,32 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         static let textRaw = NSColor(hex: 0xC47A31)
         static let textRegular = NSColor.white
         static let textLowKey = NSColor.gray
+
+        static func color(for section: MemoryRegion) -> NSColor {
+            switch section {
+            case .zeroPage: return NSColor(hex: 0xBAE1FF)
+            case .ram: return NSColor(hex: 0xbaffc9)
+            case .stack: return NSColor(hex: 0xc4baff)
+            case .io: return NSColor(hex: 0xb3fffe)
+            case .expansion: return NSColor(hex: 0xcaffb3)
+            case .save: return NSColor(hex: 0xf0b3ff)
+            case .romLow: return NSColor(hex: 0xffdfba)
+            case .romHigh: return NSColor(hex: 0xffb3ba)
+            case .mirror: return NSColor(hex: 0xffffba)
+            case .none: return .clear
+            }
+        }
     }
 }
 
 fileprivate class DebuggerToolbar: NSView {
     fileprivate class Button: NSImageView {
-        init(image: NSImage?, target: AnyObject?, action: Selector?) {
+        init(image: NSImage?, target: AnyObject?, action: Selector?, toolTip: String? = nil) {
             super.init(frame: .zero)
             self.image = image
             self.target = target
             self.action = action
+            self.toolTip = toolTip
 
             if #available(OSX 10.14, *) {
                 self.contentTintColor = .white
@@ -365,12 +472,14 @@ fileprivate class DebuggerToolbar: NSView {
     let cycleLabel: DebuggerToolbar.Label!
 
     init(debugger: DebuggerWindow) {
-        self.stepButton = DebuggerToolbar.Button(image: NSImage(named: "step"),
-                                                 target: debugger,
-                                                 action: #selector(debugger.step(_:)))
         self.runButton = DebuggerToolbar.Button(image: NSImage(named: "run"),
                                                 target: debugger,
-                                                action: #selector(debugger.run(_:)))
+                                                action: #selector(debugger.run(_:)),
+                                                toolTip: "Continue program execution")
+        self.stepButton = DebuggerToolbar.Button(image: NSImage(named: "step"),
+                                                 target: debugger,
+                                                 action: #selector(debugger.step(_:)),
+                                                 toolTip: "Step into")
         self.cycleLabel = DebuggerToolbar.Label()
         super.init(frame: .zero)
 
