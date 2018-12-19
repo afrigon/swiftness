@@ -179,6 +179,7 @@ fileprivate class DebuggerTableCellViewBreakpoint: MenloTableCellView {
             self.textField.textColor = newValue == nil ? .gray : .white
         }
     }
+    var breakpointColor: NSColor?
 
     private lazy var breakpointPath: NSBezierPath = {
         let path = NSBezierPath()
@@ -212,7 +213,7 @@ fileprivate class DebuggerTableCellViewBreakpoint: MenloTableCellView {
         self.updateLayer()
         super.draw(dirtyRect)
         if let breakpoint = self._breakpoint {
-            NSColor(named: .primary)!.withAlphaComponent(breakpoint.enabled ? 1.0 : 0.4).setFill()
+            (self.breakpointColor ?? NSColor(named: .primary)!).withAlphaComponent(breakpoint.enabled ? 1.0 : 0.4).setFill()
             self.breakpointPath.fill()
         }
     }
@@ -374,6 +375,9 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
             }
             view!.textField.stringValue = info.addressPointer.hex()
             view!.breakpoint = self.debugger.breakpoints[info.addressPointer]
+            view!.breakpointColor = self.debugger.breakpoints.enabled
+                ? NSColor(named: .primary)
+                : .gray
 
             return view
         default: return nil
@@ -450,6 +454,11 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
                 ? NSColor(named: .primary)
                 : NSColor(named: .icon)
         }
+        
+        let rowsWithBreaks = IndexSet(self.debugger.breakpoints.raw.map { (args) -> Int in
+            return Int(self.debugger.memoryDump.convert(addressToLine: args.1.address) ?? 0)
+        })
+        self.tableView.reloadData(forRowIndexes: rowsWithBreaks, columnIndexes: [0])
     }
 
     @objc func run(_ sender: AnyObject) {

@@ -33,7 +33,7 @@ class Breakpoints {
     private var breakpoints = [Word: Breakpoint]()
 
     var count: Int { return self.breakpoints.count }
-    var rawArray: [Word: Breakpoint] { return self.breakpoints }
+    var raw: [Word: Breakpoint] { return self.breakpoints }
     var enabled: Bool = true
 
     func append(_ newElement: Breakpoint) {
@@ -224,7 +224,7 @@ class Debugger {
             return false
         }
 
-        for (_, breakpoint) in self.breakpoints.rawArray {
+        for (_, breakpoint) in self.breakpoints.raw {
             guard breakpoint.enabled else { continue }
 
             if self.nes.cpuRegisters.pc == breakpoint.address { return true }
