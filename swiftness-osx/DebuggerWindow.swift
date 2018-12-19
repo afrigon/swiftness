@@ -241,7 +241,6 @@ class DebugView: NSView {
 }
 
 class DebuggerSplitView: NSSplitView {
-
     init() {
         super.init(frame: .zero)
         self.autosaveName = "debugger-splitview"
@@ -442,6 +441,17 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         // update regs in ui
     }
 
+    @objc func toggleBreakpoints(_ sender: AnyObject) {
+        self.debugger.breakpoints.enabled = !self.debugger.breakpoints.enabled
+        self.debugView.debuggerToolbar.breakpointsButton.image = NSImage(named: "breakpoint-\(self.debugger.breakpoints.enabled ? "on" : "off")")
+        self.debugView.debuggerToolbar.breakpointsButton.toolTip = "\(self.debugger.breakpoints.enabled ? "Disable" : "Enable") breakpoints"
+        if #available(OSX 10.14, *) {
+            self.debugView.debuggerToolbar.breakpointsButton.contentTintColor = self.debugger.breakpoints.enabled
+                ? NSColor(named: .primary)
+                : NSColor(named: .icon)
+        }
+    }
+
     @objc func run(_ sender: AnyObject) {
         var lines = IndexSet()
         if let oldLine = self.currentLine {
@@ -540,10 +550,15 @@ fileprivate class DebuggerToolbar: NSView {
     private let stepFrameButton: DebuggerToolbar.Button!
     private let stepLineButton: DebuggerToolbar.Button!
     private let refreshButton: DebuggerToolbar.Button!
+    let breakpointsButton: DebuggerToolbar.Button!
     let runButton: DebuggerToolbar.Button!
     let cycleLabel: DebuggerToolbar.Label!
 
     init(debugger: DebuggerWindow) {
+        self.breakpointsButton = DebuggerToolbar.Button(image: NSImage(named: "breakpoint-on"),
+                                                        target: debugger,
+                                                        action: #selector(debugger.toggleBreakpoints(_:)),
+                                                        toolTip: "Disable breakpoints")
         self.runButton = DebuggerToolbar.Button(image: NSImage(named: "resume"),
                                                 target: debugger,
                                                 action: #selector(debugger.run(_:)),
@@ -551,25 +566,30 @@ fileprivate class DebuggerToolbar: NSView {
         self.stepButton = DebuggerToolbar.Button(image: NSImage(named: "step-over"),
                                                  target: debugger,
                                                  action: #selector(debugger.step(_:)),
-                                                 toolTip: "Step Into (F9)")
+                                                 toolTip: "Step into (F9)")
         self.stepFrameButton = DebuggerToolbar.Button(image: NSImage(named: "step-over-frame"),
                                                       target: debugger,
                                                       action: #selector(debugger.stepFrame(_:)),
-                                                      toolTip: "Step Frame (F8)")
+                                                      toolTip: "Step frame (F8)")
         self.stepLineButton = DebuggerToolbar.Button(image: NSImage(named: "step-over-line"),
                                                  target: debugger,
                                                  action: #selector(debugger.stepLine(_:)),
-                                                 toolTip: "Step Line (F7)")
+                                                 toolTip: "Step line (F7)")
         self.refreshButton = DebuggerToolbar.Button(image: NSImage(named: "memory"),
                                                       target: debugger,
                                                       action: #selector(debugger.refresh(_:)),
-                                                      toolTip: "Refresh Memory Dump (F6)")
+                                                      toolTip: "Refresh memory dump (F6)")
         self.cycleLabel = DebuggerToolbar.Label()
         super.init(frame: .zero)
 
         self.wantsLayer = true
         self.layer?.borderWidth = 1
 
+        if #available(OSX 10.14, *) {
+            self.breakpointsButton.contentTintColor = NSColor(named: .primary)
+        }
+
+        self.buttonView.addSubview(self.breakpointsButton)
         self.buttonView.addSubview(self.runButton)
         self.buttonView.addSubview(self.stepButton)
         self.buttonView.addSubview(self.stepLineButton)
@@ -584,6 +604,7 @@ fileprivate class DebuggerToolbar: NSView {
         self.stepLineButton = nil
         self.stepFrameButton = nil
         self.refreshButton = nil
+        self.breakpointsButton = nil
         self.runButton = nil
         self.cycleLabel = nil
         super.init(coder: decoder)

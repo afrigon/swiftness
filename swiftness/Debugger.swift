@@ -34,7 +34,8 @@ class Breakpoints {
 
     var count: Int { return self.breakpoints.count }
     var rawArray: [Word: Breakpoint] { return self.breakpoints }
-    
+    var enabled: Bool = true
+
     func append(_ newElement: Breakpoint) {
         self.breakpoints[newElement.address] = newElement
     }
@@ -65,6 +66,7 @@ class Breakpoints {
 protocol DebuggerDelegate: AnyObject {
     func debugger(debugger: Debugger, didDumpMemory memoryDump: MemoryDump, programCounter: Word)
     func debugger(debugger: Debugger, didUpdate registers: RegisterSet)
+    func toggleBreakpoints(_ sender: AnyObject)
     func run(_ sender: AnyObject)
     func step(_ sender: AnyObject)
     func stepLine(_ sender: AnyObject)
@@ -218,6 +220,10 @@ class Debugger {
     }
 
     private func shouldBreak() -> Bool {
+        guard self.breakpoints.enabled else {
+            return false
+        }
+
         for (_, breakpoint) in self.breakpoints.rawArray {
             guard breakpoint.enabled else { continue }
 
