@@ -67,7 +67,9 @@ protocol DebuggerDelegate: AnyObject {
     func debugger(debugger: Debugger, didUpdate registers: RegisterSet)
     func run(_ sender: AnyObject)
     func step(_ sender: AnyObject)
+    func stepLine(_ sender: AnyObject)
     func stepFrame(_ sender: AnyObject)
+    func refresh(_ sender: AnyObject)
 }
 
 class DebuggerInfo {
@@ -180,14 +182,7 @@ class Debugger {
         }
 
         self.nes.deficitCycles = self._running ? cycles : 0
-        if !self._running {
-            guard let delegate = self._delegate else {
-                return
-            }
-
-            self.disassembleMemory()
-            delegate.debugger(debugger: self, didDumpMemory: self.memoryDump, programCounter: self.nes.cpuRegisters.pc)
-        }
+        if !self._running { self.refresh() }
     }
 
     func run() {
@@ -203,9 +198,23 @@ class Debugger {
         return self.nes.step()
     }
 
+    func stepLine() -> UInt64 {
+        defer { self.updateMemoryDump() }
+        return self.nes.stepFrame()
+    }
+
     func stepFrame() -> UInt64 {
         defer { self.updateMemoryDump() }
         return self.nes.stepFrame()
+    }
+
+    func refresh() {
+        guard let delegate = self._delegate else {
+            return
+        }
+
+        self.disassembleMemory()
+        delegate.debugger(debugger: self, didDumpMemory: self.memoryDump, programCounter: self.nes.cpuRegisters.pc)
     }
 
     private func shouldBreak() -> Bool {

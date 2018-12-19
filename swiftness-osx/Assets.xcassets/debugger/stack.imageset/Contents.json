@@ -2,11 +2,11 @@
   "images" : [
     {
       "idiom" : "universal",
+      "filename" : "stack.pdf",
       "scale" : "1x"
     },
     {
       "idiom" : "universal",
-      "filename" : "run.png",
       "scale" : "2x"
     },
     {
