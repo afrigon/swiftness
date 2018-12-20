@@ -74,22 +74,3 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         DebuggerWindow(debugger: debugger).getWindowController().showWindow(self)
     }
 }
-
-
-//        self.window = NSWindow(contentRect: frame,
-//                               styleMask: [.closable, .miniaturizable, .titled],
-//                               backing: .buffered,
-//                               defer: false)
-//        self.window.title = "Swiftness"
-//
-//        self.viewController = ViewController()
-//        self.viewController.view.frame = CGRect(origin: .zero, size: frame.size)
-//        self.window.contentView?.addSubview(self.viewController.view)
-//
-//
-//        self.windowController = NSWindowController(window: self.window)
-//        self.windowController.showWindow(self)
-//
-//        NSApplication.shared.mainMenu = Menu()
-//
-//        Menu.debugger(nil)

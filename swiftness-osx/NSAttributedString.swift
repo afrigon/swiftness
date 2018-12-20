@@ -25,6 +25,11 @@
 import Cocoa
 
 extension NSMutableAttributedString {
+    func setFont(forString string: String, withFont font: NSFont) {
+        let range: NSRange = self.mutableString.range(of: string, options: .literal)
+        self.addAttribute(.font, value: font, range: range)
+    }
+
     func setColor(forString string: String, withColor color: NSColor) {
         let range: NSRange = self.mutableString.range(of: string, options: .literal)
         self.addAttribute(.foregroundColor, value: color, range: range)

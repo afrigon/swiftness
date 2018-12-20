@@ -117,7 +117,7 @@ fileprivate class MenloTableCellView: NSView {
         self.textField.frame = NSRect(x: 5,
                                       y: (self.bounds.height - textFieldHeight) / 2.0 + 1,
                                       width: self.bounds.width - 5,
-                                      height: textFieldHeight)
+                                      height: textFieldHeight + 1)
     }
 }
 
@@ -236,7 +236,6 @@ class DebugView: NSView {
         column.width = 1
 
         outlineView.headerView = nil
-        outlineView.intercellSpacing = .zero
         outlineView.backgroundColor = NSColor(named: .background)!
         outlineView.addTableColumn(column)
 
@@ -285,6 +284,8 @@ class DebuggerSplitView: NSSplitView {
         self.dividerStyle = .thin
         self.isVertical = false
     }
+
+    override var dividerColor: NSColor { return .clear }
 
     required init?(coder decoder: NSCoder) { super.init(coder: decoder) }
 }
@@ -346,6 +347,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
     }
 
     override func layoutIfNeeded() {
+        super.layoutIfNeeded()
         guard let view = self.contentView else {
             self.splitView.frame = .zero
             return
@@ -531,21 +533,21 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
 
         switch item {
         case let type as VariableType:
-            view!.textField.textColor = NSColor(named: .primary)!
+            let style: [NSAttributedString.Key: Any] = [.font: NSFont(name: "menlo bold", size: 11)!]
             switch type {
-            case .cpu: view!.textField.stringValue = "Core Processing Unit Registers"
+            case .cpu: view!.textField.attributedStringValue = NSAttributedString(string: "Core Processing Unit Registers", attributes: style)
             case .cpuFlag:
-                view!.textField.textColor = NSColor(named: .text)!
                 view!.textField.stringValue = "p  (processor status) = \(self.debugger.cpuRegisters.p.value.bin())"
-            case .stack: view!.textField.stringValue = "Stack"
-            case .ppu: view!.textField.stringValue = "Picture Processing Unit Registers"
-            case .apu: view!.textField.stringValue = "Audio Processing Unit Registers"
-            case .io: view!.textField.stringValue = "Input/Output Registers"
-            case .file: view!.textField.stringValue = "iNES File"
+            case .stack: view!.textField.attributedStringValue = NSAttributedString(string: "Stack (\(Byte(0xFF) - self.debugger.cpuRegisters.sp))", attributes: style)
+            case .ppu: view!.textField.attributedStringValue = NSAttributedString(string: "Picture Processing Unit Registers", attributes: style)
+            case .apu: view!.textField.attributedStringValue = NSAttributedString(string: "Audio Processing Unit Registers", attributes: style)
+            case .io: view!.textField.attributedStringValue = NSAttributedString(string: "Input/Output Registers", attributes: style)
+            case .file: view!.textField.attributedStringValue = NSAttributedString(string: "iNES File", attributes: style)
             }
         case let string as String:
-            view!.textField.textColor = NSColor(named: .text)!
             view!.textField.stringValue = string
+        case let string as NSAttributedString:
+            view!.textField.attributedStringValue = string
         default: view!.textField.stringValue = ""
         }
 
