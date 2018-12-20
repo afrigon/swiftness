@@ -154,6 +154,7 @@ class Debugger {
     private var _running: Bool = false
     var running: Bool { return self._running }
     var totalCycles: UInt64 { return self.nes.cpuCycle }
+    var cpuRegisters: RegisterSet { return self.nes.cpuRegisters }
 
     private var nes: NintendoEntertainmentSystem!
 

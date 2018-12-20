@@ -30,6 +30,9 @@ fileprivate extension NSUserInterfaceItemIdentifier {
 
     static let debuggerColumn = NSUserInterfaceItemIdentifier("debugger-column")
     static let debuggerBreakpointColumn = NSUserInterfaceItemIdentifier("debugger-breakpoint-column")
+
+    static let debuggerInfoCell = NSUserInterfaceItemIdentifier("debugger-info-cell")
+    static let debuggerInfoColumn = NSUserInterfaceItemIdentifier("debugger-info-column")
 }
 
 fileprivate enum MemoryRegion: String {
@@ -69,7 +72,7 @@ fileprivate enum MemoryRegion: String {
 }
 
 fileprivate class MenloTableCellView: NSView {
-    let fontSize: CGFloat = 11.0
+    let fontSize: CGFloat
 
     let textField: NSTextField = {
         let textField = NSTextField()
@@ -87,29 +90,33 @@ fileprivate class MenloTableCellView: NSView {
         set { self._highlighted = newValue }
     }
 
-    init() {
+    init(fontSize: CGFloat = 11) {
+        self.fontSize = fontSize
         super.init(frame: .zero)
 
         self.wantsLayer = true
-        self.textField.font = NSFont(name: "menlo", size: fontSize)
+        self.textField.font = NSFont(name: "menlo", size: self.fontSize)
 
         self.addSubview(self.textField)
     }
 
-    required init?(coder: NSCoder) { super.init(coder: coder) }
+    required init?(coder: NSCoder) {
+        self.fontSize = 11
+        super.init(coder: coder)
+    }
 
     override func updateLayer() {
         self.layer?.backgroundColor = self._highlighted
             ? NSColor(named: .codeBackgroundHighlight)!.cgColor
-            : NSColor(named: .background)!.cgColor
+            : NSColor.clear.cgColor
     }
 
     override func resizeSubviews(withOldSize oldSize: NSSize) {
         super.resizeSubviews(withOldSize: oldSize)
         let textFieldHeight = self.textField.attributedStringValue.size().height
-        self.textField.frame = NSRect(x: 10,
+        self.textField.frame = NSRect(x: 0,
                                       y: (self.bounds.height - textFieldHeight) / 2.0 + 1,
-                                      width: self.bounds.width - 10,
+                                      width: self.bounds.width,
                                       height: textFieldHeight + 2)
     }
 }
@@ -121,7 +128,7 @@ fileprivate class DebuggerTableCellView: MenloTableCellView {
 
     fileprivate enum IndicatorType { case top, middle, bottom }
 
-    override init() {
+    init() {
         super.init()
         self.identifier = .debuggerCell
         self.addSubview(self.indicatorView)
@@ -192,7 +199,7 @@ fileprivate class DebuggerTableCellViewBreakpoint: MenloTableCellView {
         return path
     }()
 
-    override init() {
+    init() {
         super.init()
         self.identifier = .debuggerBreakpointCell
         self.textField.alignment = .right
@@ -221,13 +228,42 @@ fileprivate class DebuggerTableCellViewBreakpoint: MenloTableCellView {
 
 class DebugView: NSView {
     fileprivate let debuggerToolbar: DebuggerToolbar!
+    fileprivate let variableView: NSOutlineView = {
+        let outlineView = NSOutlineView()
+        outlineView.autosaveExpandedItems = false
+
+        let column = NSTableColumn()
+        column.width = 1
+
+        outlineView.headerView = nil
+        outlineView.intercellSpacing = .zero
+        outlineView.backgroundColor = NSColor(named: .background)!
+        outlineView.addTableColumn(column)
+
+        outlineView.indentationPerLevel = 10
+        outlineView.floatsGroupRows = true
+        outlineView.allowsColumnReordering = false
+        outlineView.outlineTableColumn = column
+
+        return outlineView
+    }()
+    private let variableScrollView: NSScrollView = {
+        let scrollView = NSScrollView()
+        scrollView.hasVerticalScroller = true
+        return scrollView
+    }()
 
     init(debugger: DebuggerWindow) {
         self.debuggerToolbar = DebuggerToolbar(debugger: debugger)
         super.init(frame: .zero)
+
+        self.variableView.delegate = debugger
+        self.variableView.dataSource = debugger
+
+        self.variableScrollView.documentView = self.variableView
+
         self.addSubview(self.debuggerToolbar)
-        self.wantsLayer = true
-        self.layer?.masksToBounds = false
+        self.addSubview(self.variableScrollView)
     }
 
     required init?(coder decoder: NSCoder) {
@@ -238,6 +274,7 @@ class DebugView: NSView {
     override func resizeSubviews(withOldSize oldSize: NSSize) {
         super.resizeSubviews(withOldSize: oldSize)
         self.debuggerToolbar.frame = NSRect(x: 0, y: self.bounds.height - 30, width: self.bounds.width, height: 30)
+        self.variableScrollView.frame = NSRect(x: 0, y: 0, width: self.bounds.width, height: self.bounds.height - 30)
     }
 }
 
@@ -252,9 +289,46 @@ class DebuggerSplitView: NSSplitView {
     required init?(coder decoder: NSCoder) { super.init(coder: decoder) }
 }
 
-class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NSTableViewDataSource, NSSplitViewDelegate {
+class DebugSection {
+    let title: String
+    var items = [DebugInfoItem]()
+
+    init(title: String) {
+        self.title = title
+    }
+}
+
+class DebugInfoItem {
+    let name: String
+    let value: String
+    let extra: String?
+
+    var nameWithExtra: String {
+        var string = self.name
+        if let extra = self.extra { string += " (\(extra))"}
+        return string
+    }
+
+    init(name: String, value: String, extra: String? = nil) {
+        self.name = name
+        self.value = value
+        self.extra = extra
+    }
+}
+
+class StackDebugInfoItem: DebugInfoItem {
+    let address: Word
+
+    init(address: Word) {
+        self.address = address
+        super.init(name: "", value: "")
+    }
+}
+
+class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NSTableViewDataSource, NSSplitViewDelegate, NSOutlineViewDelegate, NSOutlineViewDataSource {
     private let debugger: Debugger!
     private var currentLine: Int? = 0
+    private var debugSections = [DebugSection]()
 
     private let rowHeight: CGFloat = 18.0
     private let splitViewThreshold: CGFloat = 150.0
@@ -281,11 +355,6 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         return tableView
     }()
     private var debugView: DebugView!
-    private let variableView: NSScrollView = {
-        let scrollView = NSScrollView()
-        scrollView.hasVerticalScroller = true
-        return scrollView
-    }()
 
     init(debugger: Debugger) {
         self.debugger = debugger
@@ -298,7 +367,6 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         self.splitView.addSubview(self.scrollView)
 
         self.debugView = DebugView(debugger: self)
-        self.debugView.addSubview(self.variableView)
         self.splitView.addSubview(self.debugView)
 
         self.tableView.dataSource = self
@@ -424,11 +492,100 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         return proposedMaximumPosition - self.splitViewThreshold
     }
 
+    func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
+        if let section = item as? DebugSection {
+            return section.items.count
+        }
+
+        return self.debugSections.count
+    }
+
+    private enum VariableType {
+        case cpu, stack, ppu, apu, io, file, unknown
+    }
+
+    func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any {
+//        guard let item = item else {
+//            switch index {
+//            case 0: return VariableType.cpu
+//            case 1: return VariableType.stack
+//            case 2: return VariableType.ppu
+//            case 3: return VariableType.apu
+//            case 4: return VariableType.io
+//            case 5: return VariableType.file
+//            default: return VariableType.unknown
+//            }
+//        }
+
+        if let section = item as? DebugSection {
+            return section.items[index]
+        }
+
+        return self.debugSections[index]
+    }
+
+    func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {
+        guard let section = item as? DebugSection else {
+            return false
+        }
+
+        return section.items.count > 0
+    }
+
+    func outlineView(_ outlineView: NSOutlineView, viewFor tableColumn: NSTableColumn?, item: Any) -> NSView? {
+        var view = outlineView.makeView(withIdentifier: .debuggerInfoCell, owner: self) as? MenloTableCellView
+        if view == nil {
+            view = MenloTableCellView(fontSize: 10)
+        }
+
+        view!.textField.textColor = NSColor(named: .text)!
+
+        switch item {
+        case let section as DebugSection:
+            view!.textField.stringValue = section.title
+        case let info as DebugInfoItem:
+            view!.textField.stringValue = "\(info.nameWithExtra) = \(info.value)"
+        case let info as StackDebugInfoItem:
+            view!.textField.stringValue = "$\(info.address.hex()) = #$\(self.debugger.memoryDump.getInfo(forAddress: info.address)?.opcode.hex() ?? "")"
+        default: view!.textField.stringValue = ""
+        }
+
+        return view
+    }
+
+    private func initVariableData() {
+        self.debugSections.removeAll()
+        self.debugSections.append(DebugSection(title: "Core Processing Unit Registers"))
+        self.debugSections.append(DebugSection(title: "Stack"))
+        self.debugSections.append(DebugSection(title: "Picture Processing Unit Registers"))
+        self.debugSections.append(DebugSection(title: "Audio Processing Unit Registers"))
+        self.debugSections.append(DebugSection(title: "IO Registers"))
+        self.debugSections.append(DebugSection(title: "iNES File"))
+        self.updateVariableData()
+    }
+
+    private func updateVariableData() {
+        // insert activity indicator
+        self.debugSections[0].items[0] = DebugInfoItem(name: "a", value: "$\(self.debugger.cpuRegisters.a.hex())", extra: "accumulator")
+        self.debugSections[0].items[1] = DebugInfoItem(name: "x", value: "$\(self.debugger.cpuRegisters.x.hex())")
+        self.debugSections[0].items[2] = DebugInfoItem(name: "y", value: "$\(self.debugger.cpuRegisters.y.hex())")
+        self.debugSections[0].items[3] = DebugInfoItem(name: "sp", value: "$\(self.debugger.cpuRegisters.sp.hex())", extra: "stack pointer")
+        self.debugSections[0].items[4] = DebugInfoItem(name: "pc", value: "$\(self.debugger.cpuRegisters.pc.hex())", extra: "program counter")
+
+        for address: Word in 0x100..<0x200 {
+            self.debugSections[1].items[Int(address - 0x100)] = StackDebugInfoItem(address: address)
+        }
+
+        self.debugView.variableView.reloadItem(nil, reloadChildren: true)
+        // remove activity indicator
+    }
+
     func debugger(debugger: Debugger, didDumpMemory memoryDump: MemoryDump, programCounter: Word) {
         self.currentLine = Int(self.debugger.memoryDump.convert(addressToLine: programCounter) ?? 0)
         self.tableView.reloadData()
         self.tableView.scrollRowToVisible(self.currentLine!)
         self.updateToolbar()
+        self.updateVariableData()
     }
 
     func debugger(debugger: Debugger, didUpdate registers: RegisterSet) {
@@ -442,7 +599,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         self.tableView.reloadData(forRowIndexes: lines, columnIndexes: [0, 1])
         self.tableView.scrollRowToVisible(self.currentLine!)
 
-        // update regs in ui
+        self.updateVariableData()
     }
 
     @objc func toggleBreakpoints(_ sender: AnyObject) {
@@ -454,7 +611,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
                 ? NSColor(named: .primary)
                 : NSColor(named: .icon)
         }
-        
+
         let rowsWithBreaks = IndexSet(self.debugger.breakpoints.raw.map { (args) -> Int in
             return Int(self.debugger.memoryDump.convert(addressToLine: args.1.address) ?? 0)
         })

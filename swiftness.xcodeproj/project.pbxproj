@@ -64,6 +64,7 @@
 		FE53C8642183FE00002BD71F /* LogicLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743E2182014E0072530A /* LogicLoop.swift */; };
 		FE53C8652183FE00002BD71F /* InputManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C8112182474F002BD71F /* InputManager.swift */; };
 		FE53C86A2183FE00002BD71F /* IntegerExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741C217C546E0072530A /* IntegerExtensions.swift */; };
+		FE6E0C5E21CAA583004CB263 /* View.xib in Resources */ = {isa = PBXBuildFile; fileRef = FE6E0C5D21CAA583004CB263 /* View.xib */; };
 		FE82CB42219FD8AD00E08545 /* StartupOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE82CB41219FD8AD00E08545 /* StartupOptions.swift */; };
 		FE82CB6321A00BE700E08545 /* StartupOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE82CB41219FD8AD00E08545 /* StartupOptions.swift */; };
 		FE82CB6421A00BE800E08545 /* StartupOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE82CB41219FD8AD00E08545 /* StartupOptions.swift */; };
@@ -124,6 +125,7 @@
 		FE53C831218369ED002BD71F /* swiftness-osx-tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swiftness-osx-tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FE53C835218369ED002BD71F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FE53C83B2183E5AF002BD71F /* InputResponder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputResponder.swift; sourceTree = "<group>"; };
+		FE6E0C5D21CAA583004CB263 /* View.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = View.xib; sourceTree = "<group>"; };
 		FE82CB41219FD8AD00E08545 /* StartupOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupOptions.swift; sourceTree = "<group>"; };
 		FE8CD47621B800FB00C68C8D /* ConsoleWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleWindow.swift; sourceTree = "<group>"; };
 		FE8CD47821B8068400C68C8D /* DebuggerWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebuggerWindow.swift; sourceTree = "<group>"; };
@@ -253,6 +255,7 @@
 				FEA2740D217C45F90072530A /* Assets.xcassets */,
 				FEA27412217C45F90072530A /* Info.plist */,
 				FEA27413217C45F90072530A /* swiftness.entitlements */,
+				FE6E0C5D21CAA583004CB263 /* View.xib */,
 			);
 			path = "swiftness-osx";
 			sourceTree = "<group>";
@@ -429,6 +432,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FE6E0C5E21CAA583004CB263 /* View.xib in Resources */,
 				FEA2740E217C45F90072530A /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
