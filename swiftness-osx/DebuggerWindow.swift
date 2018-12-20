@@ -114,10 +114,10 @@ fileprivate class MenloTableCellView: NSView {
     override func resizeSubviews(withOldSize oldSize: NSSize) {
         super.resizeSubviews(withOldSize: oldSize)
         let textFieldHeight = self.textField.attributedStringValue.size().height
-        self.textField.frame = NSRect(x: 0,
+        self.textField.frame = NSRect(x: 5,
                                       y: (self.bounds.height - textFieldHeight) / 2.0 + 1,
-                                      width: self.bounds.width,
-                                      height: textFieldHeight + 2)
+                                      width: self.bounds.width - 5,
+                                      height: textFieldHeight)
     }
 }
 
@@ -289,46 +289,9 @@ class DebuggerSplitView: NSSplitView {
     required init?(coder decoder: NSCoder) { super.init(coder: decoder) }
 }
 
-class DebugSection {
-    let title: String
-    var items = [DebugInfoItem]()
-
-    init(title: String) {
-        self.title = title
-    }
-}
-
-class DebugInfoItem {
-    let name: String
-    let value: String
-    let extra: String?
-
-    var nameWithExtra: String {
-        var string = self.name
-        if let extra = self.extra { string += " (\(extra))"}
-        return string
-    }
-
-    init(name: String, value: String, extra: String? = nil) {
-        self.name = name
-        self.value = value
-        self.extra = extra
-    }
-}
-
-class StackDebugInfoItem: DebugInfoItem {
-    let address: Word
-
-    init(address: Word) {
-        self.address = address
-        super.init(name: "", value: "")
-    }
-}
-
 class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NSTableViewDataSource, NSSplitViewDelegate, NSOutlineViewDelegate, NSOutlineViewDataSource {
     private let debugger: Debugger!
     private var currentLine: Int? = 0
-    private var debugSections = [DebugSection]()
 
     private let rowHeight: CGFloat = 18.0
     private let splitViewThreshold: CGFloat = 150.0
@@ -493,91 +456,99 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
     }
 
     func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
-        if let section = item as? DebugSection {
-            return section.items.count
+        guard let item = item as? VariableType else {
+            return 6
         }
 
-        return self.debugSections.count
+        switch item {
+        case .cpu: return 6
+        case .cpuFlag: return 8
+        case .stack: return 0x100 - Int(self.debugger.cpuRegisters.sp)
+        case .ppu: return 0
+        case .apu: return 0
+        case .io: return 0
+        case .file: return 0
+        }
     }
 
     private enum VariableType {
-        case cpu, stack, ppu, apu, io, file, unknown
+        case cpu, cpuFlag, stack, ppu, apu, io, file
     }
 
     func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any {
-//        guard let item = item else {
-//            switch index {
-//            case 0: return VariableType.cpu
-//            case 1: return VariableType.stack
-//            case 2: return VariableType.ppu
-//            case 3: return VariableType.apu
-//            case 4: return VariableType.io
-//            case 5: return VariableType.file
-//            default: return VariableType.unknown
-//            }
-//        }
-
-        if let section = item as? DebugSection {
-            return section.items[index]
+        guard let item = item as? VariableType else {
+            switch index {
+            case 0: return VariableType.cpu
+            case 1: return VariableType.stack
+            case 2: return VariableType.ppu
+            case 3: return VariableType.apu
+            case 4: return VariableType.io
+            case 5: return VariableType.file
+            default: return ""
+            }
         }
 
-        return self.debugSections[index]
+        switch item {
+        case .cpu:
+            switch index {
+            case 0: return "a  (accumulator)      = $\(self.debugger.cpuRegisters.a.hex())"
+            case 1: return "x                     = $\(self.debugger.cpuRegisters.x.hex())"
+            case 2: return "y                     = $\(self.debugger.cpuRegisters.y.hex())"
+            case 3: return "sp (stack pointer)    = $\(self.debugger.cpuRegisters.sp.hex())"
+            case 4: return "pc (program counter)  = $\(self.debugger.cpuRegisters.pc.hex())"
+            case 5: return VariableType.cpuFlag
+            default: return ""
+            }
+        case .cpuFlag:
+            let value = (self.debugger.cpuRegisters.p.value >> Byte(7 - index)) & Byte(1)
+            switch index {
+            case 0: return "N (negative)    = \(value)"
+            case 1: return "V (overflow)    = \(value)"
+            case 2: return "  (always one)  = \(value)"
+            case 3: return "B (breaks)      = \(value)"
+            case 4: return "D (decimal)     = \(value)"
+            case 5: return "I (interrupt)   = \(value)"
+            case 6: return "Z (zero)        = \(value)"
+            case 7: return "C (carry)       = \(value)"
+            default: return ""
+            }
+        default: return ""
+        }
     }
 
     func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {
-        guard let section = item as? DebugSection else {
-            return false
-        }
-
-        return section.items.count > 0
+        return item as? VariableType != nil
     }
 
     func outlineView(_ outlineView: NSOutlineView, viewFor tableColumn: NSTableColumn?, item: Any) -> NSView? {
         var view = outlineView.makeView(withIdentifier: .debuggerInfoCell, owner: self) as? MenloTableCellView
         if view == nil {
-            view = MenloTableCellView(fontSize: 10)
+            view = MenloTableCellView()
         }
 
         view!.textField.textColor = NSColor(named: .text)!
 
         switch item {
-        case let section as DebugSection:
-            view!.textField.stringValue = section.title
-        case let info as DebugInfoItem:
-            view!.textField.stringValue = "\(info.nameWithExtra) = \(info.value)"
-        case let info as StackDebugInfoItem:
-            view!.textField.stringValue = "$\(info.address.hex()) = #$\(self.debugger.memoryDump.getInfo(forAddress: info.address)?.opcode.hex() ?? "")"
+        case let type as VariableType:
+            view!.textField.textColor = NSColor(named: .primary)!
+            switch type {
+            case .cpu: view!.textField.stringValue = "Core Processing Unit Registers"
+            case .cpuFlag:
+                view!.textField.textColor = NSColor(named: .text)!
+                view!.textField.stringValue = "p  (processor status) = \(self.debugger.cpuRegisters.p.value.bin())"
+            case .stack: view!.textField.stringValue = "Stack"
+            case .ppu: view!.textField.stringValue = "Picture Processing Unit Registers"
+            case .apu: view!.textField.stringValue = "Audio Processing Unit Registers"
+            case .io: view!.textField.stringValue = "Input/Output Registers"
+            case .file: view!.textField.stringValue = "iNES File"
+            }
+        case let string as String:
+            view!.textField.textColor = NSColor(named: .text)!
+            view!.textField.stringValue = string
         default: view!.textField.stringValue = ""
         }
 
         return view
-    }
-
-    private func initVariableData() {
-        self.debugSections.removeAll()
-        self.debugSections.append(DebugSection(title: "Core Processing Unit Registers"))
-        self.debugSections.append(DebugSection(title: "Stack"))
-        self.debugSections.append(DebugSection(title: "Picture Processing Unit Registers"))
-        self.debugSections.append(DebugSection(title: "Audio Processing Unit Registers"))
-        self.debugSections.append(DebugSection(title: "IO Registers"))
-        self.debugSections.append(DebugSection(title: "iNES File"))
-        self.updateVariableData()
-    }
-
-    private func updateVariableData() {
-        // insert activity indicator
-        self.debugSections[0].items[0] = DebugInfoItem(name: "a", value: "$\(self.debugger.cpuRegisters.a.hex())", extra: "accumulator")
-        self.debugSections[0].items[1] = DebugInfoItem(name: "x", value: "$\(self.debugger.cpuRegisters.x.hex())")
-        self.debugSections[0].items[2] = DebugInfoItem(name: "y", value: "$\(self.debugger.cpuRegisters.y.hex())")
-        self.debugSections[0].items[3] = DebugInfoItem(name: "sp", value: "$\(self.debugger.cpuRegisters.sp.hex())", extra: "stack pointer")
-        self.debugSections[0].items[4] = DebugInfoItem(name: "pc", value: "$\(self.debugger.cpuRegisters.pc.hex())", extra: "program counter")
-
-        for address: Word in 0x100..<0x200 {
-            self.debugSections[1].items[Int(address - 0x100)] = StackDebugInfoItem(address: address)
-        }
-
-        self.debugView.variableView.reloadItem(nil, reloadChildren: true)
-        // remove activity indicator
     }
 
     func debugger(debugger: Debugger, didDumpMemory memoryDump: MemoryDump, programCounter: Word) {
@@ -585,7 +556,8 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         self.tableView.reloadData()
         self.tableView.scrollRowToVisible(self.currentLine!)
         self.updateToolbar()
-        self.updateVariableData()
+        self.debugView.variableView.reloadData()
+
     }
 
     func debugger(debugger: Debugger, didUpdate registers: RegisterSet) {
@@ -599,7 +571,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         self.tableView.reloadData(forRowIndexes: lines, columnIndexes: [0, 1])
         self.tableView.scrollRowToVisible(self.currentLine!)
 
-        self.updateVariableData()
+        self.debugView.variableView.reloadData()
     }
 
     @objc func toggleBreakpoints(_ sender: AnyObject) {
