@@ -170,6 +170,10 @@ class Debugger {
         return conductor.attach()
     }
 
+    func readMemory(at address: Word) -> Byte {
+        return self.nes.bus.readByte(at: address)
+    }
+
     func loopClosure(_ deltaTime: Double) {
         var cycles: Int64 = Int64(self.nes.frequency * deltaTime) + self.nes.deficitCycles
 

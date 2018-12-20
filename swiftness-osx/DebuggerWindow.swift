@@ -455,6 +455,8 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         return proposedMaximumPosition - self.splitViewThreshold
     }
 
+    private enum VariableType { case cpu, cpuFlag, stack, ppu, apu, io, file }
+
     func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
         guard let item = item as? VariableType else {
             return 6
@@ -463,16 +465,12 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         switch item {
         case .cpu: return 6
         case .cpuFlag: return 8
-        case .stack: return 0x100 - Int(self.debugger.cpuRegisters.sp)
+        case .stack: return 0x100 - Int(self.debugger.cpuRegisters.sp) - 1
         case .ppu: return 0
         case .apu: return 0
         case .io: return 0
         case .file: return 0
         }
-    }
-
-    private enum VariableType {
-        case cpu, cpuFlag, stack, ppu, apu, io, file
     }
 
     func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any {
@@ -512,6 +510,9 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
             case 7: return "C (carry)       = \(value)"
             default: return ""
             }
+        case .stack:
+            let address = Word(0x200 - index - 1)
+            return "$\(address.hex()) = $\(self.debugger.readMemory(at: address).hex())"
         default: return ""
         }
     }
