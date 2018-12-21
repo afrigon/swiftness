@@ -61,14 +61,6 @@ fileprivate enum MemoryRegion: String {
         default: self = .none
         }
     }
-
-    static func getType(at address: Word) -> DebuggerTableCellView.IndicatorType {
-        switch address {
-        case 0x0, 0x200, 0x100, 0x2000, 0x2008, 0x4000, 0x4020, 0x6000, 0x8000, 0xC000: return .top
-        case 0xFF, 0x7FF, 0x1FF, 0x2007, 0x401F, 0x5FFF, 0x7FFF, 0xFFFF, 0x1FFF, 0x3FFF: return .bottom
-        default: return .middle
-        }
-    }
 }
 
 fileprivate class MenloTableCellView: NSView {
@@ -136,7 +128,7 @@ fileprivate class DebuggerTableCellView: MenloTableCellView {
 
     required init?(coder: NSCoder) { super.init(coder: coder) }
 
-    func setSectionIndicator(to type: IndicatorType, for section: MemoryRegion) {
+    func setSectionIndicator(for section: MemoryRegion) {
 //        let layer = CAShapeLayer()
 //        let path = CGMutablePath()
 //        path.move(to: CGPoint(x: 0, y: 0))
@@ -393,7 +385,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
             string.setColor(forStrings: ["indirect", "undefined"], withColor: NSColor(named: .codeLowkey)!)
             view!.textField.attributedStringValue = string
 
-            view!.setSectionIndicator(to: MemoryRegion.getType(at: info.addressPointer), for: MemoryRegion(at: info.addressPointer))
+            view!.setSectionIndicator(for: MemoryRegion(at: info.addressPointer))
 
             return view
         case .debuggerBreakpointColumn:
@@ -457,21 +449,20 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         return proposedMaximumPosition - self.splitViewThreshold
     }
 
-    private enum VariableType { case cpu, cpuFlag, stack, ppu, apu, io, file }
+    private enum VariableType { case cpu, cpuFlag, stack, ppu, apu, rom }
 
     func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
         guard let item = item as? VariableType else {
-            return 6
+            return 5
         }
 
         switch item {
-        case .cpu: return 6
+        case .cpu: return 7
         case .cpuFlag: return 8
         case .stack: return 0x100 - Int(self.debugger.cpuRegisters.sp) - 1
-        case .ppu: return 0
+        case .ppu: return 9
         case .apu: return 0
-        case .io: return 0
-        case .file: return 0
+        case .rom: return 6
         }
     }
 
@@ -482,8 +473,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
             case 1: return VariableType.stack
             case 2: return VariableType.ppu
             case 3: return VariableType.apu
-            case 4: return VariableType.io
-            case 5: return VariableType.file
+            case 4: return VariableType.rom
             default: return ""
             }
         }
@@ -491,12 +481,13 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         switch item {
         case .cpu:
             switch index {
-            case 0: return "a  (accumulator)      = $\(self.debugger.cpuRegisters.a.hex())"
-            case 1: return "x                     = $\(self.debugger.cpuRegisters.x.hex())"
-            case 2: return "y                     = $\(self.debugger.cpuRegisters.y.hex())"
-            case 3: return "sp (stack pointer)    = $\(self.debugger.cpuRegisters.sp.hex())"
-            case 4: return "pc (program counter)  = $\(self.debugger.cpuRegisters.pc.hex())"
-            case 5: return VariableType.cpuFlag
+            case 0: return "Cycles = \(self.debugger.totalCycles)"
+            case 1: return "A  (accumulator)      = $\(self.debugger.cpuRegisters.a.hex())"
+            case 2: return "X                     = $\(self.debugger.cpuRegisters.x.hex())"
+            case 3: return "Y                     = $\(self.debugger.cpuRegisters.y.hex())"
+            case 4: return "SP (stack pointer)    = $\(self.debugger.cpuRegisters.sp.hex())"
+            case 5: return "PC (program counter)  = $\(self.debugger.cpuRegisters.pc.hex())"
+            case 6: return VariableType.cpuFlag
             default: return ""
             }
         case .cpuFlag:
@@ -515,6 +506,31 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         case .stack:
             let address = Word(0x200 - index - 1)
             return "$\(address.hex()) = $\(self.debugger.readMemory(at: address).hex())"
+        case .ppu:
+            switch index {
+            case 0: return "Frame    = \("")"
+            case 1: return "Scanline = \("")"
+            case 2: return "Cycle    = \("")"
+            case 3: return "$2000 (control register) = \("")"
+            case 4: return "$2001 (mask register)    = \("")"
+            case 5: return "$2002 (status register)  = \("")"
+            case 6: return "$2003 (oam pointer)      = \("")"
+            case 7: return "$2005 (scroll ?)         = \("")"
+            case 8: return "$2006 (vram pointer)     = \("")"
+            default: return ""
+            }
+        case .rom:
+            switch index {
+            case 0:
+                guard let delegate = NSApplication.shared.delegate as? AppDelegate else { return "" }
+                return "Filepath = \(delegate.options.filepath ?? "nil")"
+            case 1: return "Program Banks = \(self.debugger.cartridge.programRom.count / 0x4000) -> \(self.debugger.cartridge.programRom.count / 1024)KB"
+            case 2: return "Character Banks = \(self.debugger.cartridge.characterRom.count / 0x2000) -> \(self.debugger.cartridge.characterRom.count / 1024)KB"
+            case 3: return "Battery = \(self.debugger.cartridge.battery)"
+            case 4: return "Mirroring = \(String(describing: self.debugger.cartridge.mirroring))"
+            case 5: return "Mapper = \(String(describing: self.debugger.cartridge.mapperType))"
+            default: return ""
+            }
         default: return ""
         }
     }
@@ -535,17 +551,19 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         case let type as VariableType:
             let style: [NSAttributedString.Key: Any] = [.font: NSFont(name: "menlo bold", size: 11)!]
             switch type {
-            case .cpu: view!.textField.attributedStringValue = NSAttributedString(string: "Core Processing Unit Registers", attributes: style)
+            case .cpu: view!.textField.attributedStringValue = NSAttributedString(string: "Core Processing Unit (cpu)", attributes: style)
             case .cpuFlag:
-                view!.textField.stringValue = "p  (processor status) = \(self.debugger.cpuRegisters.p.value.bin())"
+                view!.textField.stringValue = "P  (processor status) = \(self.debugger.cpuRegisters.p.value.bin())"
             case .stack: view!.textField.attributedStringValue = NSAttributedString(string: "Stack (\(Byte(0xFF) - self.debugger.cpuRegisters.sp))", attributes: style)
-            case .ppu: view!.textField.attributedStringValue = NSAttributedString(string: "Picture Processing Unit Registers", attributes: style)
-            case .apu: view!.textField.attributedStringValue = NSAttributedString(string: "Audio Processing Unit Registers", attributes: style)
-            case .io: view!.textField.attributedStringValue = NSAttributedString(string: "Input/Output Registers", attributes: style)
-            case .file: view!.textField.attributedStringValue = NSAttributedString(string: "iNES File", attributes: style)
+            case .ppu: view!.textField.attributedStringValue = NSAttributedString(string: "Picture Processing Unit (ppu)", attributes: style)
+            case .apu: view!.textField.attributedStringValue = NSAttributedString(string: "Audio Processing Unit (apu)", attributes: style)
+            case .rom: view!.textField.attributedStringValue = NSAttributedString(string: "Read Only Memory (rom)", attributes: style)
             }
         case let string as String:
-            view!.textField.stringValue = string
+            let string = NSMutableAttributedString(string: string)
+            let range: NSRange = string.mutableString.range(of: "^.*=", options: .regularExpression)
+            string.addAttributes([.font: NSFont(name: "menlo bold", size: 11)!], range: range)
+            view!.textField.attributedStringValue = string
         case let string as NSAttributedString:
             view!.textField.attributedStringValue = string
         default: view!.textField.stringValue = ""
@@ -560,7 +578,6 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         self.tableView.scrollRowToVisible(self.currentLine!)
         self.updateToolbar()
         self.debugView.variableView.reloadData()
-
     }
 
     func debugger(debugger: Debugger, didUpdate registers: RegisterSet) {

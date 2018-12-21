@@ -32,7 +32,7 @@ class NintendoEntertainmentSystem: BusDelegate {
     private let ram = RandomAccessMemory()
     private let controller1 = Controller(.primary)
     private let controller2 = Controller(.secondary)
-    private let cartridge: Cartridge
+    let cartridge: Cartridge // should be private
     let bus = Bus()
 
     private var totalCycles: UInt64 = 0
@@ -42,6 +42,7 @@ class NintendoEntertainmentSystem: BusDelegate {
 
     var cpuCycle: UInt64 { return self.totalCycles }
     var cpuRegisters: RegisterSet { return self.cpu.registers }
+    var ppuFrame: UInt64 { return 0 }
     var ppuScanline: UInt16 { return 0 }//self.ppu.cycle }
     var ppuCycle: UInt16 { return 0 }//self.ppu.cycle }
 

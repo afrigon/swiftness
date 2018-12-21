@@ -31,15 +31,14 @@ enum CartridgeRegion {
 }
 
 class Cartridge: BusConnectedComponent, MapperDelegate {
-    private let mirroring: ScreenMirroring
-    private let battery: Bool
-    private let mapperType: MapperType
+    let mirroring: ScreenMirroring // should be private (required access from debugger)
+    let battery: Bool // should be private (required access from debugger)
+    let mapperType: MapperType // should be private (required access from debugger)
     private var mapper: Mapper!
 
-    private var programRom: [Byte]
-    private var characterRom: [Byte]
-    private var saveRam = [Byte](repeating: 0x00, count: 0x2000)
-    // should probably be assigned only when supported by the mapper ?
+    var programRom: [Byte] // should be private (required access from debugger)
+    var characterRom: [Byte] // should be private (required access from debugger)
+    private var saveRam = [Byte](repeating: 0x00, count: 0x2000) // should probably be assigned only when supported by the mapper ?
 
     init(prg: [Byte], chr: [Byte], mapperType: MapperType, mirroring: ScreenMirroring, battery: Bool) {
         self.programRom = prg
