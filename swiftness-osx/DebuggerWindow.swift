@@ -380,7 +380,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
             string.setColor(forString: info.raw, withColor: NSColor(named: .codeRaw)!)
             string.setColor(forString: info.name, withColor: NSColor(named: .codeKeywords)!)
             string.setColor(forString: info.textOperand, withColor: NSColor(named: .codeNumbers)!)
-            string.addAttributes(regex: "[axy]{1}$", [.foregroundColor : NSColor(named: .codeRegisters)!])
+            string.setColor(forStrings: [",x", ",y", ",a", " a"], withColor: NSColor(named: .codeRegisters)!)
             string.setColor(forStrings: ["(", ")", ",", "+", "#"], withColor: NSColor(named: .text)!)
             string.addAttributes(regex: "[-]+", [.foregroundColor : NSColor(named: .text)!])
             string.addAttributes(regex: "indirect|undefined", [.foregroundColor : NSColor(named: .codeLowkey)!])

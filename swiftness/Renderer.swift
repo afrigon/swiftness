@@ -43,10 +43,10 @@ class FrameBuffer {
         }
 
         let index = y * self.size.width * 4 + x * 4
-        self.data[index] = Byte(color >> 16)
-        self.data[index + 1] = Byte((color >> 8) & 0xFF)
-        self.data[index + 2] = Byte(color & 0xFF)
-        self.data[index + 3] = 0xFF
+        self.data[index] = Byte(color & 0xFF)               // R
+        self.data[index + 1] = Byte((color >> 8) & 0xFF)    // G
+        self.data[index + 2] = Byte((color >> 16) & 0xFF)   // B
+        self.data[index + 3] = 0xFF                         // A
     }
 }
 

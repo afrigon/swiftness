@@ -260,7 +260,7 @@ class Debugger {
                 info.textOperand += alteration == .none ? "" : ",\(String(describing: alteration))"
                 info.operand += value
                 localProgramCounter++
-            case .absolute(let alteration):
+            case .absolute(let alteration, _):
                 let lowByte = self.nes.bus.readByte(at: Word(localProgramCounter))
                 let highByte = self.nes.bus.readByte(at: Word(localProgramCounter) &+ 1)
                 info.textOperand += "$\(highByte.hex())\(lowByte.hex())"

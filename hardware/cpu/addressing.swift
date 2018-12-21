@@ -27,7 +27,7 @@ enum AddressingMode {
     case relative
     case implied, accumulator
     case zeroPage(Alteration)
-    case absolute(Alteration)
+    case absolute(Alteration, Bool)
     case indirect(Alteration)
     enum Alteration: UInt8 { case none = 0, x = 1, y = 2 }
 }
@@ -58,13 +58,24 @@ class ZeroPageAddressingOperandBuilder: AlteredOperandBuilder {
 }
 
 class AbsoluteAddressingOperandBuilder: AlteredOperandBuilder {
+    let shouldFetchValue: Bool
+
+    init(_ alteration: AddressingMode.Alteration, _ shouldFetchValue: Bool = true) {
+        self.shouldFetchValue = shouldFetchValue
+        super.init(alteration)
+    }
+
     override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
         let alterationValue: Byte = self.alteration != .none ? (self.alteration == .x ? regs.x : regs.y) : 0
         var operand = Operand()
         operand.address = memory.readWord(at: regs.pc) + alterationValue
-        operand.value = memory.readByte(at: operand.address).asWord()
+        if self.shouldFetchValue { operand.value = memory.readByte(at: operand.address).asWord() }
         regs.pc += 2
-        operand.additionalCycles = self.alteration != .none ? UInt8(regs.isAtSamePage(than: operand.address)) : 0
+        operand.additionalCycles = self.alteration == .none
+            ? 0
+            : UInt8(operand.address.isAtSamePage(than: operand.address - (self.alteration == .x
+                ? regs.x
+                : regs.y)))
         return operand
     }
 }
@@ -83,7 +94,7 @@ class RelativeAddressingOperandBuilder: OperandBuilder {
             operand.address += value.asWord() & 0b01111111
         }
 
-        operand.additionalCycles = UInt8(regs.isAtSamePage(than: operand.address))
+        operand.additionalCycles = UInt8(regs.pc.isAtSamePage(than: operand.address))
         return operand
     }
 }
@@ -110,7 +121,7 @@ class IndirectAddressingMode: AlteredOperandBuilder {
         operand.value = memory.readByte(at: operand.address).asWord()
 
         regs.pc += self.alteration == .none ? 2 : 1
-        operand.additionalCycles = self.alteration == .y ? UInt8(regs.isAtSamePage(than: operand.address)) : 0
+        operand.additionalCycles = self.alteration == .y ? UInt8(operand.address.isAtSamePage(than: operand.address &- regs.y)) : 0
         return operand
     }
 }

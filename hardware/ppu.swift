@@ -101,7 +101,7 @@ fileprivate class Palette {
     ]
 
     func get(_ index: Byte) -> DWord {
-        guard index > 0 && index < 52 else { return 0 }
+        let index = index % 64
 
         if self.grayscale {
             return self.colors[Int(floor(Double(index) / 16)) * 16]

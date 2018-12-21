@@ -33,6 +33,7 @@ protocol Mapper: BusConnectedComponent {
 class MapperFactory {
     static func create(_ type: MapperType, withDelegate delegate: MapperDelegate) -> Mapper {
         switch type {
+        case .nrom, .unrom: return UNROM(delegate)
         case .mmc1: return MMC1(delegate)
         case .cnrom: return CNROM(delegate)
         case .mmc3: return MMC3(delegate)

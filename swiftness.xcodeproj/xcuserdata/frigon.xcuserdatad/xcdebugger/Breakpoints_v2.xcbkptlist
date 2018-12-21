@@ -6,27 +6,11 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "hardware/ppu.swift"
-            timestampString = "567077635.537577"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "243"
-            endingLineNumber = "243"
-            landmarkName = "busWrite(_:at:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "swiftness/Conductor.swift"
-            timestampString = "567077635.538071"
+            timestampString = "567088887.213969"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "81"
@@ -42,45 +26,13 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "hardware/ppu.swift"
-            timestampString = "567077635.538125"
+            timestampString = "567088887.214043"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "265"
-            endingLineNumber = "265"
-            landmarkName = "busWrite(_:at:)"
+            startingLineNumber = "300"
+            endingLineNumber = "300"
+            landmarkName = "verticalBlank()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  shouldBeEnabled = "No"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "swiftness_osx.PictureProcessingUnit.busWrite(_: Swift.UInt8, at: Swift.UInt16) -&gt; ()"
-                  moduleName = "swiftness-osx"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/frigon/Projects/swift/swiftness/hardware/ppu.swift"
-                  timestampString = "567077536.302533"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "267"
-                  endingLineNumber = "267"
-                  offsetFromSymbolStart = "4450">
-               </Location>
-               <Location
-                  shouldBeEnabled = "No"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "swiftness_osx_tests.PictureProcessingUnit.busWrite(_: Swift.UInt8, at: Swift.UInt16) -&gt; ()"
-                  moduleName = "swiftness-osx-tests"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/frigon/Projects/swift/swiftness/hardware/ppu.swift"
-                  timestampString = "567077537.939541"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "267"
-                  endingLineNumber = "267"
-                  offsetFromSymbolStart = "4450">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

@@ -129,6 +129,10 @@ extension UInt16 {
     func isSignBitOn() -> Bool { return Bool(self & 0b1000000000000000) }
     func isLeastSignificantBitOn() -> Bool { return Bool(self & 1) }
     func isMostSignificantBitOn() -> Bool { return self.isSignBitOn() }
+
+    func isAtSamePage(than address: Word) -> Bool {
+        return self >> 8 != address >> 8
+    }
 }
 
 extension UInt32 {
