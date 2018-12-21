@@ -25,6 +25,11 @@
 import Cocoa
 
 extension NSMutableAttributedString {
+    func addAttributes(regex: String, _ attributes: [NSAttributedString.Key : Any]) {
+        let range: NSRange = self.mutableString.range(of: regex, options: .regularExpression)
+        self.addAttributes(attributes, range: range)
+    }
+
     func setColor(forString string: String, withColor color: NSColor) {
         let range: NSRange = self.mutableString.range(of: string, options: .literal)
         self.addAttribute(.foregroundColor, value: color, range: range)

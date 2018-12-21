@@ -212,7 +212,7 @@ fileprivate class DebuggerTableCellViewBreakpoint: MenloTableCellView {
         self.updateLayer()
         super.draw(dirtyRect)
         if let breakpoint = self._breakpoint {
-            (self.breakpointColor ?? NSColor(named: .primary)!).withAlphaComponent(breakpoint.enabled ? 1.0 : 0.4).setFill()
+            (self.breakpointColor ?? NSColor(named: .systemAccent)!).withAlphaComponent(breakpoint.enabled ? 1.0 : 0.4).setFill()
             self.breakpointPath.fill()
         }
     }
@@ -401,7 +401,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
             view!.textField.stringValue = info.addressPointer.hex()
             view!.breakpoint = self.debugger.breakpoints[info.addressPointer]
             view!.breakpointColor = self.debugger.breakpoints.enabled
-                ? NSColor(named: .primary)
+                ? NSColor(named: .systemAccent)
                 : .gray
 
             return view
@@ -553,7 +553,9 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
             switch type {
             case .cpu: view!.textField.attributedStringValue = NSAttributedString(string: "Core Processing Unit (cpu)", attributes: style)
             case .cpuFlag:
-                view!.textField.stringValue = "P  (processor status) = \(self.debugger.cpuRegisters.p.value.bin())"
+                let string = NSMutableAttributedString(string: "P  (processor status) = \(self.debugger.cpuRegisters.p.value.bin())")
+                string.addAttributes(regex: "^.*=", [.font: NSFont(name: "menlo bold", size: 11)!])
+                view!.textField.attributedStringValue = string
             case .stack: view!.textField.attributedStringValue = NSAttributedString(string: "Stack (\(Byte(0xFF) - self.debugger.cpuRegisters.sp))", attributes: style)
             case .ppu: view!.textField.attributedStringValue = NSAttributedString(string: "Picture Processing Unit (ppu)", attributes: style)
             case .apu: view!.textField.attributedStringValue = NSAttributedString(string: "Audio Processing Unit (apu)", attributes: style)
@@ -561,8 +563,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
             }
         case let string as String:
             let string = NSMutableAttributedString(string: string)
-            let range: NSRange = string.mutableString.range(of: "^.*=", options: .regularExpression)
-            string.addAttributes([.font: NSFont(name: "menlo bold", size: 11)!], range: range)
+            string.addAttributes(regex: "^.*=", [.font: NSFont(name: "menlo bold", size: 11)!])
             view!.textField.attributedStringValue = string
         case let string as NSAttributedString:
             view!.textField.attributedStringValue = string
@@ -600,7 +601,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         self.debugView.debuggerToolbar.breakpointsButton.toolTip = "\(self.debugger.breakpoints.enabled ? "Disable" : "Enable") breakpoints"
         if #available(OSX 10.14, *) {
             self.debugView.debuggerToolbar.breakpointsButton.contentTintColor = self.debugger.breakpoints.enabled
-                ? NSColor(named: .primary)
+                ? NSColor(named: .systemAccent)
                 : NSColor(named: .icon)
         }
 
@@ -744,7 +745,7 @@ fileprivate class DebuggerToolbar: NSView {
         self.layer?.borderWidth = 1
 
         if #available(OSX 10.14, *) {
-            self.breakpointsButton.contentTintColor = NSColor(named: .primary)
+            self.breakpointsButton.contentTintColor = NSColor(named: .systemAccent)
         }
 
         self.buttonView.addSubview(self.breakpointsButton)
