@@ -31,8 +31,8 @@ guard var options: StartupOptions = StartupOptions.parse(arguments) else {
 
 // options injection for debuging
 if options.mode != .test {
-    //options.filepath = "/Users/frigon/.nes/roms/donkey-kong.nes"
-    options.filepath = "/Users/frigon/Downloads/palette.nes"
+    options.filepath = "/Users/frigon/.nes/roms/donkey-kong.nes"
+    //options.filepath = "/Users/frigon/Downloads/palette.nes"
     options.mode = .debug
 }
 

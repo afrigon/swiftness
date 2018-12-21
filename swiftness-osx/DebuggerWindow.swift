@@ -752,7 +752,7 @@ fileprivate class DebuggerToolbar: NSView {
         self.buttonView.addSubview(self.breakpointsButton)
         self.buttonView.addSubview(self.runButton)
         self.buttonView.addSubview(self.stepButton)
-        self.buttonView.addSubview(self.stepLineButton)
+        //self.buttonView.addSubview(self.stepLineButton)
         self.buttonView.addSubview(self.stepFrameButton)
         self.buttonView.addSubview(self.refreshButton)
         self.addSubview(self.buttonView)

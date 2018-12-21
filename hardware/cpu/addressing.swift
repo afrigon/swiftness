@@ -30,6 +30,19 @@ enum AddressingMode {
     case absolute(Alteration, Bool)
     case indirect(Alteration)
     enum Alteration: UInt8 { case none = 0, x = 1, y = 2 }
+
+    static public func == (left: AddressingMode, right: AddressingMode) -> Bool {
+        switch (left, right) {
+        case (.immediate, .immediate),
+             (.relative, .relative),
+             (.implied, .implied),
+             (.accumulator, .accumulator): return true
+        case let (.zeroPage(l), .zeroPage(r)),
+             let (.absolute(l, _), .absolute(r, _)),
+             let (.indirect(l), .indirect(r)): return l == r
+        default: return false
+        }
+    }
 }
 
 protocol OperandBuilder {

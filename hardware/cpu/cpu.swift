@@ -95,12 +95,12 @@ enum InterruptType: Word {
 }
 
 struct Opcode {
-    let closure: (Word, Word) -> Void
+    let closure: (inout Operand) -> Void
     let name: String
     let cycles: UInt8
     let addressingMode: AddressingMode
 
-    init(_ closure: @escaping (Word, Word) -> Void, _ name: String, _ cycles: UInt8, _ addressingMode: AddressingMode) {
+    init(_ closure: @escaping (inout Operand) -> Void, _ name: String, _ cycles: UInt8, _ addressingMode: AddressingMode) {
         self.closure = closure
         self.name = name
         self.cycles = cycles
@@ -132,7 +132,6 @@ class CoreProcessingUnit {
 
     var registers: RegisterSet { return self.regs }
     var stallCycle: UInt16 = 0
-    private var branchCycle: UInt8 = 0
 
     func opcodeInfo(for opcode: Byte) -> (String, AddressingMode) {
         return (self.opcodes[opcode]?.name ?? "undefined", self.opcodes[opcode]?.addressingMode ?? .implied)
@@ -307,15 +306,6 @@ class CoreProcessingUnit {
         // maybe will have to switch to a queue of interrupts ?
     }
 
-    /// Method used to inject instructions for testing
-    func process(opcode: Byte, operand: Operand = Operand()) {
-        guard let opcode: Opcode = self.opcodes[opcode] else {
-            fatalError("Unknown opcode used (outside of the 151 available)")
-        }
-
-        opcode.closure(operand.value, operand.address)
-    }
-
     @discardableResult
     func step() -> UInt8 {
         if self.stallCycle > 0 {
@@ -334,11 +324,10 @@ class CoreProcessingUnit {
             fatalError("Unknown opcode used (outside of the 151 available)")
         }
 
-        let operand: Operand = self.buildOperand(using: opcode.addressingMode)
-        opcode.closure(operand.value, operand.address)
+        var operand: Operand = self.buildOperand(using: opcode.addressingMode)
+        opcode.closure(&operand)
 
-        defer { self.branchCycle = 0 }
-        return opcode.cycles + operand.additionalCycles + self.branchCycle
+        return opcode.cycles + operand.additionalCycles
     }
 
     @discardableResult
@@ -373,102 +362,102 @@ class CoreProcessingUnit {
     }
 
     // OPCODES IMPLEMENTATION
-    private func nop(_ value: Word, _ address: Word) {}
+    private func nop(_ operand: inout Operand) {}
 
     // Math
-    private func inx(_ value: Word, _ address: Word) { regs.x++; regs.p.updateFor(regs.x) }
-    private func iny(_ value: Word, _ address: Word) { regs.y++; regs.p.updateFor(regs.y) }
-    private func dex(_ value: Word, _ address: Word) { regs.x--; regs.p.updateFor(regs.x) }
-    private func dey(_ value: Word, _ address: Word) { regs.y--; regs.p.updateFor(regs.y) }
+    private func inx(_ operand: inout Operand) { regs.x++; regs.p.updateFor(regs.x) }
+    private func iny(_ operand: inout Operand) { regs.y++; regs.p.updateFor(regs.y) }
+    private func dex(_ operand: inout Operand) { regs.x--; regs.p.updateFor(regs.x) }
+    private func dey(_ operand: inout Operand) { regs.y--; regs.p.updateFor(regs.y) }
 
-    private func adc(_ value: Word, _ address: Word) {
-        let result: Word = regs.a &+ value &+ regs.p.valueOf(.carry)
+    private func adc(_ operand: inout Operand) {
+        let result: Word = regs.a &+ operand.value &+ regs.p.valueOf(.carry)
         regs.p.set(.carry, if: result.overflowsByte())
-        regs.p.set(.overflow, if: Bool(~(regs.a ^ value) & Word(regs.a ^ result) & Word(Flag.negative.rawValue)))
+        regs.p.set(.overflow, if: Bool(~(regs.a ^ operand.value) & Word(regs.a ^ result) & Word(Flag.negative.rawValue)))
         regs.a = result.rightByte()
         regs.p.updateFor(regs.a)
     }
 
-    private func sbc(_ value: Word, _ address: Word) {
-        let result: Word = regs.a &- value &- (1 - regs.p.valueOf(.carry))
+    private func sbc(_ operand: inout Operand) {
+        let result: Word = regs.a &- operand.value &- (1 - regs.p.valueOf(.carry))
         regs.p.set(.carry, if: !result.overflowsByte())
-        regs.p.set(.overflow, if: Bool((regs.a ^ value) & Word(regs.a ^ result) & Word(Flag.negative.rawValue)))
+        regs.p.set(.overflow, if: Bool((regs.a ^ operand.value) & Word(regs.a ^ result) & Word(Flag.negative.rawValue)))
         regs.a = result.rightByte()
         regs.p.updateFor(regs.a)
     }
 
-    private func inc(_ value: Word, _ address: Word) {
-        let result: Byte = value.rightByte() &+ 1
-        memory.writeByte(result, at: address)
+    private func inc(_ operand: inout Operand) {
+        let result: Byte = operand.value.rightByte() &+ 1
+        memory.writeByte(result, at: operand.address)
         regs.p.updateFor(result)
     }
 
-    private func dec(_ value: Word, _ address: Word) {
-        let result: Byte = value.rightByte() &- 1
-        memory.writeByte(result, at: address)
+    private func dec(_ operand: inout Operand) {
+        let result: Byte = operand.value.rightByte() &- 1
+        memory.writeByte(result, at: operand.address)
         regs.p.updateFor(result)
     }
 
     // Bitwise
-    private func and(_ value: Word, _ address: Word) { regs.a &= Byte(value); regs.p.updateFor(regs.a) }
-    private func eor(_ value: Word, _ address: Word) { regs.a ^= Byte(value); regs.p.updateFor(regs.a) }
-    private func ora(_ value: Word, _ address: Word) { regs.a |= Byte(value); regs.p.updateFor(regs.a) }
+    private func and(_ operand: inout Operand) { regs.a &= Byte(operand.value); regs.p.updateFor(regs.a) }
+    private func eor(_ operand: inout Operand) { regs.a ^= Byte(operand.value); regs.p.updateFor(regs.a) }
+    private func ora(_ operand: inout Operand) { regs.a |= Byte(operand.value); regs.p.updateFor(regs.a) }
 
-    private func bit(_ value: Word, _ address: Word) {
-        regs.p.set(.zero, if: !Bool(regs.a & Byte(value)))
-        regs.p.set(.overflow, if: Bool(Flag.overflow.rawValue & Byte(value)))
-        regs.p.set(.negative, if: Bool(Flag.negative.rawValue & Byte(value)))
+    private func bit(_ operand: inout Operand) {
+        regs.p.set(.zero, if: !Bool(regs.a & Byte(operand.value)))
+        regs.p.set(.overflow, if: Bool(Flag.overflow.rawValue & Byte(operand.value)))
+        regs.p.set(.negative, if: Bool(Flag.negative.rawValue & Byte(operand.value)))
     }
 
-    private func asl(_ value: Word, _ address: Word) {
-        regs.p.set(.carry, if: value.rightByte().isMostSignificantBitOn())
-        let result: Byte = value.rightByte() << 1
+    private func asl(_ operand: inout Operand) {
+        regs.p.set(.carry, if: operand.value.rightByte().isMostSignificantBitOn())
+        let result: Byte = operand.value.rightByte() << 1
         regs.p.updateFor(result)
-        memory.writeByte(result, at: address)
+        memory.writeByte(result, at: operand.address)
     }
 
-    private func lsr(_ value: Word, _ address: Word) {
-        regs.p.set(.carry, if: value.rightByte().isLeastSignificantBitOn())
-        let result: Byte = value.rightByte() >> 1
+    private func lsr(_ operand: inout Operand) {
+        regs.p.set(.carry, if: operand.value.rightByte().isLeastSignificantBitOn())
+        let result: Byte = operand.value.rightByte() >> 1
         regs.p.updateFor(result)
-        memory.writeByte(result, at: address)
+        memory.writeByte(result, at: operand.address)
     }
 
-    private func rol(_ value: Word, _ address: Word) {
-        let result: Word = value << 1 | Word(regs.p.valueOf(.carry))
+    private func rol(_ operand: inout Operand) {
+        let result: Word = operand.value << 1 | Word(regs.p.valueOf(.carry))
         regs.p.set(.carry, if: Bool(result & 0x100))
-        memory.writeByte(result.rightByte(), at: address)
+        memory.writeByte(result.rightByte(), at: operand.address)
         regs.p.updateFor(result)
     }
 
-    private func ror(_ value: Word, _ address: Word) {
+    private func ror(_ operand: inout Operand) {
         let carry: Byte = regs.p.valueOf(.carry)
-        regs.p.set(.carry, if: value.isLeastSignificantBitOn())
-        let result: Byte = value.rightByte() >> 1 | carry << 7
+        regs.p.set(.carry, if: operand.value.isLeastSignificantBitOn())
+        let result: Byte = operand.value.rightByte() >> 1 | carry << 7
         regs.p.updateFor(result)
-        memory.writeByte(result, at: address)
+        memory.writeByte(result, at: operand.address)
     }
 
-    private func asla(_ value: Word, _ address: Word) {
+    private func asla(_ operand: inout Operand) {
         regs.p.set(.carry, if: regs.a.isMostSignificantBitOn())
         regs.a <<= 1
         regs.p.updateFor(regs.a)
     }
 
-    private func lsra(_ value: Word, _ address: Word) {
+    private func lsra(_ operand: inout Operand) {
         regs.p.set(.carry, if: regs.a.isLeastSignificantBitOn())
         regs.a >>= 1
         regs.p.updateFor(regs.a)
     }
 
-    private func rola(_ value: Word, _ address: Word) {
+    private func rola(_ operand: inout Operand) {
         let carry: Byte = regs.p.valueOf(.carry)
         regs.p.set(.carry, if: regs.a.isSignBitOn())
         regs.a = regs.a << 1 | carry
         regs.p.updateFor(regs.a)
     }
 
-    private func rora(_ value: Word, _ address: Word) {
+    private func rora(_ operand: inout Operand) {
         let carry: Byte = regs.p.valueOf(.carry)
         regs.p.set(.carry, if: regs.a.isLeastSignificantBitOn())
         regs.a = regs.a >> 1 | carry << 7
@@ -476,80 +465,83 @@ class CoreProcessingUnit {
     }
 
     // flags
-    private func clc(_ value: Word, _ address: Word) { regs.p.unset(.carry) }
-    private func cld(_ value: Word, _ address: Word) { regs.p.unset(.decimal) }
-    private func cli(_ value: Word, _ address: Word) { regs.p.unset(.interrupt) }
-    private func clv(_ value: Word, _ address: Word) { regs.p.unset(.overflow) }
-    private func sec(_ value: Word, _ address: Word) { regs.p.set(.carry) }
-    private func sed(_ value: Word, _ address: Word) { regs.p.set(.decimal) }
-    private func sei(_ value: Word, _ address: Word) { regs.p.set(.interrupt) }
+    private func clc(_ operand: inout Operand) { regs.p.unset(.carry) }
+    private func cld(_ operand: inout Operand) { regs.p.unset(.decimal) }
+    private func cli(_ operand: inout Operand) { regs.p.unset(.interrupt) }
+    private func clv(_ operand: inout Operand) { regs.p.unset(.overflow) }
+    private func sec(_ operand: inout Operand) { regs.p.set(.carry) }
+    private func sed(_ operand: inout Operand) { regs.p.set(.decimal) }
+    private func sei(_ operand: inout Operand) { regs.p.set(.interrupt) }
 
     // comparison
     private func compare(_ register: Byte, _ value: Word) {
         regs.p.updateFor(register &- value.rightByte())
         regs.p.set(.carry, if: register >= value)
     }
-    private func cmp(_ value: Word, _ address: Word) { compare(regs.a, value) }
-    private func cpx(_ value: Word, _ address: Word) { compare(regs.x, value) }
-    private func cpy(_ value: Word, _ address: Word) { compare(regs.y, value) }
+    private func cmp(_ operand: inout Operand) { compare(regs.a, operand.value) }
+    private func cpx(_ operand: inout Operand) { compare(regs.x, operand.value) }
+    private func cpy(_ operand: inout Operand) { compare(regs.y, operand.value) }
 
     // branches
-    private func branch(to address: Word, if condition: Bool) {
-        if condition {
-            regs.pc = address
-            self.branchCycle = 1
+    private func branch(to operand: inout Operand, if condition: Bool) {
+        guard condition else {
+            operand.additionalCycles = 0
+            return
         }
+
+        regs.pc = operand.address
+        operand.additionalCycles++
     }
-    private func beq(_ value: Word, _ address: Word) { branch(to: address, if: regs.p.isSet(.zero)) }
-    private func bne(_ value: Word, _ address: Word) { branch(to: address, if: !regs.p.isSet(.zero)) }
-    private func bmi(_ value: Word, _ address: Word) { branch(to: address, if: regs.p.isSet(.negative)) }
-    private func bpl(_ value: Word, _ address: Word) { branch(to: address, if: !regs.p.isSet(.negative)) }
-    private func bcs(_ value: Word, _ address: Word) { branch(to: address, if: regs.p.isSet(.carry)) }
-    private func bcc(_ value: Word, _ address: Word) { branch(to: address, if: !regs.p.isSet(.carry)) }
-    private func bvs(_ value: Word, _ address: Word) { branch(to: address, if: regs.p.isSet(.overflow)) }
-    private func bvc(_ value: Word, _ address: Word) { branch(to: address, if: !regs.p.isSet(.overflow)) }
+    private func beq(_ operand: inout Operand) { branch(to: &operand, if: regs.p.isSet(.zero)) }
+    private func bne(_ operand: inout Operand) { branch(to: &operand, if: !regs.p.isSet(.zero)) }
+    private func bmi(_ operand: inout Operand) { branch(to: &operand, if: regs.p.isSet(.negative)) }
+    private func bpl(_ operand: inout Operand) { branch(to: &operand, if: !regs.p.isSet(.negative)) }
+    private func bcs(_ operand: inout Operand) { branch(to: &operand, if: regs.p.isSet(.carry)) }
+    private func bcc(_ operand: inout Operand) { branch(to: &operand, if: !regs.p.isSet(.carry)) }
+    private func bvs(_ operand: inout Operand) { branch(to: &operand, if: regs.p.isSet(.overflow)) }
+    private func bvc(_ operand: inout Operand) { branch(to: &operand, if: !regs.p.isSet(.overflow)) }
 
     // jump
-    private func jmp(_ value: Word, _ address: Word) { regs.pc = address }
+    private func jmp(_ operand: inout Operand) { regs.pc = operand.address }
 
     // subroutines
-    private func jsr(_ value: Word, _ address: Word) { stack.pushWord(data: regs.pc &- 1); regs.pc = address }
-    private func rts(_ value: Word, _ address: Word) { regs.pc = stack.popWord() &+ 1 }
+    private func jsr(_ operand: inout Operand) { stack.pushWord(data: regs.pc &- 1); regs.pc = operand.address }
+    private func rts(_ operand: inout Operand) { regs.pc = stack.popWord() &+ 1 }
 
     // interruptions
-    private func rti(_ value: Word, _ address: Word) {
+    private func rti(_ operand: inout Operand) {
         regs.p &= stack.popByte() | Flag.alwaysOne.rawValue
         regs.pc = stack.popWord()
     }
 
-    private func brk(_ value: Word, _ address: Word) {
+    private func brk(_ operand: inout Operand) {
         self.regs.p.set(.breaks)
         self.interrupt(type: .irq)
     }
 
     // stack
-    private func pha(_ value: Word, _ address: Word) { stack.pushByte(data: regs.a) }
-    private func php(_ value: Word, _ address: Word) { stack.pushByte(data: regs.p.value | (.alwaysOne | .breaks)) }
-    private func pla(_ value: Word, _ address: Word) { regs.a = stack.popByte(); regs.p.updateFor(regs.a) }
-    private func plp(_ value: Word, _ address: Word) { regs.p &= stack.popByte() & ~Flag.breaks.rawValue | Flag.alwaysOne.rawValue }
+    private func pha(_ operand: inout Operand) { stack.pushByte(data: regs.a) }
+    private func php(_ operand: inout Operand) { stack.pushByte(data: regs.p.value | (.alwaysOne | .breaks)) }
+    private func pla(_ operand: inout Operand) { regs.a = stack.popByte(); regs.p.updateFor(regs.a) }
+    private func plp(_ operand: inout Operand) { regs.p &= stack.popByte() & ~Flag.breaks.rawValue | Flag.alwaysOne.rawValue }
 
     // loading
     private func load(_ a: inout Byte, _ operand: Word) { a = operand.rightByte(); regs.p.updateFor(a) }
-    private func lda(_ value: Word, _ address: Word) { self.load(&regs.a, value) }
-    private func ldx(_ value: Word, _ address: Word) { self.load(&regs.x, value) }
-    private func ldy(_ value: Word, _ address: Word) { self.load(&regs.y, value) }
+    private func lda(_ operand: inout Operand) { self.load(&regs.a, operand.value) }
+    private func ldx(_ operand: inout Operand) { self.load(&regs.x, operand.value) }
+    private func ldy(_ operand: inout Operand) { self.load(&regs.y, operand.value) }
 
     // storing
-    private func sta(_ value: Word, _ address: Word) { memory.writeByte(regs.a, at: address) }
-    private func stx(_ value: Word, _ address: Word) { memory.writeByte(regs.x, at: address) }
-    private func sty(_ value: Word, _ address: Word) { memory.writeByte(regs.y, at: address) }
+    private func sta(_ operand: inout Operand) { memory.writeByte(regs.a, at: operand.address) }
+    private func stx(_ operand: inout Operand) { memory.writeByte(regs.x, at: operand.address) }
+    private func sty(_ operand: inout Operand) { memory.writeByte(regs.y, at: operand.address) }
 
     // transfering
     private func transfer(_ a: inout Byte, _ b: Byte) { a = b; regs.p.updateFor(a) }
-    private func tax(_ value: Word, _ address: Word) { self.transfer(&regs.x, regs.a) }
-    private func txa(_ value: Word, _ address: Word) { self.transfer(&regs.a, regs.x) }
-    private func tay(_ value: Word, _ address: Word) { self.transfer(&regs.y, regs.a) }
-    private func tya(_ value: Word, _ address: Word) { self.transfer(&regs.a, regs.y) }
-    private func tsx(_ value: Word, _ address: Word) { self.transfer(&regs.x, regs.sp) }
-    private func txs(_ value: Word, _ address: Word) { regs.sp = regs.x }
+    private func tax(_ operand: inout Operand) { self.transfer(&regs.x, regs.a) }
+    private func txa(_ operand: inout Operand) { self.transfer(&regs.a, regs.x) }
+    private func tay(_ operand: inout Operand) { self.transfer(&regs.y, regs.a) }
+    private func tya(_ operand: inout Operand) { self.transfer(&regs.a, regs.y) }
+    private func tsx(_ operand: inout Operand) { self.transfer(&regs.x, regs.sp) }
+    private func txs(_ operand: inout Operand) { regs.sp = regs.x }
 }
