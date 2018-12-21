@@ -24,23 +24,15 @@
 
 import Foundation
 
-class Conductor: GuardStatus {
-    private var nes: NintendoEntertainmentSystem! = nil
+class Conductor {
+    private let nes: NintendoEntertainmentSystem
     private let renderer: Renderer
     private let loop: LogicLoop
     private let inputManager: InputManager
+    private var updateClosure = [(Double) -> Void]()
     private let options: StartupOptions
 
-    var status: String {
-        return """
-        |------ General ------|
-         File: \(self.options.filepath ?? "None")
-        \(self.loop.status)
-        \(self.nes.status)
-        """
-    }
-
-    init(use options: StartupOptions,
+    init?(use options: StartupOptions,
          with renderer: Renderer,
          drivenBy loop: LogicLoop,
          interactingWith inputManager: InputManager) {
@@ -50,25 +42,29 @@ class Conductor: GuardStatus {
         self.inputManager = inputManager
 
         guard self.options.mode != .test, let filepath = self.options.filepath else {
-            return
+            return nil
         }
 
         let game: Cartridge = NesFile.load(path: filepath)
         // * blows a bit into the cardridge *
         self.nes = NintendoEntertainmentSystem(load: game)
 
+        self.updateClosure.append(self.update(_:))
         self.loop.start(closure: self.loopClosure)
     }
 
-    func step() {
-        if self.options.mode == .debug {
-            self.nes.step()
-        }
+    func attach() -> Debugger {
+        self.options.mode = .debug
+        let debugger = Debugger(nes: self.nes)
+        self.updateClosure.append(debugger.loopClosure(_:))
+        return debugger
     }
 
     private func loopClosure(_ deltaTime: Double) {
         self.processInput()
-        self.update(deltaTime)
+        for f in self.updateClosure {
+            f(deltaTime)
+        }
         self.render()
     }
 

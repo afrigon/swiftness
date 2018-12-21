@@ -24,21 +24,8 @@
 
 import Cocoa
 
-class AppDelegate: NSObject, NSApplicationDelegate {
-    let options: StartupOptions
-    private let scale = 3
-    private var window: NSWindow!
-    private var viewController: ViewController!
-
-    init(_ options: StartupOptions) {
-        self.options = options
-        super.init()
-    }
-
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        let width = CGFloat(256 * self.scale)
-        let height = CGFloat(240 * self.scale)
-
+class CenteredWindow: NSWindow {
+    init(width: CGFloat, height: CGFloat, styleMask style: NSWindow.StyleMask) {
         guard let screen = NSScreen.main else {
             fatalError("User has no screen, wtf?!")
         }
@@ -47,18 +34,47 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                            y: screen.frame.midY - height / 2,
                            width: width,
                            height: height)
-        self.window = NSWindow(contentRect: frame,
-                               styleMask: [.closable, .miniaturizable, .titled],
-                               backing: .buffered,
-                               defer: false)
-        self.window.title = "Swiftness"
 
-        self.viewController = ViewController()
-        self.viewController.view.frame = CGRect(origin: .zero, size: frame.size)
-        self.window.contentView?.addSubview(self.viewController.view)
+        super.init(contentRect: frame,
+                   styleMask: style,
+                   backing: .buffered,
+                   defer: false)
 
+        self.contentView?.wantsLayer = true
+    }
+
+    func getWindowController() -> NSWindowController {
+        return NSWindowController(window: self)
+    }
+}
+
+class AppDelegate: NSObject, NSApplicationDelegate {
+    private let scale = 3
+    private var windowController: NSWindowController!
+    private var window: ConsoleWindow!
+
+    let options: StartupOptions
+    var conductor: Conductor { return self.window.conductor }
+
+    init(_ options: StartupOptions) {
+        self.options = options
+    }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        let width = CGFloat(256 * self.scale)
+        let height = CGFloat(240 * self.scale)
+
+        self.window = ConsoleWindow(width: width, height: height, options: self.options)
+        self.window.makeFirstResponder(self.window.inputResponder)
+        self.windowController = self.window.getWindowController()
+        self.windowController.showWindow(self)
         NSApplication.shared.mainMenu = Menu()
-        self.window.makeKeyAndOrderFront(nil)
-        self.window.makeFirstResponder(self.viewController.inputResponder)
+
+        guard self.options.mode != .test else {
+            return
+        }
+
+        let debugger = self.conductor.attach()
+        DebuggerWindow(debugger: debugger).getWindowController().showWindow(self)
     }
 }
