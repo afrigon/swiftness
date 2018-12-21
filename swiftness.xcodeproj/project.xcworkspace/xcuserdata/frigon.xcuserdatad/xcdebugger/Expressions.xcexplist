@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "PictureProcessingUnit.step():ppu.swift">
+      </ContextState>
+      <ContextState
+         contextName = "$defer #1 () in PictureProcessingUnit.busRead(at:):ppu.swift">
+      </ContextState>
+      <ContextState
+         contextName = "PictureProcessingUnit.busWrite(_:at:):ppu.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ControlRegister.backgroundPatternAddress.getter:ppu.swift">
+      </ContextState>
+      <ContextState
+         contextName = "CoreProcessingUnit.step():cpu.swift">
+      </ContextState>
+      <ContextState
+         contextName = "Tile.getPaletteIndex(_:):ppu.swift">
+      </ContextState>
+      <ContextState
+         contextName = "PictureProcessingUnit.vramWrite(_:at:):ppu.swift">
+      </ContextState>
+      <ContextState
+         contextName = "CoreProcessingUnit.sta(_:_:):cpu.swift">
+      </ContextState>
+      <ContextState
+         contextName = "NintendoEntertainmentSystem.step():nes.swift">
+      </ContextState>
+      <ContextState
+         contextName = "PictureProcessingUnit.verticalBlank():ppu.swift">
+      </ContextState>
+      <ContextState
+         contextName = "PictureProcessingUnit.render(x:y:):ppu.swift">
+      </ContextState>
+      <ContextState
+         contextName = "PictureProcessingUnit.vramRead(at:):ppu.swift">
+      </ContextState>
+      <ContextState
+         contextName = "Debugger.ppu.getter:Debugger.swift">
+      </ContextState>
+      <ContextState
+         contextName = "PictureProcessingUnit.busRead(at:):ppu.swift">
+      </ContextState>
+      <ContextState
+         contextName = "NintendoEntertainmentSystem.init(load:hostedBy:):nes.swift">
+      </ContextState>
+      <ContextState
+         contextName = "PictureProcessingUnit.fetchData(type:):ppu.swift">
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

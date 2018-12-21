@@ -114,7 +114,7 @@ fileprivate class Palette {
 }
 
 class ControlRegister { // 0x2000
-    private var value: Byte = 0
+    var value: Byte = 0
     static func &= (left: inout ControlRegister, right: Byte) { left.value = right }
 
     var nameTableAddress: Word { return 0x2000 + Word(value & 0b11) * 0x400 }       // 0: 0x2000; 1: 0x2400; 2: 0x2800; 3: 0x2C00
@@ -127,7 +127,7 @@ class ControlRegister { // 0x2000
 }
 
 class MaskRegister { // 0x2001
-    private var value: Byte = 0
+    var value: Byte = 0
     static func &= (left: inout MaskRegister, right: Byte) { left.value = right }
 
     var greyscale: Bool { return Bool(self.value & 0b00000001) }
@@ -184,19 +184,19 @@ class PictureProcessingUnit: BusConnectedComponent {
     private let cyclePerScanline: UInt16 = 341
     private let scanlinePerFrame: UInt16 = 262
 
-    private var cycle: UInt16 = 0
-    private var scanline: UInt16 = 0
-    private var frame: Int64 = 0
+    var cycle: UInt16 = 0 // private
+    var scanline: UInt16 = 0 // private
+    var frame: Int64 = 0 // private
 
-    private var vramPointer: Word = 0
+    var vramPointer: Word = 0 // private
     private var vramTempPointer: Word = 0
     private var vramBufferedData: Byte = 0
 
     private var oamPointer: Byte = 0
 
-    private var controlRegister = ControlRegister()
-    private var maskRegister = MaskRegister()
-    private var statusRegister = StatusRegister()
+    var controlRegister = ControlRegister() // private
+    var maskRegister = MaskRegister() // private
+    var statusRegister = StatusRegister() // private
 
     private var paletteIndices = [Byte](repeating: 0x00, count: 32)
     private var nameTable = [Byte](repeating: 0x00, count: 2048)
@@ -382,6 +382,6 @@ class PictureProcessingUnit: BusConnectedComponent {
 
         self.tilesData = (visible: Tile(), cached: Tile(), current: Tile())
         self.frameBuffers = (rendered: FrameBuffer(), current: FrameBuffer())
-        self.bus.renderFrame(frameBuffer: self.frameBuffers.rendered)
+        //self.bus.renderFrame(frameBuffer: self.frameBuffers.rendered)
     }
 }

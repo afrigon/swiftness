@@ -32,12 +32,12 @@ class NintendoEntertainmentSystem: BusDelegate {
 
     private weak var delegate: EmulatorDelegate!
     private let cpu: CoreProcessingUnit
-    private let ppu: PictureProcessingUnit
+    let ppu: PictureProcessingUnit // private
     private let apu = AudioProcessingUnit()
     private let ram = RandomAccessMemory()
     private let controller1 = Controller(.primary)
     private let controller2 = Controller(.secondary)
-    let cartridge: Cartridge // should be private
+    let cartridge: Cartridge // private
     let bus = Bus()
 
     private var totalCycles: UInt64 = 0

@@ -306,6 +306,16 @@ class CoreProcessingUnit {
         // maybe will have to switch to a queue of interrupts ?
     }
 
+    // Method used to inject instructions for testing
+    func process(opcode: Byte, operand: Operand = Operand()) {
+        guard let opcode: Opcode = self.opcodes[opcode] else {
+            fatalError("Unknown opcode used (outside of the 151 available)")
+        }
+
+        var operand = operand
+        opcode.closure(&operand)
+    }
+
     @discardableResult
     func step() -> UInt8 {
         if self.stallCycle > 0 {

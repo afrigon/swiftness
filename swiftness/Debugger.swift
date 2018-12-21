@@ -156,6 +156,7 @@ class Debugger {
     var totalCycles: UInt64 { return self.nes.cpuCycle }
     var cpuRegisters: RegisterSet { return self.nes.cpuRegisters }
     var cartridge: Cartridge { return self.nes.cartridge }
+    var ppu: PictureProcessingUnit { return self.nes.ppu }
 
     private var nes: NintendoEntertainmentSystem!
 
@@ -244,6 +245,11 @@ class Debugger {
         var localProgramCounter: DWord = 0
 
         repeat {
+            // dirty fix to avoid increasing vram pointer
+            if (0x2000..<0x4000).contains(localProgramCounter) {
+                localProgramCounter = 0x4000
+            }
+
             let info: DebuggerInfo = DebuggerInfo(atLine: lineNumber, addressPointer: localProgramCounter)
             info.opcode = self.nes.bus.readByte(at: Word(localProgramCounter))
 

@@ -450,8 +450,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         return proposedMaximumPosition - self.splitViewThreshold
     }
 
-    private enum VariableType { case cpu, cpuFlag, stack, ppu, apu, rom }
-
+    private enum VariableType { case cpu, cpuFlag, stack, ppu, apu, rom, ppuControl, ppuMask, ppuStatus }
     func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
         guard let item = item as? VariableType else {
             return 5
@@ -461,7 +460,10 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         case .cpu: return 7
         case .cpuFlag: return 8
         case .stack: return 0x100 - Int(self.debugger.cpuRegisters.sp) - 1
-        case .ppu: return 9
+        case .ppu: return 7
+        case .ppuControl: return 7
+        case .ppuMask: return 8
+        case .ppuStatus: return 3
         case .apu: return 0
         case .rom: return 6
         }
@@ -509,15 +511,43 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
             return "$\(address.hex()) = $\(self.debugger.readMemory(at: address).hex())"
         case .ppu:
             switch index {
-            case 0: return "Frame    = \("")"
-            case 1: return "Scanline = \("")"
-            case 2: return "Cycle    = \("")"
-            case 3: return "$2000 (control register) = \("")"
-            case 4: return "$2001 (mask register)    = \("")"
-            case 5: return "$2002 (status register)  = \("")"
-            case 6: return "$2003 (oam pointer)      = \("")"
-            case 7: return "$2005 (scroll ?)         = \("")"
-            case 8: return "$2006 (vram pointer)     = \("")"
+            case 0: return "Frame    = \(self.debugger.ppu.frame)"
+            case 1: return "Scanline = \(self.debugger.ppu.scanline)"
+            case 2: return "Cycle    = \(self.debugger.ppu.cycle)"
+            case 3: return "Video Memory Pointer = $\(self.debugger.ppu.vramPointer.hex())"
+            case 4: return VariableType.ppuControl
+            case 5: return VariableType.ppuMask
+            case 6: return VariableType.ppuStatus
+            default: return ""
+            }
+        case .ppuControl:
+            switch index {
+            case 0: return "Interrupt Enabled           = \(self.debugger.ppu.controlRegister.interruptEnabled)"
+            case 1: return "Master/Slave                = \(self.debugger.ppu.controlRegister.masterSlave)"
+            case 2: return "Sprite Size                 = 8x\(self.debugger.ppu.controlRegister.spriteSize)"
+            case 3: return "Background Pattern Address  = $\(self.debugger.ppu.controlRegister.backgroundPatternAddress.hex())"
+            case 4: return "Sprite Pattern Address      = $\(self.debugger.ppu.controlRegister.spritePatternAddress.hex())"
+            case 5: return "Increment                   = \(self.debugger.ppu.controlRegister.increment)"
+            case 6: return "Nametable Pointer           = $\(self.debugger.ppu.controlRegister.nameTableAddress.hex())"
+            default: return ""
+            }
+        case .ppuMask:
+            switch index {
+            case 0: return "Emphasis Blue   = \(self.debugger.ppu.maskRegister.emphasisBlue)"
+            case 1: return "Emphasis Green  = \(self.debugger.ppu.maskRegister.emphasisGreen)"
+            case 2: return "Emphasis Red    = \(self.debugger.ppu.maskRegister.emphasisRed)"
+            case 3: return "Show Sprite     = \(self.debugger.ppu.maskRegister.showSprites)"
+            case 4: return "Show Background = \(self.debugger.ppu.maskRegister.showBackground)"
+            case 5: return "Clip Sprite     = \(self.debugger.ppu.maskRegister.clipSprites)"
+            case 6: return "Clip Background = \(self.debugger.ppu.maskRegister.clipBackground)"
+            case 7: return "Greyscale       = \(self.debugger.ppu.maskRegister.greyscale)"
+            default: return ""
+            }
+        case .ppuStatus:
+            switch index {
+            case 0: return "Vertical Blank  = \(self.debugger.ppu.statusRegister.vblank)"
+            case 1: return "Sprite Zero Hit = \(self.debugger.ppu.statusRegister.spriteZeroHit)"
+            case 2: return "Sprite Overflow = \(self.debugger.ppu.statusRegister.spriteOverflow)"
             default: return ""
             }
         case .rom:
@@ -525,11 +555,11 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
             case 0:
                 guard let delegate = NSApplication.shared.delegate as? AppDelegate else { return "" }
                 return "Filepath = \(delegate.options.filepath ?? "nil")"
-            case 1: return "Program Banks = \(self.debugger.cartridge.programRom.count / 0x4000) -> \(self.debugger.cartridge.programRom.count / 1024)KB"
+            case 1: return "Program Banks   = \(self.debugger.cartridge.programRom.count / 0x4000) -> \(self.debugger.cartridge.programRom.count / 1024)KB"
             case 2: return "Character Banks = \(self.debugger.cartridge.characterRom.count / 0x2000) -> \(self.debugger.cartridge.characterRom.count / 1024)KB"
-            case 3: return "Battery = \(self.debugger.cartridge.battery)"
-            case 4: return "Mirroring = \(String(describing: self.debugger.cartridge.mirroring))"
-            case 5: return "Mapper = \(String(describing: self.debugger.cartridge.mapperType))"
+            case 3: return "Battery         = \(self.debugger.cartridge.battery)"
+            case 4: return "Mirroring       = \(String(describing: self.debugger.cartridge.mirroring))"
+            case 5: return "Mapper          = \(String(describing: self.debugger.cartridge.mapperType))"
             default: return ""
             }
         default: return ""
@@ -553,14 +583,26 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
             let style: [NSAttributedString.Key: Any] = [.font: NSFont(name: "menlo bold", size: 11)!]
             switch type {
             case .cpu: view!.textField.attributedStringValue = NSAttributedString(string: "Core Processing Unit (cpu)", attributes: style)
-            case .cpuFlag:
-                let string = NSMutableAttributedString(string: "P  (processor status) = \(self.debugger.cpuRegisters.p.value.bin())")
-                string.addAttributes(regex: "^.*=", [.font: NSFont(name: "menlo bold", size: 11)!])
-                view!.textField.attributedStringValue = string
             case .stack: view!.textField.attributedStringValue = NSAttributedString(string: "Stack (\(Byte(0xFF) - self.debugger.cpuRegisters.sp))", attributes: style)
             case .ppu: view!.textField.attributedStringValue = NSAttributedString(string: "Picture Processing Unit (ppu)", attributes: style)
             case .apu: view!.textField.attributedStringValue = NSAttributedString(string: "Audio Processing Unit (apu)", attributes: style)
             case .rom: view!.textField.attributedStringValue = NSAttributedString(string: "Read Only Memory (rom)", attributes: style)
+            case .cpuFlag:
+                let string = NSMutableAttributedString(string: "P  (processor status) = \(self.debugger.cpuRegisters.p.value.bin())")
+                string.addAttributes(regex: "^.*=", [.font: NSFont(name: "menlo bold", size: 11)!])
+                view!.textField.attributedStringValue = string
+            case .ppuControl:
+                let string = NSMutableAttributedString(string: "Control Register = \(self.debugger.ppu.controlRegister.value.bin())")
+                string.addAttributes(regex: "^.*=", [.font: NSFont(name: "menlo bold", size: 11)!])
+                view!.textField.attributedStringValue = string
+            case .ppuMask:
+                let string = NSMutableAttributedString(string: "Mask Register = \(self.debugger.ppu.maskRegister.value.bin())")
+                string.addAttributes(regex: "^.*=", [.font: NSFont(name: "menlo bold", size: 11)!])
+                view!.textField.attributedStringValue = string
+            case .ppuStatus:
+                let string = NSMutableAttributedString(string: "Status Register = \(self.debugger.ppu.statusRegister.value.bin())")
+                string.addAttributes(regex: "^.*=", [.font: NSFont(name: "menlo bold", size: 11)!])
+                view!.textField.attributedStringValue = string
             }
         case let string as String:
             let string = NSMutableAttributedString(string: string)
