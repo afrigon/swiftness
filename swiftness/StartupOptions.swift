@@ -24,7 +24,7 @@
 
 enum RunMode {
     case debug      // step cpu cycle manually
-    case test       // early exit for unit tests
+    case test       // unit tests
     case normal     // as expected
 }
 
@@ -40,6 +40,7 @@ class StartupOptions {
             switch argument {
             case "-h", "--help", "-help", "help": StartupOptions.printUsage(); return nil
             case "-d", "--debug": options.mode = .debug
+            case "-t", "--test": options.mode = .test
             default:
                 if argument.hasPrefix("-") {
                     temp = argument
