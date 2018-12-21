@@ -70,6 +70,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.windowController.showWindow(self)
         NSApplication.shared.mainMenu = Menu()
 
+        guard self.options.mode != .test else {
+            return
+        }
+
         let debugger = self.conductor.attach()
         DebuggerWindow(debugger: debugger).getWindowController().showWindow(self)
     }
