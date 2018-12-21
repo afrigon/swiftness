@@ -28,8 +28,8 @@ protocol EmulatorDelegate: AnyObject {
     func emulator(nes: NintendoEntertainmentSystem, shouldRenderFrame frameBuffer: FrameBuffer)
 }
 
-class Conductor: GuardStatus, EmulatorDelegate {
-    private let nes: NintendoEntertainmentSystem! = nil
+class Conductor: EmulatorDelegate {
+    private var nes: NintendoEntertainmentSystem! = nil
     private let renderer: Renderer
     private let loop: LogicLoop
     private let inputManager: InputManager

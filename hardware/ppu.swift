@@ -119,8 +119,8 @@ class ControlRegister { // 0x2000
 
     var nameTableAddress: Word { return 0x2000 + Word(value & 0b11) * 0x400 }       // 0: 0x2000; 1: 0x2400; 2: 0x2800; 3: 0x2C00
     var increment: Word { return Bool(self.value & 0b00000100) ? 32 : 1 }           // 0: add 1; 1: add 32
-    var spritePatternAddress: Word { return Word(value & 0b00001000) * 0x1000 }     // 0: $0000; 1: $1000; ignored in 8x16 mode
-    var backgroundPatternAddress: Word { return Word(value & 0b00010000) * 0x1000 } // 0: $0000; 1: $1000
+    var spritePatternAddress: Word { return Word((value >> 3) & 1) * 0x1000 }     // 0: $0000; 1: $1000; ignored in 8x16 mode
+    var backgroundPatternAddress: Word { return Word((value >> 4) & 1) * 0x1000 } // 0: $0000; 1: $1000
     var spriteSize: Byte { return Bool(self.value & 0b00010000) ? 16 : 8 }          // 0: 8x8; 1: 8x16
     var masterSlave: Bool { return Bool(self.value & 0b01000000) }
     var interruptEnabled: Bool { return Bool(self.value & 0b10000000) }
@@ -179,7 +179,7 @@ fileprivate struct Tile {
     }
 }
 
-class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
+class PictureProcessingUnit: BusConnectedComponent {
     private let bus: Bus
     private let cyclePerScanline: UInt16 = 341
     private let scanlinePerFrame: UInt16 = 262
@@ -205,14 +205,6 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
     private let palette = Palette()
     private var tilesData = (visible: Tile(), cached: Tile(), current: Tile())
     private var frameBuffers = (rendered: FrameBuffer(), current: FrameBuffer())
-
-    var status: String {
-        return """
-        |-------- PPU --------|
-         Scanline: \(self.scanline)   Cycle: \(self.cycle)
-         Frame:    \(self.frame)
-        """
-    }
 
     var frameBuffer: FrameBuffer { return self.frameBuffers.rendered }
     var frameCount: Int64 { return self.frame }
@@ -264,9 +256,9 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
         case 0x2006:
             // the least significant bit of vramTempPointer is used to keep track of first vs second write
             if !Bool(self.vramTempPointer & Word(1)) {
-                self.vramTempPointer = Word(data << 8) | Word(1)
+                self.vramTempPointer = (Word(data) << 8) | Word(1)
             } else {
-                self.vramPointer = self.vramTempPointer & 0x3F00 | data
+                self.vramPointer = (self.vramTempPointer & Word(0x3F00)) | Word(data)
                 self.vramTempPointer = 0
             }
         case 0x2007:
@@ -326,7 +318,7 @@ class PictureProcessingUnit: GuardStatus, BusConnectedComponent {
         case .attributeTable:
             let address: Word = 0x23C0 | (self.vramPointer & 0x0C00) | ((self.vramPointer >> 4) & 0x38) | ((self.vramPointer >> 2) & 0x07)
             let shift: Word = ((self.vramPointer >> 4) & 4) | (self.vramPointer & 2)
-            self.tilesData.current.attributeTable = ((self.vramRead(at: address) >> shift) & Word(3)) << 2
+            self.tilesData.current.attributeTable = ((self.vramRead(at: address) >> shift) & 3) << 2
         case .lowTile:
             let fineY: Word = self.vramPointer >> 12 & 7
             let address: Word = self.controlRegister.backgroundPatternAddress + self.tilesData.current.nameTable * 16 + fineY

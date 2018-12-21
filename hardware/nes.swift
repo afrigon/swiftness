@@ -26,7 +26,7 @@ enum Component {
     case cpu, ppu, apu, controller1, controller2, cartridge
 }
 
-class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
+class NintendoEntertainmentSystem: BusDelegate {
     static let screenWidth: Int = 256
     static let screenHeight: Int = 240
 
@@ -115,7 +115,7 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     func stepFrame(_ count: Int64 = 1) -> UInt64 {
         var cyclesCount: UInt64 = 0
         let endFrame = self.ppu.frameCount + count
-        while self.ppu.frameCount < endFrame { cyclesCount += self.step() }
+        while self.ppu.frameCount < endFrame { cyclesCount += UInt64(self.step()) }
         return cyclesCount
     }
 
@@ -132,11 +132,13 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     }
 
     func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte {
-        return self.bus(bus: bus, didSendReadSignalAt: address, of: self.getComponent(at: address))
+        guard let component = self.getComponent(at: address) else { return 0 }
+        return self.bus(bus: bus, didSendReadSignalAt: address, of: component)
     }
 
     func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte) {
-        self.bus(bus: bus, didSendWriteSignalAt: address, of: self.getComponent(at: address), data: data)
+        guard let component = self.getComponent(at: address) else { return }
+        self.bus(bus: bus, didSendWriteSignalAt: address, of: component, data: data)
     }
 
     func bus(bus: Bus, didSendReadSignalAt address: Word, of component: Component) -> Byte {
@@ -161,7 +163,7 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         }
     }
 
-    private func getComponent(at address: Word) -> Component {
+    private func getComponent(at address: Word) -> Component? {
         switch address {
         case 0x0000..<0x2000: return .cpu
         case 0x2000..<0x4000, 0x4014: return .ppu
@@ -169,7 +171,7 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         case 0x4016: return .controller1
         case 0x4017: return .controller2
         case 0x6000...0xFFFF: return .cartridge
-        default: fatalError("Not implemented or invalid read/write at 0x\(address.hex())")
+        default: return nil
         }
     }
 }

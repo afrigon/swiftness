@@ -302,6 +302,8 @@ class Debugger {
             case .implied: break
             }
 
+            if info.opcode == 0x60 { info.textOperand = "--------------------" }
+
             lineNumber++
             self.memoryDump.append(info)
         } while (localProgramCounter <= 0xFFFF)

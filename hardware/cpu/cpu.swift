@@ -386,7 +386,7 @@ class CoreProcessingUnit {
     private func adc(_ value: Word, _ address: Word) {
         let result: Word = regs.a &+ value &+ regs.p.valueOf(.carry)
         regs.p.set(.carry, if: result.overflowsByte())
-        regs.p.set(.overflow, if: Bool(~(regs.a ^ value) & (regs.a ^ result) & Flag.negative.rawValue))
+        regs.p.set(.overflow, if: Bool(~(regs.a ^ value) & Word(regs.a ^ result) & Word(Flag.negative.rawValue)))
         regs.a = result.rightByte()
         regs.p.updateFor(regs.a)
     }
@@ -394,7 +394,7 @@ class CoreProcessingUnit {
     private func sbc(_ value: Word, _ address: Word) {
         let result: Word = regs.a &- value &- (1 - regs.p.valueOf(.carry))
         regs.p.set(.carry, if: !result.overflowsByte())
-        regs.p.set(.overflow, if: Bool((regs.a ^ value) & (regs.a ^ result) & Flag.negative.rawValue))
+        regs.p.set(.overflow, if: Bool((regs.a ^ value) & Word(regs.a ^ result) & Word(Flag.negative.rawValue)))
         regs.a = result.rightByte()
         regs.p.updateFor(regs.a)
     }
@@ -412,14 +412,14 @@ class CoreProcessingUnit {
     }
 
     // Bitwise
-    private func and(_ value: Word, _ address: Word) { regs.a &= value; regs.p.updateFor(regs.a) }
-    private func eor(_ value: Word, _ address: Word) { regs.a ^= value; regs.p.updateFor(regs.a) }
-    private func ora(_ value: Word, _ address: Word) { regs.a |= value; regs.p.updateFor(regs.a) }
+    private func and(_ value: Word, _ address: Word) { regs.a &= Byte(value); regs.p.updateFor(regs.a) }
+    private func eor(_ value: Word, _ address: Word) { regs.a ^= Byte(value); regs.p.updateFor(regs.a) }
+    private func ora(_ value: Word, _ address: Word) { regs.a |= Byte(value); regs.p.updateFor(regs.a) }
 
     private func bit(_ value: Word, _ address: Word) {
-        regs.p.set(.zero, if: !Bool(regs.a & value))
-        regs.p.set(.overflow, if: Bool(Flag.overflow.rawValue & value))
-        regs.p.set(.negative, if: Bool(Flag.negative.rawValue & value))
+        regs.p.set(.zero, if: !Bool(regs.a & Byte(value)))
+        regs.p.set(.overflow, if: Bool(Flag.overflow.rawValue & Byte(value)))
+        regs.p.set(.negative, if: Bool(Flag.negative.rawValue & Byte(value)))
     }
 
     private func asl(_ value: Word, _ address: Word) {

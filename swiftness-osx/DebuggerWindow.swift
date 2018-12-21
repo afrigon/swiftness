@@ -380,9 +380,10 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
             string.setColor(forString: info.raw, withColor: NSColor(named: .codeRaw)!)
             string.setColor(forString: info.name, withColor: NSColor(named: .codeKeywords)!)
             string.setColor(forString: info.textOperand, withColor: NSColor(named: .codeNumbers)!)
-            string.setColor(forStrings: [",x", ",y", ",a", " a"], withColor: NSColor(named: .codeRegisters)!)
-            string.setColor(forStrings: [",", "(", ")", "+", "-", "#"], withColor: NSColor(named: .text)!)
-            string.setColor(forStrings: ["indirect", "undefined"], withColor: NSColor(named: .codeLowkey)!)
+            string.addAttributes(regex: "[axy]{1}$", [.foregroundColor : NSColor(named: .codeRegisters)!])
+            string.setColor(forStrings: ["(", ")", ",", "+", "#"], withColor: NSColor(named: .text)!)
+            string.addAttributes(regex: "[-]+", [.foregroundColor : NSColor(named: .text)!])
+            string.addAttributes(regex: "indirect|undefined", [.foregroundColor : NSColor(named: .codeLowkey)!])
             view!.textField.attributedStringValue = string
 
             view!.setSectionIndicator(for: MemoryRegion(at: info.addressPointer))
@@ -504,7 +505,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
             default: return ""
             }
         case .stack:
-            let address = Word(0x200 - index - 1)
+            let address: Word = 0x100 + self.debugger.cpuRegisters.sp + 1 + Word(index)
             return "$\(address.hex()) = $\(self.debugger.readMemory(at: address).hex())"
         case .ppu:
             switch index {
