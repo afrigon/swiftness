@@ -25,7 +25,7 @@
       </Testables>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "--debug"
+            argument = "--test"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
@@ -52,6 +52,12 @@
             ReferencedContainer = "container:swiftness.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "--test"
+            isEnabled = "YES">
+         </CommandLineArgument>
+      </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>

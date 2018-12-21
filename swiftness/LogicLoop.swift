@@ -22,7 +22,7 @@
 //    SOFTWARE.
 //
 
-protocol LogicLoop: GuardStatus {
+protocol LogicLoop {
     var delegate: LogicLoopDelegate? { get set }
     func start(closure: @escaping (Double) -> Void)
 }

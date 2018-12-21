@@ -37,22 +37,22 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
     private let ram = RandomAccessMemory()
     private let controller1 = Controller(.primary)
     private let controller2 = Controller(.secondary)
-    private let cartridge: Cartridge
-    private let bus = Bus()
+    let cartridge: Cartridge // should be private
+    let bus = Bus()
 
-    private let frequency: Double
     private var totalCycles: UInt64 = 0
-    private var deficitCycles: Int64 = 0
 
-    var status: String {
-        return """
-         Cycles: \(self.totalCycles)
-        \(self.cpu.status)
-        \(self.ppu.status)
-        \(self.apu.status)
-        \(self.cartridge.status)
-        \(self.controller1.status)
-        """
+    var deficitCycles: Int64 = 0
+    let frequency: Double
+
+    var cpuCycle: UInt64 { return self.totalCycles }
+    var cpuRegisters: RegisterSet { return self.cpu.registers }
+    var ppuFrame: UInt64 { return 0 }
+    var ppuScanline: UInt16 { return 0 }//self.ppu.cycle }
+    var ppuCycle: UInt16 { return 0 }//self.ppu.cycle }
+
+    func opcodeInfo(for opcode: Byte) -> (String, AddressingMode) {
+        return self.cpu.opcodeInfo(for: opcode)
     }
 
     var mirroringMode: ScreenMirroring {
@@ -112,9 +112,11 @@ class NintendoEntertainmentSystem: GuardStatus, BusDelegate {
         self.deficitCycles = cycles * -1
     }
 
-    func stepFrame(_ count: Int64 = 1) {
+    func stepFrame(_ count: Int64 = 1) -> UInt64 {
+        var cyclesCount: UInt64 = 0
         let endFrame = self.ppu.frameCount + count
-        while self.ppu.frameCount < endFrame { self.step() }
+        while self.ppu.frameCount < endFrame { cyclesCount += self.step() }
+        return cyclesCount
     }
 
     func bus(bus: Bus, shouldTriggerInterrupt type: InterruptType) {

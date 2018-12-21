@@ -29,20 +29,12 @@ protocol EmulatorDelegate: AnyObject {
 }
 
 class Conductor: GuardStatus, EmulatorDelegate {
-    private var nes: NintendoEntertainmentSystem! = nil
+    private let nes: NintendoEntertainmentSystem! = nil
     private let renderer: Renderer
     private let loop: LogicLoop
     private let inputManager: InputManager
+    private var updateClosure = [(Double) -> Void]()
     private let options: StartupOptions
-
-    var status: String {
-        return """
-        |------ General ------|
-         File: \(self.options.filepath ?? "None")
-        \(self.loop.status)
-        \(self.nes.status)
-        """
-    }
 
     init?(use options: StartupOptions,
          with renderer: Renderer,
@@ -61,27 +53,23 @@ class Conductor: GuardStatus, EmulatorDelegate {
         // * blows a bit into the cardridge *
         self.nes = NintendoEntertainmentSystem(load: game, hostedBy: self)
 
+        self.updateClosure.append(self.update(_:))
         self.loop.start(closure: self.loopClosure)
     }
 
-    func step() {
-        if self.options.mode == .debug {
-            self.nes.step()
-        }
-    }
-
-    func stepFrame(_ count: Int64 = 1) {
-        if self.options.mode == .debug {
-            self.nes.stepFrame(count)
-        }
+    func attach() -> Debugger {
+        self.options.mode = .debug
+        let debugger = Debugger(nes: self.nes)
+        self.updateClosure.append(debugger.loopClosure(_:))
+        return debugger
     }
 
     private func loopClosure(_ deltaTime: Double) {
         self.processInput()
-        self.update(deltaTime)
-        autoreleasepool {
-            self.render()
+        for f in self.updateClosure {
+            f(deltaTime)
         }
+        self.render()
     }
 
     private func processInput() {
@@ -95,7 +83,9 @@ class Conductor: GuardStatus, EmulatorDelegate {
     }
 
     private func render() {
-        self.renderer.draw(self.nes.getFrameBuffer())
+        autoreleasepool {
+            self.renderer.draw(self.nes.getFrameBuffer())
+        }
     }
 
     func emulator(nes: NintendoEntertainmentSystem, shouldRenderFrame frameBuffer: FrameBuffer) {
