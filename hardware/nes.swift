@@ -109,7 +109,7 @@ class NintendoEntertainmentSystem: BusDelegate {
             cycles -= Int64(self.step())
         }
 
-        self.deficitCycles = cycles * -1
+        //self.deficitCycles = cycles * -1
     }
 
     func stepFrame(_ count: Int64 = 1) -> UInt64 {
