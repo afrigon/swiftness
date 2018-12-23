@@ -209,7 +209,7 @@ class Debugger {
 
     func stepLine() -> UInt64 {
         defer { self.updateMemoryDump() }
-        return self.nes.stepFrame()
+        return self.nes.stepLine()
     }
 
     func stepFrame() -> UInt64 {

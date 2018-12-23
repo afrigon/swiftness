@@ -40,16 +40,14 @@ class NintendoEntertainmentSystem: BusDelegate {
     let cartridge: Cartridge // private
     let bus = Bus()
 
-    private var totalCycles: UInt64 = 0
-
     var deficitCycles: Int64 = 0
-    let frequency: Double
+    var frequency: Double { return self.cpu.frequency }
 
-    var cpuCycle: UInt64 { return self.totalCycles }
+    var cpuCycle: UInt64 { return self.cpu.totalCycles }
     var cpuRegisters: RegisterSet { return self.cpu.registers }
-    var ppuFrame: UInt64 { return 0 }
-    var ppuScanline: UInt16 { return 0 }//self.ppu.cycle }
-    var ppuCycle: UInt16 { return 0 }//self.ppu.cycle }
+    var ppuFrame: Int64 { return self.ppu.frame }
+    var ppuScanline: UInt16 { return self.ppu.scanline }
+    var ppuCycle: UInt16 { return self.ppu.cycle }
 
     func opcodeInfo(for opcode: Byte) -> (String, AddressingMode) {
         return self.cpu.opcodeInfo(for: opcode)
@@ -64,13 +62,8 @@ class NintendoEntertainmentSystem: BusDelegate {
         self.cpu = CoreProcessingUnit(using: self.bus)
         self.ppu = PictureProcessingUnit(using: self.bus)
         self.cartridge = game
-        self.frequency = self.cpu.frequency * 1e6   // MHz * 1e+6 == Hz
         self.bus.delegate = self
         self.reset()
-    }
-
-    func getFrameBuffer() -> FrameBuffer {
-        return self.ppu.frameBuffer
     }
 
     func reset() {
@@ -90,12 +83,7 @@ class NintendoEntertainmentSystem: BusDelegate {
     @discardableResult
     func step() -> UInt8 {
         let cpuCycle: UInt8 = self.cpu.step()
-        self.totalCycles &+= UInt64(cpuCycle)
-
-        for _ in 0..<cpuCycle * 3 {
-            self.ppu.step()
-        }
-
+        for _ in 0..<cpuCycle * 3 { self.ppu.step() }
         self.apu.step()
 
         return cpuCycle
@@ -103,19 +91,26 @@ class NintendoEntertainmentSystem: BusDelegate {
 
     // TODO: what to do when the emulation is running behind
     func run(for deltaTime: Double) {
-        var cycles: Int64 = Int64(self.frequency * deltaTime) //+ self.deficitCycles
+        var cycles: Int64 = Int64(self.cpu.frequency * deltaTime) + self.deficitCycles
 
         while cycles > 0 {
             cycles -= Int64(self.step())
         }
 
-        //self.deficitCycles = cycles * -1
+        self.deficitCycles = cycles
+    }
+
+    func stepLine(_ count: UInt16 = 1) -> UInt64 {
+        var cyclesCount: UInt64 = 0
+        let endLine = (self.ppu.scanline + count) % self.ppu.scanlinePerFrame
+        while self.ppu.scanline < endLine { cyclesCount += UInt64(self.step()) }
+        return cyclesCount
     }
 
     func stepFrame(_ count: Int64 = 1) -> UInt64 {
         var cyclesCount: UInt64 = 0
-        let endFrame = self.ppu.frameCount + count
-        while self.ppu.frameCount < endFrame { cyclesCount += UInt64(self.step()) }
+        let endFrame = self.ppu.frame + count
+        while self.ppu.frame < endFrame { cyclesCount += UInt64(self.step()) }
         return cyclesCount
     }
 
@@ -127,8 +122,8 @@ class NintendoEntertainmentSystem: BusDelegate {
         self.delegate!.emulator(nes: self, shouldRenderFrame: frameBuffer)
     }
 
-    func bus(bus: Bus, didBlockFor cycle: UInt16) {
-        self.cpu.stallCycle += cycle
+    func bus(bus: Bus, didBlockFor cycles: UInt16) {
+        self.cpu.stallCycles += cycles
     }
 
     func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte {

@@ -180,13 +180,16 @@ fileprivate struct Tile {
 }
 
 class PictureProcessingUnit: BusConnectedComponent {
-    private let bus: Bus
-    private let cyclePerScanline: UInt16 = 341
-    private let scanlinePerFrame: UInt16 = 262
+    private weak var bus: Bus!
+    let cyclePerScanline: UInt16 = 341
+    let scanlinePerFrame: UInt16 = 262
 
     var cycle: UInt16 = 0 // private
-    var scanline: UInt16 = 0 // private
-    var frame: Int64 = 0 // private
+    private var _scanline: UInt16 = 0
+    private var _frame: Int64 = 0
+    var scanline: UInt16 { get { return self._scanline } }
+    var frame: Int64 { get { return self._frame } }
+
 
     var vramPointer: Word = 0 // private
     private var vramTempPointer: Word = 0
@@ -207,7 +210,7 @@ class PictureProcessingUnit: BusConnectedComponent {
     private var frameBuffers = (rendered: FrameBuffer(), current: FrameBuffer())
 
     var frameBuffer: FrameBuffer { return self.frameBuffers.rendered }
-    var frameCount: Int64 { return self.frame }
+    var frameCount: Int64 { return self._frame }
 
     init(using bus: Bus) { self.bus = bus }
 
@@ -270,7 +273,7 @@ class PictureProcessingUnit: BusConnectedComponent {
                 self.oamPointer++
             }
             // might be 513 and 514 on odd cycles
-            self.bus.block(cycle: 512)
+            self.bus.block(cycles: 512)
         default: return
         }
     }
@@ -299,7 +302,7 @@ class PictureProcessingUnit: BusConnectedComponent {
         // Swap buffers and render
         self.frameBuffers = (current: self.frameBuffers.rendered,
                              rendered: self.frameBuffers.current)
-        //self.bus.renderFrame(frameBuffer: self.frameBuffers.rendered)
+        self.bus.renderFrame(frameBuffer: self.frameBuffers.rendered)
         self.statusRegister.vblank = true
 
         // Trigger nmi interrupt if enabled
@@ -341,9 +344,9 @@ class PictureProcessingUnit: BusConnectedComponent {
     }
 
     func step() {
-        switch (ScanlineType(self.scanline)!, CycleType(self.cycle)) {
+        switch (ScanlineType(self._scanline)!, CycleType(self.cycle)) {
         case (.visible, .visible) where self.maskRegister.renderingEnabled:
-            self.render(x: self.cycle - 1, y: self.scanline)
+            self.render(x: self.cycle - 1, y: self._scanline)
             self.fetchData(type: DataFetchType(self.cycle))
 
         case (.pre, .visible) where self.maskRegister.renderingEnabled:
@@ -352,7 +355,7 @@ class PictureProcessingUnit: BusConnectedComponent {
         case (.pre, .pre) where self.maskRegister.renderingEnabled:
             self.fetchData(type: DataFetchType(self.cycle))
 
-        case (.vblank, _) where self.scanline == 241 && self.cycle == 1:
+        case (.vblank, _) where self._scanline == 241 && self.cycle == 1:
             self.verticalBlank()
 
         case (.pre, _) where self.cycle == 1:
@@ -362,20 +365,20 @@ class PictureProcessingUnit: BusConnectedComponent {
 
         self.cycle = (self.cycle + 1) % self.cyclePerScanline
         if self.cycle == 0 {
-            self.scanline = (self.scanline + 1) % self.scanlinePerFrame
+            self._scanline = (self._scanline + 1) % self.scanlinePerFrame
 
-            if self.scanline == 0 {
+            if self._scanline == 0 {
                 // skipping idle cycle on odd frames
-                if self.frame % 2 != 0 { self.cycle++ }
-                self.frame &+= 1
+                if self._frame % 2 != 0 { self.cycle++ }
+                self._frame &+= 1
             }
         }
     }
 
     func reset() {
         self.cycle = 321
-        self.scanline = 261
-        self.frame = -1
+        self._scanline = 261
+        self._frame = -1
         self.controlRegister &= 0
         self.maskRegister &= 0
         // set oam address to 0

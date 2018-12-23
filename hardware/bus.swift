@@ -48,11 +48,11 @@ class Bus {
         delegate.bus(bus: self, shouldRenderFrame: frameBuffer)
     }
 
-    func block(cycle: UInt16) {
+    func block(cycles: UInt16) {
         guard let delegate = self.delegate else {
             fatalError("A bus delegate must be assign before using the bus")
         }
-        delegate.bus(bus: self, didBlockFor: cycle)
+        delegate.bus(bus: self, didBlockFor: cycles)
     }
 
     func readByte(at address: Word, of component: Component? = nil) -> Byte {
@@ -85,7 +85,7 @@ protocol BusDelegate: AnyObject {
 
     func bus(bus: Bus, shouldTriggerInterrupt type: InterruptType)
     func bus(bus: Bus, shouldRenderFrame frameBuffer: FrameBuffer)
-    func bus(bus: Bus, didBlockFor cycle: UInt16)
+    func bus(bus: Bus, didBlockFor cycles: UInt16)
     func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte
     func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte)
     func bus(bus: Bus, didSendReadSignalAt address: Word, of component: Component) -> Byte

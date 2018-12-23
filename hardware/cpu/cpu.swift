@@ -121,17 +121,16 @@ struct Operand {
 }
 
 class CoreProcessingUnit {
-    let frequency: Double = 1.789773    // MHz
+    private weak var bus: Bus!
     private let memory: CoreProcessingUnitMemory
     private let stack: Stack
-    private let bus: Bus
     private var regs: RegisterSet
     private var opcodes: [Byte: Opcode]! = nil
-
     private var interruptRequest: InterruptType?
-
     var registers: RegisterSet { return self.regs }
-    var stallCycle: UInt16 = 0
+    let frequency: Double = 1789773
+    var stallCycles: UInt16 = 0
+    var totalCycles: UInt64 = 0
 
     func opcodeInfo(for opcode: Byte) -> (String, AddressingMode) {
         return (self.opcodes[opcode]?.name ?? "undefined", self.opcodes[opcode]?.addressingMode ?? .implied)
@@ -318,13 +317,16 @@ class CoreProcessingUnit {
 
     @discardableResult
     func step() -> UInt8 {
-        if self.stallCycle > 0 {
-            self.stallCycle--
+        if self.stallCycles > 0 {
+            self.stallCycles--
+            self.totalCycles++
             return 1
         }
 
         if let interrupt = self.interruptRequest {
-            return self.interrupt(type: interrupt)
+            let cycles = self.interrupt(type: interrupt)
+            self.totalCycles &+= UInt64(cycles)
+            return  cycles
         }
 
         let opcodeHex: Byte = self.memory.readByte(at: regs.pc)
@@ -337,7 +339,9 @@ class CoreProcessingUnit {
         var operand: Operand = self.buildOperand(using: opcode.addressingMode)
         opcode.closure(&operand)
 
-        return opcode.cycles + operand.additionalCycles
+        let cycles = opcode.cycles + operand.additionalCycles
+        self.totalCycles &+= UInt64(cycles)
+        return cycles
     }
 
     @discardableResult
