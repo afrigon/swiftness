@@ -58,6 +58,8 @@ class UNROM: Mapper {
         switch address {
         case 0..<0x2000:
             self.delegate.mapper(mapper: self, didWriteAt: address, of: .chr, data: data)
+        case 0x6000..<0x8000:
+            self.delegate.mapper(mapper: self, didWriteAt: address - 0x6000, of: .sram, data: data)
         case 0x8000...0xFFFF:
             self.prgIndex0 = data % self.delegate.programBankCount(for: self)
         default: print("UNROM mapper invalid write at 0x\(address.hex())")

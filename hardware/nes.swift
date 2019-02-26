@@ -23,7 +23,11 @@
 //
 
 enum Component {
-    case cpu, ppu, apu, controller1, controller2, cartridge
+    case cpu, ppu, apu, controller1, controller2, controllers, cartridge
+}
+
+enum MemoryAccessMode {
+    case read, write
 }
 
 class NintendoEntertainmentSystem: BusDelegate {
@@ -40,6 +44,7 @@ class NintendoEntertainmentSystem: BusDelegate {
     let cartridge: Cartridge // private
     let bus = Bus()
 
+    var disableGraphics: Bool = false
     var deficitCycles: Int64 = 0
     var frequency: Double { return self.cpu.frequency }
 
@@ -83,7 +88,9 @@ class NintendoEntertainmentSystem: BusDelegate {
     @discardableResult
     func step() -> UInt8 {
         let cpuCycle: UInt8 = self.cpu.step()
-        for _ in 0..<cpuCycle * 3 { self.ppu.step() }
+        if !self.disableGraphics {
+            for _ in 0..<cpuCycle * 3 { self.ppu.step() }
+        }
         self.apu.step()
 
         return cpuCycle
@@ -100,13 +107,15 @@ class NintendoEntertainmentSystem: BusDelegate {
         self.deficitCycles = cycles
     }
 
+    @discardableResult
     func stepLine(_ count: UInt16 = 1) -> UInt64 {
         var cyclesCount: UInt64 = 0
         let endLine = (self.ppu.scanline + count) % self.ppu.scanlinePerFrame
-        while self.ppu.scanline < endLine { cyclesCount += UInt64(self.step()) }
+        while self.ppu.scanline != endLine { cyclesCount += UInt64(self.step()) }
         return cyclesCount
     }
 
+    @discardableResult
     func stepFrame(_ count: Int64 = 1) -> UInt64 {
         var cyclesCount: UInt64 = 0
         let endFrame = self.ppu.frame + count
@@ -123,16 +132,16 @@ class NintendoEntertainmentSystem: BusDelegate {
     }
 
     func bus(bus: Bus, didBlockFor cycles: UInt16) {
-        self.cpu.stallCycles += cycles
+        self.cpu.stallCycles += cycles + UInt16(self.cpu.totalCycles % 2 != 0 ? 1 : 0)
     }
 
     func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte {
-        guard let component = self.getComponent(at: address) else { return 0 }
+        guard let component = self.getComponent(at: address, mode: .read) else { return 0 }
         return self.bus(bus: bus, didSendReadSignalAt: address, of: component)
     }
 
     func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte) {
-        guard let component = self.getComponent(at: address) else { return }
+        guard let component = self.getComponent(at: address, mode: .write) else { return }
         self.bus(bus: bus, didSendWriteSignalAt: address, of: component, data: data)
     }
 
@@ -143,6 +152,7 @@ class NintendoEntertainmentSystem: BusDelegate {
         case .apu: return self.apu.busRead(at: address)
         case .controller1: return self.controller1.busRead(at: address)
         case .controller2: return self.controller2.busRead(at: address)
+        case .controllers: return 0
         case .cartridge: return self.cartridge.busRead(at: address)
         }
     }
@@ -154,17 +164,20 @@ class NintendoEntertainmentSystem: BusDelegate {
         case .apu: self.apu.busWrite(data, at: address)
         case .controller1: self.controller1.busWrite(data, at: address)
         case .controller2: self.controller2.busWrite(data, at: address)
+        case .controllers:
+            self.controller1.busWrite(data, at: address)
+            self.controller2.busWrite(data, at: address)
         case .cartridge: self.cartridge.busWrite(data, at: address)
         }
     }
 
-    private func getComponent(at address: Word) -> Component? {
+    private func getComponent(at address: Word, mode: MemoryAccessMode) -> Component? {
         switch address {
         case 0x0000..<0x2000: return .cpu
         case 0x2000..<0x4000, 0x4014: return .ppu
         case 0x4000...0x4013, 0x4015: return .apu
-        case 0x4016: return .controller1
-        case 0x4017: return .controller2
+        case 0x4016: return mode == .read ? .controller1 : .controllers
+        case 0x4017: return mode == .read ? .controller2 : .apu
         case 0x6000...0xFFFF: return .cartridge
         default: return nil
         }

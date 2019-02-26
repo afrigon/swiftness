@@ -300,6 +300,10 @@ class CoreProcessingUnit {
     func requestInterrupt(type: InterruptType) {
         // maybe handle interrupt priority as described in this document at page 13
         // http://nesdev.com/NESDoc.pdf
+        guard type != .irq || self.regs.p.isNotSet(.interrupt) else {
+            return
+        }
+
         self.interruptRequest = type
 
         // maybe will have to switch to a queue of interrupts ?
@@ -314,6 +318,8 @@ class CoreProcessingUnit {
         var operand = operand
         opcode.closure(&operand)
     }
+
+//    var trace = [Word](repeating: 0, count: 50)
 
     @discardableResult
     func step() -> UInt8 {
@@ -330,6 +336,8 @@ class CoreProcessingUnit {
         }
 
         let opcodeHex: Byte = self.memory.readByte(at: regs.pc)
+//        self.trace.append(regs.pc)
+//        self.trace.removeFirst()
         regs.pc++
 
         guard let opcode: Opcode = self.opcodes[opcodeHex] else {
@@ -348,14 +356,9 @@ class CoreProcessingUnit {
     private func interrupt(type: InterruptType) -> UInt8 {
         self.interruptRequest = nil
 
-        // seems wrong with the doc but the tests are ok with it (irq interrupt should not bypass the flag)
-        guard type == .irq || type == .nmi || self.regs.p.isNotSet(.interrupt) else {
-            return 0
-        }
-
         if type == .reset { self.regs.sp = 0xFD }
 
-        stack.pushWord(data: regs.pc + 1)
+        stack.pushWord(data: regs.pc)
         stack.pushByte(data: regs.p.value | Flag.alwaysOne.rawValue)
         self.regs.p.set(.interrupt)
         self.regs.pc = memory.readWord(at: type.address)

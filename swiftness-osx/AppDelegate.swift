@@ -74,7 +74,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        let debugger = self.conductor.attach()
-        DebuggerWindow(debugger: debugger).getWindowController().showWindow(self)
+        if self.options.mode == .debug {
+            let debugger = self.conductor.attach()
+            DebuggerWindow(debugger: debugger).getWindowController().showWindow(self)
+        }
     }
 }

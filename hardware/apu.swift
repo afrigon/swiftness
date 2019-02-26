@@ -22,7 +22,36 @@
 //    SOFTWARE.
 //
 
+class Channel {
+    var length: Byte = 0
+
+    var _enabled: Bool = false
+    var enabled: Bool {
+        get { return self._enabled }
+        set {
+            self._enabled = newValue
+            self.length = self._enabled ? self.length : 0
+        }
+    }
+}
+
+class Oscillator: Channel { }
+
+class PulseOscillator: Oscillator { }
+
+class TriangleOscillator: Oscillator { }
+
+class NoiseOscillator: Oscillator { }
+
+class DeltaModulationChannel: Channel { }
+
 class AudioProcessingUnit: BusConnectedComponent {
+    private let pulse1 = PulseOscillator()
+    private let pulse2 = PulseOscillator()
+    private let triangle = TriangleOscillator()
+    private let noise = NoiseOscillator()
+    private let delta = DeltaModulationChannel()
+
     func step() {
 
     }
@@ -32,6 +61,15 @@ class AudioProcessingUnit: BusConnectedComponent {
     }
 
     func busWrite(_ data: Byte, at address: Word) {
-
+        switch address {
+        case 0x4015:
+            self.pulse1.enabled = Bool(data & 1)
+            self.pulse2.enabled = Bool(data & 2)
+            self.triangle.enabled = Bool(data & 4)
+            self.noise.enabled = Bool(data & 8)
+            self.delta.enabled = Bool(data & 16)
+            // maybe restart dmc
+        default: return
+        }
     }
 }

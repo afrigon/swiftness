@@ -13,6 +13,9 @@
 		FE0E81E421B72C6400FAB227 /* Debugger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0E81E321B72C6400FAB227 /* Debugger.swift */; };
 		FE0E81E521B7354400FAB227 /* Debugger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0E81E321B72C6400FAB227 /* Debugger.swift */; };
 		FE0E81E621B7354400FAB227 /* Debugger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0E81E321B72C6400FAB227 /* Debugger.swift */; };
+		FE205D0121E7FAE900FFE577 /* nes-tests-roms.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE205D0021E7FAE900FFE577 /* nes-tests-roms.swift */; };
+		FE205D0321E800FB00FFE577 /* cpu-instructions-tests.nes in Resources */ = {isa = PBXBuildFile; fileRef = FE205D0221E800F400FFE577 /* cpu-instructions-tests.nes */; };
+		FE205D0521E801CF00FFE577 /* cpu-instructions-misc-tests.nes in Resources */ = {isa = PBXBuildFile; fileRef = FE205D0421E801CF00FFE577 /* cpu-instructions-misc-tests.nes */; };
 		FE3F925421859C1C0000B574 /* NesFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8821842789006C3096 /* NesFile.swift */; };
 		FE3F925521859C1D0000B574 /* NesFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8821842789006C3096 /* NesFile.swift */; };
 		FE3F925621859C260000B574 /* mmc1.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8A218459A7006C3096 /* mmc1.swift */; };
@@ -112,6 +115,9 @@
 /* Begin PBXFileReference section */
 		FE0E81DF21B3794800FAB227 /* cnrom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = cnrom.swift; sourceTree = "<group>"; };
 		FE0E81E321B72C6400FAB227 /* Debugger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Debugger.swift; sourceTree = "<group>"; };
+		FE205D0021E7FAE900FFE577 /* nes-tests-roms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "nes-tests-roms.swift"; sourceTree = "<group>"; };
+		FE205D0221E800F400FFE577 /* cpu-instructions-tests.nes */ = {isa = PBXFileReference; lastKnownFileType = file; path = "cpu-instructions-tests.nes"; sourceTree = "<group>"; };
+		FE205D0421E801CF00FFE577 /* cpu-instructions-misc-tests.nes */ = {isa = PBXFileReference; lastKnownFileType = file; path = "cpu-instructions-misc-tests.nes"; sourceTree = "<group>"; };
 		FE53C80321821344002BD71F /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		FE53C807218224C5002BD71F /* MetalRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalRenderer.swift; sourceTree = "<group>"; };
 		FE53C809218225C4002BD71F /* CVDisplayLinkLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CVDisplayLinkLoop.swift; sourceTree = "<group>"; };
@@ -213,6 +219,7 @@
 			isa = PBXGroup;
 			children = (
 				FEFA972321A7DEFD00FF74ED /* roms */,
+				FE205D0021E7FAE900FFE577 /* nes-tests-roms.swift */,
 				FEFA971F21A7B98F00FF74ED /* cpu-tests-roms.swift */,
 				FE53C835218369ED002BD71F /* Info.plist */,
 			);
@@ -281,6 +288,8 @@
 		FEA4864F21B2822B00ADE1AF /* cpu-instructions */ = {
 			isa = PBXGroup;
 			children = (
+				FE205D0221E800F400FFE577 /* cpu-instructions-tests.nes */,
+				FE205D0421E801CF00FFE577 /* cpu-instructions-misc-tests.nes */,
 				FEA4866221B28D5A00ADE1AF /* cpu-instructions-tests.bin */,
 				FEA4865D21B288C600ADE1AF /* cpu-instructions-tests.lst */,
 			);
@@ -426,6 +435,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				FEA4865F21B288C600ADE1AF /* cpu-instructions-tests.lst in Resources */,
+				FE205D0321E800FB00FFE577 /* cpu-instructions-tests.nes in Resources */,
+				FE205D0521E801CF00FFE577 /* cpu-instructions-misc-tests.nes in Resources */,
 				FEA4866321B28D5A00ADE1AF /* cpu-instructions-tests.bin in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -476,6 +487,7 @@
 				FE53C8402183FADC002BD71F /* addressing.swift in Sources */,
 				FE53C84D2183FDCE002BD71F /* Renderer.swift in Sources */,
 				FE82CB6421A00BE800E08545 /* StartupOptions.swift in Sources */,
+				FE205D0121E7FAE900FFE577 /* nes-tests-roms.swift in Sources */,
 				FE53C84C2183FDCE002BD71F /* Conductor.swift in Sources */,
 				FEE7F73D21CD14CD0005956E /* unrom.swift in Sources */,
 			);

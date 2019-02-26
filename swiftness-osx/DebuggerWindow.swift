@@ -600,7 +600,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
                 string.addAttributes(regex: "^.*=", [.font: NSFont(name: "menlo bold", size: 11)!])
                 view!.textField.attributedStringValue = string
             case .ppuStatus:
-                let string = NSMutableAttributedString(string: "Status Register = \(self.debugger.ppu.statusRegister.value.bin())")
+                let string = NSMutableAttributedString(string: "Status Register = todo")
                 string.addAttributes(regex: "^.*=", [.font: NSFont(name: "menlo bold", size: 11)!])
                 view!.textField.attributedStringValue = string
             }
@@ -684,6 +684,19 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         self.debugger.refresh()
     }
 
+    @objc func stringSRAM(_ sender: AnyObject) {
+        var i: Word = 0x6004
+        var value: Byte = 0
+        var string = ""
+        repeat {
+            value = self.debugger.readMemory(at: i)
+
+            string += String(Character(UnicodeScalar(value)))
+            i++
+        } while (value != 0)
+        print(string)
+    }
+
     func updateToolbar() {
         self.debugView.debuggerToolbar.cycleLabel.stringValue = "Cycles: \(self.debugger.totalCycles)"
         self.debugView.debuggerToolbar.runButton.image = NSImage(named: self.debugger.running ? "pause" : "resume")
@@ -701,6 +714,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         case 98: self.stepLine(self)    // F7
         case 100: self.stepFrame(self)  // F8
         case 101: self.step(self)       // F9
+        case 122: self.stringSRAM(self) // F1
         default: print(event.keyCode)
         }
     }

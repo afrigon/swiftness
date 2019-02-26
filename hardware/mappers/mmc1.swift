@@ -70,8 +70,12 @@ class MMC1: Mapper {
     func busRead(at address: Word) -> Byte {
         // missing ppu reads
         switch address {
+        case 0..<0x2000:
+            let address: DWord = DWord(address)
+            return self.delegate.mapper(mapper: self, didReadAt: address, of: .chr)
         case 0x6000..<0x8000:
-            return self.delegate.mapper(mapper: self, didReadAt: DWord(address - 0x6000), of: .sram)
+            let address: DWord = DWord(address - 0x6000)
+            return self.delegate.mapper(mapper: self, didReadAt: address, of: .sram)
         case 0x8000..<0xC000:
             let address: DWord = DWord(address - 0x8000) + DWord(self.lowerPrgIndex) * self.bankSize
             return self.delegate.mapper(mapper: self, didReadAt: address, of: .prg)
@@ -84,7 +88,8 @@ class MMC1: Mapper {
 
     func busWrite(_ data: Byte, at address: Word) {
         switch address {
-        case 0x6000..<0x8000: self.delegate.mapper(mapper: self, didWriteAt: address, of: .sram, data: data)
+        case 0..<0x2000: self.delegate.mapper(mapper: self, didWriteAt: address, of: .chr, data: data)
+        case 0x6000..<0x8000: self.delegate.mapper(mapper: self, didWriteAt: address - 0x6000, of: .sram, data: data)
         case 0x8000..<0xA000: self.registers.write(data, to: .control)
         case 0xA000..<0xC000: self.registers.write(data, to: .chrBank0)
         case 0xC000..<0xE000: self.registers.write(data, to: .chrBank1)

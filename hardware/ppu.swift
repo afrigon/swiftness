@@ -31,14 +31,14 @@ fileprivate enum CycleType {
     init(_ value: UInt16) {
 //        switch value {
 //        case 2...256: self = .visible
-//        case 257: self = .oam // ?
+//        case 257: self = .oam
 //        case 1, 321...336: self = .pre
 //        default: self = .idle
 //        }
 //
         switch value {
         case 1...256: self = .visible
-        case 257: self = .oam // ?
+        case 257: self = .oam
         case 321...336: self = .pre
         default: self = .idle
         }
@@ -257,9 +257,9 @@ class PictureProcessingUnit: BusConnectedComponent {
             self.oamPointer++
         case 0x2005: break // TODO: scroll
         case 0x2006:
-            // the least significant bit of vramTempPointer is used to keep track of first vs second write
-            if !Bool(self.vramTempPointer & Word(1)) {
-                self.vramTempPointer = (Word(data) << 8) | Word(1)
+            // vramTempPointer's lsb used as toggle
+            if !Bool(self.vramTempPointer & 1) {
+                self.vramTempPointer = (Word(data) << 8) | 1
             } else {
                 self.vramPointer = (self.vramTempPointer & Word(0x3F00)) | Word(data)
                 self.vramTempPointer = 0
@@ -272,8 +272,7 @@ class PictureProcessingUnit: BusConnectedComponent {
                 self.oam[self.oamPointer] = self.bus.readByte(at: Word(data) << 8 | i)
                 self.oamPointer++
             }
-            // might be 513 and 514 on odd cycles
-            self.bus.block(cycles: 512)
+            self.bus.block(cycles: 513)
         default: return
         }
     }
@@ -305,7 +304,6 @@ class PictureProcessingUnit: BusConnectedComponent {
         self.bus.renderFrame(frameBuffer: self.frameBuffers.rendered)
         self.statusRegister.vblank = true
 
-        // Trigger nmi interrupt if enabled
         if self.controlRegister.interruptEnabled {
             self.bus.triggerInterrupt(of: .nmi)
         }
@@ -324,11 +322,11 @@ class PictureProcessingUnit: BusConnectedComponent {
             self.tilesData.current.attributeTable = ((self.vramRead(at: address) >> shift) & 3) << 2
         case .lowTile:
             let fineY: Word = self.vramPointer >> 12 & 7
-            let address: Word = self.controlRegister.backgroundPatternAddress + self.tilesData.current.nameTable * 16 + fineY
+            let address: Word = self.controlRegister.backgroundPatternAddress + Word(self.tilesData.current.nameTable) * 16 + fineY
             self.tilesData.current.lowTileData = self.vramRead(at: address)
         case .highTile:
             let fineY: Word = self.vramPointer >> 12 & 7
-            let address: Word = self.controlRegister.backgroundPatternAddress + self.tilesData.current.nameTable * 16 + fineY
+            let address: Word = self.controlRegister.backgroundPatternAddress + Word(self.tilesData.current.nameTable) * 16 + fineY
             self.tilesData.current.lowTileData = self.vramRead(at: address + 8)
         case .flush:
             self.tilesData = (visible: self.tilesData.cached,
@@ -381,10 +379,10 @@ class PictureProcessingUnit: BusConnectedComponent {
         self._frame = -1
         self.controlRegister &= 0
         self.maskRegister &= 0
-        // set oam address to 0
+        self.oamPointer = 0
 
         self.tilesData = (visible: Tile(), cached: Tile(), current: Tile())
         self.frameBuffers = (rendered: FrameBuffer(), current: FrameBuffer())
-        //self.bus.renderFrame(frameBuffer: self.frameBuffers.rendered)
+        self.bus.renderFrame(frameBuffer: self.frameBuffers.rendered)
     }
 }

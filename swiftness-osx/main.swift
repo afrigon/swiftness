@@ -31,8 +31,12 @@ guard var options: StartupOptions = StartupOptions.parse(arguments) else {
 
 // options injection for debuging
 if options.mode != .test {
-    options.filepath = "/Users/frigon/.nes/roms/donkey-kong.nes"
-    //options.filepath = "/Users/frigon/Downloads/palette.nes"
+//    options.filepath = "/Users/frigon/.nes/roms/donkey-kong.nes"
+    options.filepath = "/Users/frigon/Downloads/nes/palette.nes"
+    //options.filepath = "/Users/frigon/Downloads/cpu_interrupts_v2/rom_singles/1-cli_latency.nes"
+    //options.filepath = "/Users/frigon/Downloads/instr_timing/rom_singles/1-instr_timing.nes"
+    //options.filepath = "/Users/frigon/Downloads/cpu_interrupts_v2/rom_singles/2-nmi_and_brk.nes"
+
     options.mode = .debug
 }
 
