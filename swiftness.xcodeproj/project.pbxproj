@@ -67,7 +67,6 @@
 		FE53C8642183FE00002BD71F /* LogicLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743E2182014E0072530A /* LogicLoop.swift */; };
 		FE53C8652183FE00002BD71F /* InputManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C8112182474F002BD71F /* InputManager.swift */; };
 		FE53C86A2183FE00002BD71F /* IntegerExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741C217C546E0072530A /* IntegerExtensions.swift */; };
-		FE787A8C222AA8D1009AA3A8 /* PaletteWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE787A8B222AA8D1009AA3A8 /* PaletteWindow.swift */; };
 		FE82CB42219FD8AD00E08545 /* StartupOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE82CB41219FD8AD00E08545 /* StartupOptions.swift */; };
 		FE82CB6321A00BE700E08545 /* StartupOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE82CB41219FD8AD00E08545 /* StartupOptions.swift */; };
 		FE82CB6421A00BE800E08545 /* StartupOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE82CB41219FD8AD00E08545 /* StartupOptions.swift */; };
@@ -96,6 +95,32 @@
 		FEC79C8921842789006C3096 /* NesFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8821842789006C3096 /* NesFile.swift */; };
 		FEC79C8B218459A7006C3096 /* mmc1.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8A218459A7006C3096 /* mmc1.swift */; };
 		FEC79C8D21845CF7006C3096 /* mmc3.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8C21845CF7006C3096 /* mmc3.swift */; };
+		FEE4CA7C2260730900434BF8 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEE4CA7B2260730900434BF8 /* main.swift */; };
+		FEE4CA802260737600434BF8 /* Conductor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743A2181FC860072530A /* Conductor.swift */; };
+		FEE4CA812260737600434BF8 /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743C2181FCCA0072530A /* Renderer.swift */; };
+		FEE4CA822260737600434BF8 /* LogicLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743E2182014E0072530A /* LogicLoop.swift */; };
+		FEE4CA832260737600434BF8 /* InputManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C8112182474F002BD71F /* InputManager.swift */; };
+		FEE4CA842260737600434BF8 /* NesFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8821842789006C3096 /* NesFile.swift */; };
+		FEE4CA852260737600434BF8 /* Debugger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0E81E321B72C6400FAB227 /* Debugger.swift */; };
+		FEE4CA862260737600434BF8 /* StartupOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE82CB41219FD8AD00E08545 /* StartupOptions.swift */; };
+		FEE4CA872260737600434BF8 /* IntegerExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741C217C546E0072530A /* IntegerExtensions.swift */; };
+		FEE4CA882260738200434BF8 /* mapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C8172182C27E002BD71F /* mapper.swift */; };
+		FEE4CA892260738200434BF8 /* unrom.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEE7F73A21CD14CD0005956E /* unrom.swift */; };
+		FEE4CA8A2260738200434BF8 /* mmc1.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8A218459A7006C3096 /* mmc1.swift */; };
+		FEE4CA8B2260738200434BF8 /* cnrom.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0E81DF21B3794800FAB227 /* cnrom.swift */; };
+		FEE4CA8C2260738200434BF8 /* mmc3.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8C21845CF7006C3096 /* mmc3.swift */; };
+		FEE4CA8D2260738200434BF8 /* nes.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2742D218076150072530A /* nes.swift */; };
+		FEE4CA8E2260738200434BF8 /* ppu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA27420217C91710072530A /* ppu.swift */; };
+		FEE4CA8F2260738200434BF8 /* apu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C80E21823FB1002BD71F /* apu.swift */; };
+		FEE4CA902260738200434BF8 /* ram.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C8152182BE49002BD71F /* ram.swift */; };
+		FEE4CA912260738200434BF8 /* controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C81321824964002BD71F /* controller.swift */; };
+		FEE4CA922260738200434BF8 /* cartridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C81A21834DBE002BD71F /* cartridge.swift */; };
+		FEE4CA932260738200434BF8 /* bus.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C81C21834E08002BD71F /* bus.swift */; };
+		FEE4CA942260738500434BF8 /* cpu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741A217C47B50072530A /* cpu.swift */; };
+		FEE4CA952260738500434BF8 /* addressing.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C82121835789002BD71F /* addressing.swift */; };
+		FEE4CA962260738500434BF8 /* memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C823218357A7002BD71F /* memory.swift */; };
+		FEE4CA98226073B800434BF8 /* TerminalLogicLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEE4CA97226073B800434BF8 /* TerminalLogicLoop.swift */; };
+		FEE4CA9A2260788F00434BF8 /* Interpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEE4CA992260788F00434BF8 /* Interpreter.swift */; };
 		FEE7F73B21CD14CD0005956E /* unrom.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEE7F73A21CD14CD0005956E /* unrom.swift */; };
 		FEE7F73C21CD14CD0005956E /* unrom.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEE7F73A21CD14CD0005956E /* unrom.swift */; };
 		FEE7F73D21CD14CD0005956E /* unrom.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEE7F73A21CD14CD0005956E /* unrom.swift */; };
@@ -112,6 +137,18 @@
 			remoteInfo = "swiftness-osx";
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		FEE4CA772260730900434BF8 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		FE0E81DF21B3794800FAB227 /* cnrom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = cnrom.swift; sourceTree = "<group>"; };
@@ -134,7 +171,6 @@
 		FE53C831218369ED002BD71F /* swiftness-osx-tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swiftness-osx-tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FE53C835218369ED002BD71F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FE53C83B2183E5AF002BD71F /* InputResponder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputResponder.swift; sourceTree = "<group>"; };
-		FE787A8B222AA8D1009AA3A8 /* PaletteWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaletteWindow.swift; sourceTree = "<group>"; };
 		FE82CB41219FD8AD00E08545 /* StartupOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupOptions.swift; sourceTree = "<group>"; };
 		FE8CD47621B800FB00C68C8D /* ConsoleWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleWindow.swift; sourceTree = "<group>"; };
 		FE8CD47821B8068400C68C8D /* DebuggerWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebuggerWindow.swift; sourceTree = "<group>"; };
@@ -165,6 +201,10 @@
 		FEC79C8821842789006C3096 /* NesFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NesFile.swift; sourceTree = "<group>"; };
 		FEC79C8A218459A7006C3096 /* mmc1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mmc1.swift; sourceTree = "<group>"; };
 		FEC79C8C21845CF7006C3096 /* mmc3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mmc3.swift; sourceTree = "<group>"; };
+		FEE4CA792260730900434BF8 /* swiftness-unix */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "swiftness-unix"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FEE4CA7B2260730900434BF8 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		FEE4CA97226073B800434BF8 /* TerminalLogicLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalLogicLoop.swift; sourceTree = "<group>"; };
+		FEE4CA992260788F00434BF8 /* Interpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interpreter.swift; sourceTree = "<group>"; };
 		FEE7F73A21CD14CD0005956E /* unrom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = unrom.swift; sourceTree = "<group>"; };
 		FEF6F44021BF83F200DE9881 /* NSAttributedString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSAttributedString.swift; sourceTree = "<group>"; };
 		FEFA971F21A7B98F00FF74ED /* cpu-tests-roms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "cpu-tests-roms.swift"; sourceTree = "<group>"; };
@@ -186,6 +226,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		FEBA1F3921820D610044DC8B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FEE4CA762260730900434BF8 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -233,6 +280,7 @@
 			children = (
 				FEA27419217C46530072530A /* hardware */,
 				FEBA1F4E21820E760044DC8B /* swiftness */,
+				FEE4CA7A2260730900434BF8 /* swiftness-unix */,
 				FEA2740A217C45F70072530A /* swiftness-osx */,
 				FEBA1F3D21820D610044DC8B /* swiftness-ios */,
 				FE53C832218369ED002BD71F /* swiftness-osx-tests */,
@@ -246,6 +294,7 @@
 				FEA27408217C45F70072530A /* swiftness-osx.app */,
 				FEBA1F3C21820D610044DC8B /* swiftness-ios.app */,
 				FE53C831218369ED002BD71F /* swiftness-osx-tests.xctest */,
+				FEE4CA792260730900434BF8 /* swiftness-unix */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -258,7 +307,6 @@
 				FE53C809218225C4002BD71F /* CVDisplayLinkLoop.swift */,
 				FE53C83B2183E5AF002BD71F /* InputResponder.swift */,
 				FE8CD47621B800FB00C68C8D /* ConsoleWindow.swift */,
-				FE787A8B222AA8D1009AA3A8 /* PaletteWindow.swift */,
 				FE8CD47821B8068400C68C8D /* DebuggerWindow.swift */,
 				FEA2740B217C45F70072530A /* AppDelegate.swift */,
 				FEA274352180D0EA0072530A /* Menu.swift */,
@@ -327,6 +375,16 @@
 			path = swiftness;
 			sourceTree = "<group>";
 		};
+		FEE4CA7A2260730900434BF8 /* swiftness-unix */ = {
+			isa = PBXGroup;
+			children = (
+				FEE4CA7B2260730900434BF8 /* main.swift */,
+				FEE4CA97226073B800434BF8 /* TerminalLogicLoop.swift */,
+				FEE4CA992260788F00434BF8 /* Interpreter.swift */,
+			);
+			path = "swiftness-unix";
+			sourceTree = "<group>";
+		};
 		FEFA972321A7DEFD00FF74ED /* roms */ = {
 			isa = PBXGroup;
 			children = (
@@ -390,13 +448,30 @@
 			productReference = FEBA1F3C21820D610044DC8B /* swiftness-ios.app */;
 			productType = "com.apple.product-type.application";
 		};
+		FEE4CA782260730900434BF8 /* swiftness-unix */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FEE4CA7D2260730900434BF8 /* Build configuration list for PBXNativeTarget "swiftness-unix" */;
+			buildPhases = (
+				FEE4CA752260730900434BF8 /* Sources */,
+				FEE4CA762260730900434BF8 /* Frameworks */,
+				FEE4CA772260730900434BF8 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "swiftness-unix";
+			productName = "swiftness-unix";
+			productReference = FEE4CA792260730900434BF8 /* swiftness-unix */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		FEA27400217C45F70072530A /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 1000;
+				LastSwiftUpdateCheck = 1020;
 				LastUpgradeCheck = 1000;
 				ORGANIZATIONNAME = Frigstudio;
 				TargetAttributes = {
@@ -409,6 +484,9 @@
 					};
 					FEBA1F3B21820D610044DC8B = {
 						CreatedOnToolsVersion = 10.0;
+					};
+					FEE4CA782260730900434BF8 = {
+						CreatedOnToolsVersion = 10.2;
 					};
 				};
 			};
@@ -428,6 +506,7 @@
 				FEA27407217C45F70072530A /* swiftness-osx */,
 				FEBA1F3B21820D610044DC8B /* swiftness-ios */,
 				FE53C830218369ED002BD71F /* swiftness-osx-tests */,
+				FEE4CA782260730900434BF8 /* swiftness-unix */,
 			);
 		};
 /* End PBXProject section */
@@ -500,7 +579,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FE787A8C222AA8D1009AA3A8 /* PaletteWindow.swift in Sources */,
 				FE53C8122182474F002BD71F /* InputManager.swift in Sources */,
 				FEA2743D2181FCCA0072530A /* Renderer.swift in Sources */,
 				FEB8D31F21BC72D700A42E99 /* NSColorExtensions.swift in Sources */,
@@ -569,6 +647,39 @@
 				FE3F925721859C260000B574 /* mmc3.swift in Sources */,
 				FE53C83E2183FADC002BD71F /* addressing.swift in Sources */,
 				FEE7F73C21CD14CD0005956E /* unrom.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FEE4CA752260730900434BF8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FEE4CA882260738200434BF8 /* mapper.swift in Sources */,
+				FEE4CA832260737600434BF8 /* InputManager.swift in Sources */,
+				FEE4CA892260738200434BF8 /* unrom.swift in Sources */,
+				FEE4CA8F2260738200434BF8 /* apu.swift in Sources */,
+				FEE4CA8B2260738200434BF8 /* cnrom.swift in Sources */,
+				FEE4CA852260737600434BF8 /* Debugger.swift in Sources */,
+				FEE4CA942260738500434BF8 /* cpu.swift in Sources */,
+				FEE4CA8C2260738200434BF8 /* mmc3.swift in Sources */,
+				FEE4CA952260738500434BF8 /* addressing.swift in Sources */,
+				FEE4CA922260738200434BF8 /* cartridge.swift in Sources */,
+				FEE4CA7C2260730900434BF8 /* main.swift in Sources */,
+				FEE4CA842260737600434BF8 /* NesFile.swift in Sources */,
+				FEE4CA812260737600434BF8 /* Renderer.swift in Sources */,
+				FEE4CA932260738200434BF8 /* bus.swift in Sources */,
+				FEE4CA902260738200434BF8 /* ram.swift in Sources */,
+				FEE4CA912260738200434BF8 /* controller.swift in Sources */,
+				FEE4CA962260738500434BF8 /* memory.swift in Sources */,
+				FEE4CA8E2260738200434BF8 /* ppu.swift in Sources */,
+				FEE4CA9A2260788F00434BF8 /* Interpreter.swift in Sources */,
+				FEE4CA98226073B800434BF8 /* TerminalLogicLoop.swift in Sources */,
+				FEE4CA8D2260738200434BF8 /* nes.swift in Sources */,
+				FEE4CA8A2260738200434BF8 /* mmc1.swift in Sources */,
+				FEE4CA822260737600434BF8 /* LogicLoop.swift in Sources */,
+				FEE4CA862260737600434BF8 /* StartupOptions.swift in Sources */,
+				FEE4CA872260737600434BF8 /* IntegerExtensions.swift in Sources */,
+				FEE4CA802260737600434BF8 /* Conductor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -852,6 +963,28 @@
 			};
 			name = Release;
 		};
+		FEE4CA7E2260730900434BF8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7LYG6KRX2T;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		FEE4CA7F2260730900434BF8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7LYG6KRX2T;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -887,6 +1020,15 @@
 			buildConfigurations = (
 				FEBA1F4C21820D620044DC8B /* Debug */,
 				FEBA1F4D21820D620044DC8B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FEE4CA7D2260730900434BF8 /* Build configuration list for PBXNativeTarget "swiftness-unix" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FEE4CA7E2260730900434BF8 /* Debug */,
+				FEE4CA7F2260730900434BF8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

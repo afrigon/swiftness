@@ -31,16 +31,16 @@ protocol EmulatorDelegate: AnyObject {
 class Conductor: EmulatorDelegate {
     private weak var nextFrameBuffer: FrameBuffer?
     private var nes: NintendoEntertainmentSystem! = nil
-    private let renderer: Renderer
+    private let renderer: Renderer?
     private let loop: LogicLoop
-    private let inputManager: InputManager
+    private let inputManager: InputManager?
     private var updateClosure = [(Double) -> Void]()
     private let options: StartupOptions
 
     init?(use options: StartupOptions,
-         with renderer: Renderer,
+         with renderer: Renderer?,
          drivenBy loop: LogicLoop,
-         interactingWith inputManager: InputManager) {
+         interactingWith inputManager: InputManager?) {
         self.options = options
         self.renderer = renderer
         self.loop = loop
@@ -74,7 +74,8 @@ class Conductor: EmulatorDelegate {
     }
 
     private func processInput() {
-        self.nes.setInputs(to: self.inputManager.buttons, for: .primary)
+        guard self.inputManager != nil else { return }
+        self.nes.setInputs(to: self.inputManager!.buttons, for: .primary)
     }
 
     private func update(_ deltaTime: Double) {
@@ -84,11 +85,11 @@ class Conductor: EmulatorDelegate {
     }
 
     private func render() {
-        guard self.nextFrameBuffer != nil else {
+        guard self.renderer != nil && self.nextFrameBuffer != nil else {
             return
         }
 
-        autoreleasepool { self.renderer.draw(self.nextFrameBuffer!) }
+        autoreleasepool { self.renderer!.draw(self.nextFrameBuffer!) }
         self.nextFrameBuffer = nil
     }
 
