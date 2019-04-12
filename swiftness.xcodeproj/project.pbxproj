@@ -67,6 +67,7 @@
 		FE53C8642183FE00002BD71F /* LogicLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2743E2182014E0072530A /* LogicLoop.swift */; };
 		FE53C8652183FE00002BD71F /* InputManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C8112182474F002BD71F /* InputManager.swift */; };
 		FE53C86A2183FE00002BD71F /* IntegerExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA2741C217C546E0072530A /* IntegerExtensions.swift */; };
+		FE787A8C222AA8D1009AA3A8 /* PaletteWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE787A8B222AA8D1009AA3A8 /* PaletteWindow.swift */; };
 		FE82CB42219FD8AD00E08545 /* StartupOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE82CB41219FD8AD00E08545 /* StartupOptions.swift */; };
 		FE82CB6321A00BE700E08545 /* StartupOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE82CB41219FD8AD00E08545 /* StartupOptions.swift */; };
 		FE82CB6421A00BE800E08545 /* StartupOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE82CB41219FD8AD00E08545 /* StartupOptions.swift */; };
@@ -133,6 +134,7 @@
 		FE53C831218369ED002BD71F /* swiftness-osx-tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swiftness-osx-tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FE53C835218369ED002BD71F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FE53C83B2183E5AF002BD71F /* InputResponder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputResponder.swift; sourceTree = "<group>"; };
+		FE787A8B222AA8D1009AA3A8 /* PaletteWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaletteWindow.swift; sourceTree = "<group>"; };
 		FE82CB41219FD8AD00E08545 /* StartupOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupOptions.swift; sourceTree = "<group>"; };
 		FE8CD47621B800FB00C68C8D /* ConsoleWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleWindow.swift; sourceTree = "<group>"; };
 		FE8CD47821B8068400C68C8D /* DebuggerWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebuggerWindow.swift; sourceTree = "<group>"; };
@@ -256,6 +258,7 @@
 				FE53C809218225C4002BD71F /* CVDisplayLinkLoop.swift */,
 				FE53C83B2183E5AF002BD71F /* InputResponder.swift */,
 				FE8CD47621B800FB00C68C8D /* ConsoleWindow.swift */,
+				FE787A8B222AA8D1009AA3A8 /* PaletteWindow.swift */,
 				FE8CD47821B8068400C68C8D /* DebuggerWindow.swift */,
 				FEA2740B217C45F70072530A /* AppDelegate.swift */,
 				FEA274352180D0EA0072530A /* Menu.swift */,
@@ -497,6 +500,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FE787A8C222AA8D1009AA3A8 /* PaletteWindow.swift in Sources */,
 				FE53C8122182474F002BD71F /* InputManager.swift in Sources */,
 				FEA2743D2181FCCA0072530A /* Renderer.swift in Sources */,
 				FEB8D31F21BC72D700A42E99 /* NSColorExtensions.swift in Sources */,

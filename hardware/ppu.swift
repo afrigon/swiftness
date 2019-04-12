@@ -280,7 +280,7 @@ class PictureProcessingUnit: BusConnectedComponent {
     private func vramRead(at address: Word) -> Byte {
         let address: Word = address % 0x4000
         switch address {
-        case 0..<0x2000: return self.bus.readByte(at: address, of: .cartridge)
+        case 0..<0x2000: return self.bus.readByte(at: address, of: .cartridge) // think this shit is wrong
         case 0x2000..<0x3F00: return self.nameTable[address % 2048] // handle mirroring stuff
         case 0x3F00..<0x4000: return self.paletteIndices[address % 32]
         default: return 0
@@ -298,7 +298,7 @@ class PictureProcessingUnit: BusConnectedComponent {
     }
 
     private func verticalBlank() {
-        // Swap buffers and render
+        // Swap buffers and render, TODO: make sure this is a constant time operation
         self.frameBuffers = (current: self.frameBuffers.rendered,
                              rendered: self.frameBuffers.current)
         self.bus.renderFrame(frameBuffer: self.frameBuffers.rendered)
@@ -321,13 +321,13 @@ class PictureProcessingUnit: BusConnectedComponent {
             let shift: Word = ((self.vramPointer >> 4) & 4) | (self.vramPointer & 2)
             self.tilesData.current.attributeTable = ((self.vramRead(at: address) >> shift) & 3) << 2
         case .lowTile:
-            let fineY: Word = self.vramPointer >> 12 & 7
-            let address: Word = self.controlRegister.backgroundPatternAddress + Word(self.tilesData.current.nameTable) * 16 + fineY
+            //let fineY: Word = self.vramPointer >> 12 & 7
+            let address: Word = self.controlRegister.backgroundPatternAddress + Word(self.tilesData.current.nameTable) * 16// + fineY
             self.tilesData.current.lowTileData = self.vramRead(at: address)
         case .highTile:
-            let fineY: Word = self.vramPointer >> 12 & 7
-            let address: Word = self.controlRegister.backgroundPatternAddress + Word(self.tilesData.current.nameTable) * 16 + fineY
-            self.tilesData.current.lowTileData = self.vramRead(at: address + 8)
+            //let fineY: Word = self.vramPointer >> 12 & 7
+            let address: Word = self.controlRegister.backgroundPatternAddress + Word(self.tilesData.current.nameTable) * 16// + fineY
+            self.tilesData.current.highTileData = self.vramRead(at: address + 8)
         case .flush:
             self.tilesData = (visible: self.tilesData.cached,
                               cached: self.tilesData.current,
