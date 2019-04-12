@@ -402,10 +402,12 @@
 				TargetAttributes = {
 					FE53C830218369ED002BD71F = {
 						CreatedOnToolsVersion = 10.0;
+						LastSwiftMigration = 1020;
 						TestTargetID = FEA27407217C45F70072530A;
 					};
 					FEA27407217C45F70072530A = {
 						CreatedOnToolsVersion = 10.0;
+						LastSwiftMigration = 1020;
 					};
 					FEBA1F3B21820D610044DC8B = {
 						CreatedOnToolsVersion = 10.0;
@@ -612,7 +614,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swiftness-osx-tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ENFORCE_EXCLUSIVE_ACCESS = none;
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/swiftness-osx.app/Contents/MacOS/swiftness-osx";
 			};
 			name = Debug;
@@ -635,7 +637,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swiftness-osx-tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ENFORCE_EXCLUSIVE_ACCESS = none;
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/swiftness-osx.app/Contents/MacOS/swiftness-osx";
 			};
 			name = Release;
@@ -762,7 +764,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "swiftness-osx/swiftness.entitlements";
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = 7LYG6KRX2T;
@@ -779,7 +781,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_ENFORCE_EXCLUSIVE_ACCESS = none;
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -805,7 +807,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_ENFORCE_EXCLUSIVE_ACCESS = none;
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};

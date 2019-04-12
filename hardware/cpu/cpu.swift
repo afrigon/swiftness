@@ -41,15 +41,15 @@ class ProcessorStatusRegister {
         return left.value != right.value
     }
 
-    func set(_ flags: Byte, if condition: Bool? = nil) {
+    func set(flags: Byte, if condition: Bool? = nil) {
         if let condition = condition {
-            return condition ? self.set(flags) : self.unset(flags)
+            return condition ? self.set(flags: flags) : self.unset(flags)
         }
 
         self._value |= flags
     }
 
-    func set(_ flag: Flag, if condition: Bool? = nil) { self.set(flag.rawValue, if: condition) }
+    func set(_ flag: Flag, if condition: Bool? = nil) { self.set(flags: flag.rawValue, if: condition) }
     func unset(_ flags: Byte) { self._value &= ~flags }
     func unset(_ flag: Flag) { self.unset(flag.rawValue) }
     func isSet(_ flag: Flag) -> Bool { return Bool(self.value & flag.rawValue) }

@@ -507,7 +507,7 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
             default: return ""
             }
         case .stack:
-            let address: Word = 0x100 + self.debugger.cpuRegisters.sp + 1 + Word(index)
+            let address: Word = Word(index) + 0x100 + self.debugger.cpuRegisters.sp + 1
             return "$\(address.hex()) = $\(self.debugger.readMemory(at: address).hex())"
         case .ppu:
             switch index {
