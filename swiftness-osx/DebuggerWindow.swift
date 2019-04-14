@@ -684,10 +684,6 @@ class DebuggerWindow: CenteredWindow, DebuggerDelegate, NSTableViewDelegate, NST
         self.debugger.refresh()
     }
 
-    @objc func paletteWindow(_ sender: AnyObject) {
-        PaletteWindow(debugger: self.debugger).getWindowController().showWindow(self)
-    }
-
     @objc func stringSRAM(_ sender: AnyObject) {
         var i: Word = 0x6004
         var value: Byte = 0
@@ -770,7 +766,6 @@ fileprivate class DebuggerToolbar: NSView {
     private let stepFrameButton: DebuggerToolbar.Button!
     private let stepLineButton: DebuggerToolbar.Button!
     private let refreshButton: DebuggerToolbar.Button!
-    private let paletteWindowButton: DebuggerToolbar.Button!
     let breakpointsButton: DebuggerToolbar.Button!
     let runButton: DebuggerToolbar.Button!
     let cycleLabel: DebuggerToolbar.Label!
@@ -800,10 +795,6 @@ fileprivate class DebuggerToolbar: NSView {
                                                       target: debugger,
                                                       action: #selector(debugger.refresh(_:)),
                                                       toolTip: "Refresh memory dump (F6)")
-        self.paletteWindowButton = DebuggerToolbar.Button(image: NSImage(named: "memory"),
-                                                    target: debugger,
-                                                    action: #selector(debugger.paletteWindow(_:)),
-                                                    toolTip: "Show palette window")
         self.cycleLabel = DebuggerToolbar.Label()
         super.init(frame: .zero)
 
@@ -820,7 +811,6 @@ fileprivate class DebuggerToolbar: NSView {
         self.buttonView.addSubview(self.stepLineButton)
         self.buttonView.addSubview(self.stepFrameButton)
         self.buttonView.addSubview(self.refreshButton)
-        self.buttonView.addSubview(self.paletteWindowButton)
         self.addSubview(self.buttonView)
         self.addSubview(self.cycleLabel)
     }
@@ -830,7 +820,6 @@ fileprivate class DebuggerToolbar: NSView {
         self.stepLineButton = nil
         self.stepFrameButton = nil
         self.refreshButton = nil
-        self.paletteWindowButton = nil
         self.breakpointsButton = nil
         self.runButton = nil
         self.cycleLabel = nil
