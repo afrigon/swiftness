@@ -279,6 +279,7 @@ class Debugger {
                 info.textOperand += "\(value.isSignBitOn() ? "-" : "+")$\(offset)"
                 localProgramCounter++
 
+                if localProgramCounter > 0xFFFF { continue }
                 var address = Word(localProgramCounter)
                 if value.isSignBitOn() {
                     address = address &- offset

@@ -88,6 +88,79 @@ class Conductor: EmulatorDelegate {
             return
         }
 
+
+//        let buffer = FrameBuffer(width: NintendoEntertainmentSystem.screenWidth, height: NintendoEntertainmentSystem.screenHeight)
+
+        // color palette debug
+//        let p = Palette()
+//        let sizeX = NintendoEntertainmentSystem.screenWidth / 8
+//        let sizeY = NintendoEntertainmentSystem.screenHeight / 4
+//        for y in 0..<NintendoEntertainmentSystem.screenHeight {
+//            for x in 0..<NintendoEntertainmentSystem.screenWidth {
+//                let i = y / sizeY + (x / sizeX * 4)
+//                let color_pointer = self.nes.ppu.paletteIndices[i]
+//                buffer.set(x: x, y: y, color: p.get(color_pointer))
+//            }
+//        }
+
+        // pattern table debug
+//        let p = Palette()
+//        for y in 0..<16 * 8 {
+//            for x in 0..<16 * 8 {
+//                let tileIndex = Word(x) / 8 + Word(y) / 8 * 16
+//                let address: Word = tileIndex * 16 + Word(y) % 8
+//
+//                let low = self.nes.ppu.vramTempRead(at: address)
+//                let high = self.nes.ppu.vramTempRead(at: address + 8)
+//
+//                let offset = x % 8
+//                let h: Byte = high >> (Byte(7) - Byte(offset)) & Byte(1)
+//                let l: Byte = low >> (Byte(7) - Byte(offset)) & Byte(1)
+//                let i: Byte = h << 1 | l
+//                buffer.set(x: x, y: y, color: p.get(self.nes.ppu.paletteIndices[i]))
+//            }
+//        }
+//
+//        for y in 0..<16 * 8 {
+//            for x in 0..<16 * 8 {
+//                let tileIndex = Word(x) / 8 + Word(y) / 8 * 16
+//                let address: Word = tileIndex * 16 + Word(y) % 8 + 0x1000
+//
+//                let low = self.nes.ppu.vramTempRead(at: address)
+//                let high = self.nes.ppu.vramTempRead(at: address + 8)
+//
+//                let offset = x % 8
+//                let h: Byte = high >> (Byte(7) - Byte(offset)) & Byte(1)
+//                let l: Byte = low >> (Byte(7) - Byte(offset)) & Byte(1)
+//                let i: Byte = h << 1 | l
+//                buffer.set(x: x + 16*8, y: y, color: p.get(self.nes.ppu.paletteIndices[i]))
+//            }
+//        }
+
+        // nametable debug
+//        let p = Palette()
+//        for y in 0..<30 {
+//            for x in 0..<32 {
+//                let tileIndex = y * 32 + x
+//                let tileId = self.nes.ppu.vramRead(at: 0x2000 + Word(tileIndex))
+//
+//                for i in 0..<8 {
+//                    let address: Word = Word(tileId) * 16 + Word(i) + 0x1000
+//                    let low = self.nes.ppu.vramRead(at: address)
+//                    let high = self.nes.ppu.vramRead(at: address + 8)
+//
+//                    for j in 0..<8 {
+//                        let h: Byte = high >> (Byte(7) - Byte(j)) & Byte(1)
+//                        let l: Byte = low >> (Byte(7) - Byte(j)) & Byte(1)
+//                        let index: Byte = h << 1 | l
+//                        buffer.set(x: x * 8 + j, y: y * 8 + i, color: p[self.nes.ppu.paletteIndices[index+12]])
+//                    }
+//                }
+//            }
+//        }
+
+
+//        autoreleasepool { self.renderer.draw(buffer) }
         autoreleasepool { self.renderer.draw(self.nextFrameBuffer!) }
         self.nextFrameBuffer = nil
     }

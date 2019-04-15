@@ -27,15 +27,7 @@ import Foundation
 fileprivate enum CycleType {
     case visible, oam, pre, idle
 
-
     init(_ value: UInt16) {
-//        switch value {
-//        case 2...256: self = .visible
-//        case 257: self = .oam
-//        case 1, 321...336: self = .pre
-//        default: self = .idle
-//        }
-//
         switch value {
         case 1...256: self = .visible
         case 257: self = .oam
@@ -74,7 +66,7 @@ fileprivate enum DataFetchType {
     }
 }
 
-fileprivate class Palette {
+/*fileprivate*/ class Palette {
     var grayscale: Bool = false
     var emphasisRed: Bool = false
     var emphasisGreen: Bool = false
@@ -100,16 +92,18 @@ fileprivate class Palette {
         0x99FFFC, 0xDDDDDD, 0x111111, 0x111111
     ]
 
-    func get(_ index: Byte) -> DWord {
-        let index = index % 64
+    subscript(_ index: Byte) -> DWord {
+        get {
+            let index = index % 64
 
-        if self.grayscale {
-            return self.colors[Int(floor(Double(index) / 16)) * 16]
+            if self.grayscale {
+                return self.colors[Int(floor(Double(index) / 16)) * 16]
+            }
+
+            // TODO: handle emphasis modes
+
+            return self.colors[index]
         }
-
-        // TODO: handle emphasis modes
-
-        return self.colors[index]
     }
 }
 
@@ -119,8 +113,8 @@ class ControlRegister { // 0x2000
 
     var nameTableAddress: Word { return 0x2000 + Word(value & 0b11) * 0x400 }       // 0: 0x2000; 1: 0x2400; 2: 0x2800; 3: 0x2C00
     var increment: Word { return Bool(self.value & 0b00000100) ? 32 : 1 }           // 0: add 1; 1: add 32
-    var spritePatternAddress: Word { return Word((value >> 3) & 1) * 0x1000 }     // 0: $0000; 1: $1000; ignored in 8x16 mode
-    var backgroundPatternAddress: Word { return Word((value >> 4) & 1) * 0x1000 } // 0: $0000; 1: $1000
+    var spritePatternAddress: Word { return Word((value >> 3) & 1) * 0x1000 }       // 0: $0000; 1: $1000; ignored in 8x16 mode
+    var backgroundPatternAddress: Word { return Word((value >> 4) & 1) * 0x1000 }   // 0: $0000; 1: $1000
     var spriteSize: Byte { return Bool(self.value & 0b00010000) ? 16 : 8 }          // 0: 8x8; 1: 8x16
     var masterSlave: Bool { return Bool(self.value & 0b01000000) }
     var interruptEnabled: Bool { return Bool(self.value & 0b10000000) }
@@ -163,22 +157,6 @@ class StatusRegister { // 0x2002
     }
 }
 
-fileprivate struct Tile {
-    // Pointer to tile pattern
-    var nameTable: Byte = 0
-    var attributeTable: Byte = 0
-    var lowTileData: Byte = 0
-    var highTileData: Byte = 0
-
-    func getPaletteIndex(_ index: Byte) -> Byte {
-        let high: Byte = self.highTileData >> (Byte(7) - index) & Byte(1)
-        let low: Byte = self.lowTileData >> (Byte(7) - index) & Byte(1)
-        let paletteOffset: Byte = high << 1 | low
-
-        return self.attributeTable << 2 | paletteOffset
-    }
-}
-
 class PictureProcessingUnit: BusConnectedComponent {
     private weak var bus: Bus!
     let cyclePerScanline: UInt16 = 341
@@ -190,9 +168,10 @@ class PictureProcessingUnit: BusConnectedComponent {
     var scanline: UInt16 { get { return self._scanline } }
     var frame: Int64 { get { return self._frame } }
 
-
     var vramPointer: Word = 0 // private
     private var vramTempPointer: Word = 0
+    private var writeToggle: Byte = 0
+    private var fineX: Byte = 0
     private var vramBufferedData: Byte = 0
 
     private var oamPointer: Byte = 0
@@ -201,16 +180,19 @@ class PictureProcessingUnit: BusConnectedComponent {
     var maskRegister = MaskRegister() // private
     var statusRegister = StatusRegister() // private
 
-    private var paletteIndices = [Byte](repeating: 0x00, count: 32)
+    private let palette = Palette()
+    /*private*/ var paletteIndices = [Byte](repeating: 0x00, count: 32)
     private var nameTable = [Byte](repeating: 0x00, count: 2048)
     private var oam = [Byte](repeating: 0x00, count: 256)
 
-    private let palette = Palette()
-    private var tilesData = (visible: Tile(), cached: Tile(), current: Tile())
-    private var frameBuffers = (rendered: FrameBuffer(), current: FrameBuffer())
+    private var nameTableBuffer: Byte = 0
+    private var attributeTableBuffer: Byte = 0
+    private var lowTileBuffer: Byte = 0
+    private var highTileBuffer: Byte = 0
+    private var shiftRegister: UInt64 = 0
 
+    private var frameBuffers = (rendered: FrameBuffer(), current: FrameBuffer())
     var frameBuffer: FrameBuffer { return self.frameBuffers.rendered }
-    var frameCount: Int64 { return self._frame }
 
     init(using bus: Bus) { self.bus = bus }
 
@@ -255,14 +237,24 @@ class PictureProcessingUnit: BusConnectedComponent {
         case 0x2004:
             self.oam[self.oamPointer] = data
             self.oamPointer++
-        case 0x2005: break // TODO: scroll
-        case 0x2006:
-            // vramTempPointer's lsb used as toggle
-            if !Bool(self.vramTempPointer & 1) {
-                self.vramTempPointer = (Word(data) << 8) | 1
+        case 0x2005:
+            if Bool(self.writeToggle) {
+                self.vramTempPointer = (self.vramTempPointer & 0x8FFF) | ((Word(data) & 0x07) << 12)
+                self.vramTempPointer = (self.vramTempPointer & 0xFC1F) | ((Word(data) & 0xF8) << 2)
+                self.writeToggle = 0
             } else {
-                self.vramPointer = (self.vramTempPointer & Word(0x3F00)) | Word(data)
-                self.vramTempPointer = 0
+                self.vramTempPointer = (self.vramTempPointer & 0xFFE0) | Word(data) >> 3
+                self.fineX = data & 0x07
+                self.writeToggle = 1
+            }
+        case 0x2006:
+            if Bool(self.writeToggle) {
+                self.vramTempPointer = (self.vramTempPointer & 0xFF00) | Word(data)
+                self.vramPointer = self.vramTempPointer
+                self.writeToggle = 0
+            } else {
+                self.vramTempPointer = (self.vramTempPointer & 0x80FF) | ((Word(data) & 0x3F) << 8)
+                self.writeToggle = 1
             }
         case 0x2007:
             self.vramWrite(data, at: self.vramPointer)
@@ -277,10 +269,10 @@ class PictureProcessingUnit: BusConnectedComponent {
         }
     }
 
-    private func vramRead(at address: Word) -> Byte {
+    /*private*/ func vramRead(at address: Word) -> Byte {
         let address: Word = address % 0x4000
         switch address {
-        case 0..<0x2000: return self.bus.readByte(at: address, of: .cartridge) // think this shit is wrong
+        case 0..<0x2000: return self.bus.readByte(at: address, of: .cartridge)
         case 0x2000..<0x3F00: return self.nameTable[address % 2048] // handle mirroring stuff
         case 0x3F00..<0x4000: return self.paletteIndices[address % 32]
         default: return 0
@@ -298,7 +290,7 @@ class PictureProcessingUnit: BusConnectedComponent {
     }
 
     private func verticalBlank() {
-        // Swap buffers and render, TODO: make sure this is a constant time operation
+        // Swap buffers and render, TODO: make sure this is a constant time operation aka just swaping pointers
         self.frameBuffers = (current: self.frameBuffers.rendered,
                              rendered: self.frameBuffers.current)
         self.bus.renderFrame(frameBuffer: self.frameBuffers.rendered)
@@ -309,42 +301,102 @@ class PictureProcessingUnit: BusConnectedComponent {
         }
     }
 
+    // inc hori(v)
+    private func incrementX() {
+        if self.vramPointer & 0x001F == 31 {
+            // set coarse x to 0 and switch horizontal nametable
+            self.vramPointer &= 0xFFE0
+            self.vramPointer ^= 0x0400
+        } else {
+            self.vramPointer++
+        }
+    }
+
+    // inc vert(v)
+    private func incrementY() {
+        // if fine Y < 7
+        if self.vramPointer & 0x7000 != 0x7000 {
+            self.vramPointer += 0x1000 // inc fine y
+        } else {
+            self.vramPointer &= 0x8FFF // fine y = 0
+
+            var coarseY = (self.vramPointer & 0x03E0) >> 5
+            if coarseY == 29 {
+                coarseY = 0
+                self.vramPointer ^= 0x0800 // switch vertical nametable
+            } else if coarseY == 31 {
+                coarseY = 0
+            } else {
+                coarseY++
+            }
+            self.vramPointer = (self.vramPointer & 0xFC1F) | (coarseY << 5)
+        }
+    }
+
+    // hori(v) = hori(t)
+    private func copyX() {
+        self.vramPointer = (self.vramPointer & 0xFBE0) | (self.vramTempPointer & 0x041F)
+    }
+
+    // vert(v) = vert(t)
+    private func copyY() {
+        self.vramPointer = (self.vramPointer & 0x841F) | (self.vramTempPointer & 0x7BE0)
+    }
+
     private func fetchData(type: DataFetchType?) {
         guard let type = type else { return }
 
         switch type {
         case .nameTable:
             let address: Word = 0x2000 | (self.vramPointer & 0x0FFF)
-            self.tilesData.current.nameTable = self.vramRead(at: address)
+            self.nameTableBuffer = self.vramRead(at: address)
         case .attributeTable:
-            let address: Word = 0x23C0 | (self.vramPointer & 0x0C00) | ((self.vramPointer >> 4) & 0x38) | ((self.vramPointer >> 2) & 0x07)
-            let shift: Word = ((self.vramPointer >> 4) & 4) | (self.vramPointer & 2)
-            self.tilesData.current.attributeTable = ((self.vramRead(at: address) >> shift) & 3) << 2
+            let address: Word = 0x23C0 | self.vramPointer & 0x0C00 | self.vramPointer >> 4 & 0x38 | self.vramPointer >> 2 & 0x07
+            let shift: Word = self.vramPointer >> 4 & 4 | self.vramPointer & 2
+            self.attributeTableBuffer = self.vramRead(at: address) >> shift & 3
         case .lowTile:
-            //let fineY: Word = self.vramPointer >> 12 & 7
-            let address: Word = self.controlRegister.backgroundPatternAddress + Word(self.tilesData.current.nameTable) * 16// + fineY
-            self.tilesData.current.lowTileData = self.vramRead(at: address)
+            let fineY: Word = self.vramPointer >> 12 & 7
+            let address: Word = self.controlRegister.backgroundPatternAddress + Word(self.nameTableBuffer) * 16 + fineY
+            self.lowTileBuffer = self.vramRead(at: address)
         case .highTile:
-            //let fineY: Word = self.vramPointer >> 12 & 7
-            let address: Word = self.controlRegister.backgroundPatternAddress + Word(self.tilesData.current.nameTable) * 16// + fineY
-            self.tilesData.current.highTileData = self.vramRead(at: address + 8)
+            let fineY: Word = self.vramPointer >> 12 & 7
+            let address: Word = self.controlRegister.backgroundPatternAddress + Word(self.nameTableBuffer) * 16 + fineY
+            self.highTileBuffer = self.vramRead(at: address + 8)
         case .flush:
-            self.tilesData = (visible: self.tilesData.cached,
-                              cached: self.tilesData.current,
-                              current: Tile())
+            var data: DWord = 0
+            let a = self.attributeTableBuffer << 2
+            for _ in 0..<8 {
+                let lo = (self.lowTileBuffer & 0x80) >> 7
+                let hi = (self.highTileBuffer & 0x80) >> 6
+                self.lowTileBuffer <<= 1
+                self.highTileBuffer <<= 1
+                data <<= 4
+                data |= DWord(a | hi | lo)
+            }
+            self.shiftRegister |= QWord(data)
+            self.incrementX()
         }
     }
 
     private func render(x: UInt16, y: UInt16) {
-        let paletteIndex: Byte = self.paletteIndices[self.tilesData.visible.getPaletteIndex(Byte(x % 8))]
-        let color: DWord = self.palette.get(paletteIndex)
+        var background: Byte = 0
+        if self.maskRegister.showBackground {
+            background = Byte((self.shiftRegister >> 32) >> ((7 - self.fineX) * 4) & 0x0F)
+        }
+
+        let paletteIndex: Byte = self.paletteIndices[background]
+        let color: DWord = self.palette[paletteIndex]
         self.frameBuffers.current.set(x: Int(x), y: Int(y), color: color)
     }
 
     func step() {
-        switch (ScanlineType(self._scanline)!, CycleType(self.cycle)) {
+        let scanlineType = ScanlineType(self._scanline)!
+        let cycleType = CycleType(self.cycle)
+
+        switch (scanlineType, cycleType) {
         case (.visible, .visible) where self.maskRegister.renderingEnabled:
             self.render(x: self.cycle - 1, y: self._scanline)
+            self.shiftRegister <<= 4
             self.fetchData(type: DataFetchType(self.cycle))
 
         case (.pre, .visible) where self.maskRegister.renderingEnabled:
@@ -360,6 +412,16 @@ class PictureProcessingUnit: BusConnectedComponent {
             self.statusRegister.clear()
         default: break
         }
+
+        if self.maskRegister.renderingEnabled {
+            if scanlineType == .pre && self.cycle >= 280 && self.cycle <= 304 { self.copyY() }
+            if scanlineType == .pre || scanlineType == .visible {
+                if self.cycle == 256 { self.incrementY() }
+                if self.cycle == 257 { self.copyX() }
+            }
+        }
+
+        // sprite stuff
 
         self.cycle = (self.cycle + 1) % self.cyclePerScanline
         if self.cycle == 0 {
@@ -381,7 +443,6 @@ class PictureProcessingUnit: BusConnectedComponent {
         self.maskRegister &= 0
         self.oamPointer = 0
 
-        self.tilesData = (visible: Tile(), cached: Tile(), current: Tile())
         self.frameBuffers = (rendered: FrameBuffer(), current: FrameBuffer())
         self.bus.renderFrame(frameBuffer: self.frameBuffers.rendered)
     }
