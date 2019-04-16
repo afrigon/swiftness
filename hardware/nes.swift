@@ -30,7 +30,6 @@ class NintendoEntertainmentSystem: BusDelegate {
     static let screenWidth: Int = 256
     static let screenHeight: Int = 240
 
-    private weak var delegate: EmulatorDelegate!
     private let cpu: CoreProcessingUnit
     let ppu: PictureProcessingUnit // private
     private let apu = AudioProcessingUnit()
@@ -58,8 +57,7 @@ class NintendoEntertainmentSystem: BusDelegate {
         return self.cartridge.mirroring
     }
 
-    init(load game: Cartridge, hostedBy delegate: EmulatorDelegate) {
-        self.delegate = delegate
+    init(load game: Cartridge) {
         self.cpu = CoreProcessingUnit(using: self.bus)
         self.ppu = PictureProcessingUnit(using: self.bus)
         self.cartridge = game
@@ -127,10 +125,6 @@ class NintendoEntertainmentSystem: BusDelegate {
 
     func bus(bus: Bus, shouldTriggerInterrupt type: InterruptType) {
         self.cpu.requestInterrupt(type: type)
-    }
-
-    func bus(bus: Bus, shouldRenderFrame frameBuffer: FrameBuffer) {
-        self.delegate!.emulator(nes: self, shouldRenderFrame: frameBuffer)
     }
 
     func bus(bus: Bus, didBlockFor cycles: UInt16) {

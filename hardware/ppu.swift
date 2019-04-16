@@ -115,6 +115,32 @@ class StatusRegister { // 0x2002
     }
 }
 
+fileprivate struct Tile {
+    var nameTable: Byte = 0
+    var attributeTable: Byte = 0
+    var lowTile: Byte = 0
+    var highTile: Byte = 0
+
+    func pixelData(flip: Bool = false) -> DWord {
+        var data: DWord = 0
+        let a = self.attributeTable << 2
+        for i in 0..<8 {
+            let lo = self.lowTile >> (7 - i) & Byte(1)
+            let hi = self.highTile >> (6 - i) & Byte(2)
+            let shift = 4 * (flip ? i : (7 - i))
+            data |= DWord(a | hi | lo) << shift
+        }
+        return data
+    }
+}
+
+fileprivate struct Sprite {
+    var pattern: DWord = 0
+    var position: Byte = 0
+    var index: Byte = 0
+    var priority: Bool = false
+}
+
 class PictureProcessingUnit: BusConnectedComponent {
     static let cyclePerScanline: UInt16 = 341
     static let scanlinePerFrame: UInt16 = 262
@@ -146,17 +172,11 @@ class PictureProcessingUnit: BusConnectedComponent {
     private var nameTable = [Byte](repeating: 0x00, count: 2048)
     private var oam = [Byte](repeating: 0x00, count: 256)
 
-    private var nameTableBuffer: Byte = 0
-    private var attributeTableBuffer: Byte = 0
-    private var lowTileBuffer: Byte = 0
-    private var highTileBuffer: Byte = 0
     private var shiftRegister: UInt64 = 0
+    private var tileBuffer = Tile()
 
     private var spriteCount: Byte = 0
-    private var spritePatterns: [DWord] = Array(repeating: 0x00000000, count: 8)
-    private var spritePositions: [Byte] = Array(repeating: 0x00, count: 8)
-    private var spritePriorities: [Byte] = Array(repeating: 0x00, count: 8)
-    private var spriteIndices: [Byte] = Array(repeating: 0x00, count: 8)
+    private var sprites: [Sprite] = Array(repeating: Sprite(), count: 8)
 
     private var frameBufferA = FrameBuffer()
     private var frameBufferB = FrameBuffer()
@@ -276,10 +296,8 @@ class PictureProcessingUnit: BusConnectedComponent {
     }
 
     private func verticalBlank() {
-        // Swap buffers and render
         self.frameBuffers = (current: self.frameBuffers.rendered,
                              rendered: self.frameBuffers.current)
-        //self.bus.renderFrame(frameBuffer: &self.frameBuffers.rendered)
         self.statusRegister.vblank = true
 
         if self.controlRegister.interruptEnabled {
@@ -333,38 +351,65 @@ class PictureProcessingUnit: BusConnectedComponent {
         switch type {
         case 1: // name table
             let address: Word = 0x2000 | (self.vramPointer & 0x0FFF)
-            self.nameTableBuffer = self.vramRead(at: address)
+            self.tileBuffer.nameTable = self.vramRead(at: address)
         case 3: // attribute table
             let address: Word = 0x23C0 | self.vramPointer & 0x0C00 | self.vramPointer >> 4 & 0x38 | self.vramPointer >> 2 & 0x07
             let shift: Word = self.vramPointer >> 4 & 4 | self.vramPointer & 2
-            self.attributeTableBuffer = self.vramRead(at: address) >> shift & 3
+            self.tileBuffer.attributeTable = self.vramRead(at: address) >> shift & 3
         case 5: // low tile
             let fineY: Word = self.vramPointer >> 12 & 7
-            let address: Word = self.controlRegister.backgroundPatternAddress + Word(self.nameTableBuffer) * 16 + fineY
-            self.lowTileBuffer = self.vramRead(at: address)
+            let address: Word = self.controlRegister.backgroundPatternAddress + Word(self.tileBuffer.nameTable) * 16 + fineY
+            self.tileBuffer.lowTile = self.vramRead(at: address)
         case 7: // high tile
             let fineY: Word = self.vramPointer >> 12 & 7
-            let address: Word = self.controlRegister.backgroundPatternAddress + Word(self.nameTableBuffer) * 16 + fineY
-            self.highTileBuffer = self.vramRead(at: address + 8)
+            let address: Word = self.controlRegister.backgroundPatternAddress + Word(self.tileBuffer.nameTable) * 16 + fineY
+            self.tileBuffer.highTile = self.vramRead(at: address + 8)
         case 0: // flush
-            var data: DWord = 0
-            let a = self.attributeTableBuffer << 2
-            for _ in 0..<8 {
-                let lo = (self.lowTileBuffer & 0x80) >> 7
-                let hi = (self.highTileBuffer & 0x80) >> 6
-                self.lowTileBuffer <<= 1
-                self.highTileBuffer <<= 1
-                data <<= 4
-                data |= DWord(a | hi | lo)
-            }
-            self.shiftRegister |= QWord(data)
+            self.shiftRegister |= QWord(self.tileBuffer.pixelData())
             self.incrementX()
         default: break
         }
     }
 
     private func fetchSpriteData() {
+        self.spriteCount = 0
+        for i in 0..<64 {
+            let tileAttributes = self.oam[i * 4 + 2]
+            var row: Word = self.scanline &- Word(self.oam[i * 4])
+            if row < 0 || row >= self.controlRegister.spriteSize { continue }
 
+            if self.spriteCount < 8 {
+                self.sprites[self.spriteCount].position = self.oam[i * 4 + 3]
+                self.sprites[self.spriteCount].priority = Bool(tileAttributes & 0x20)
+                self.sprites[self.spriteCount].index = Byte(i)
+
+                // fetching sprite pattern
+                var tileIndex = self.oam[i * 4 + 1]
+                var patternTable: Word = 0
+
+                if Bool(tileAttributes & 0x80) {
+                    row = self.controlRegister.spriteSize - 1 - row
+                }
+
+                if self.controlRegister.spriteSize == 8 {
+                    patternTable = self.controlRegister.spritePatternAddress
+                } else {
+                    patternTable = Word(tileIndex & 1) * 0x1000
+                    tileIndex &= 0xFE
+                    if row > 7 { tileIndex++; row -= 8 }
+                }
+
+                let address: Word = patternTable + Word(tileIndex) * 16 + row
+                let tile = Tile(nameTable: 0, attributeTable: tileAttributes & 0b11, lowTile: self.vramRead(at: address), highTile: self.vramRead(at: address + 8))
+                self.sprites[self.spriteCount].pattern = tile.pixelData(flip: Bool(tileAttributes & 0x40))
+            }
+
+            self.spriteCount++
+        }
+        if self.spriteCount > 8 {
+            self.spriteCount = 8
+            self.statusRegister.spriteOverflow = true
+        }
     }
 
     private func render(x: UInt16, y: UInt16) {
@@ -382,10 +427,10 @@ class PictureProcessingUnit: BusConnectedComponent {
         if self.maskRegister.showSprites {
             if x >= 8 || !self.maskRegister.clipSprites {
                 for i in 0..<self.spriteCount {
-                    var offset = self.cycle - 1 - Word(self.spritePositions[i])
+                    var offset = x &- Word(self.sprites[i].position)
                     if offset < 0 || offset > 7 { continue }
                     offset = 7 - offset
-                    let color = Byte(self.spritePatterns[i] >> Byte(offset * 4) & 0x0F)
+                    let color = Byte(self.sprites[i].pattern >> Byte(offset * 4) & 0x0F)
                     if color % 4 == 0 { continue }
                     spriteIndex = i
                     spriteColorIndex = color
@@ -398,15 +443,13 @@ class PictureProcessingUnit: BusConnectedComponent {
         let renderSprite = spriteColorIndex % 4 != 0
 
         if renderBackground && renderSprite {
-            if self.spriteIndices[spriteIndex] == 0 && x < 255 {
+            if self.sprites[spriteIndex].index == 0 && x < 255 {
                 self.statusRegister.spriteZeroHit = true
             }
 
-            if self.spritePriorities[spriteIndex] == 0 {
-                colorIndex = spriteColorIndex | 0x10
-            } else {
-                colorIndex = backgroundColorIndex
-            }
+            colorIndex = self.sprites[spriteIndex].priority ?
+                spriteColorIndex | 0x10 :
+                backgroundColorIndex
         } else {
             if renderSprite {
                 colorIndex = spriteColorIndex | 0x10

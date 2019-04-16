@@ -24,11 +24,7 @@
 
 import Foundation
 
-protocol EmulatorDelegate: AnyObject {
-    func emulator(nes: NintendoEntertainmentSystem, shouldRenderFrame frameBuffer: FrameBuffer)
-}
-
-class Conductor: EmulatorDelegate {
+class Conductor {
     private var nes: NintendoEntertainmentSystem! = nil
     private let renderer: Renderer
     private let loop: LogicLoop
@@ -51,7 +47,7 @@ class Conductor: EmulatorDelegate {
 
         guard let game: Cartridge = NesFile.load(path: filepath) else { return nil }
         // * blows a bit into the cardridge *
-        self.nes = NintendoEntertainmentSystem(load: game, hostedBy: self)
+        self.nes = NintendoEntertainmentSystem(load: game)
 
         self.updateClosure.append(self.update(_:))
         self.loop.start(closure: self.loopClosure)
@@ -65,7 +61,7 @@ class Conductor: EmulatorDelegate {
     }
 
     private func loopClosure(_ deltaTime: Double) {
-        print((self.loop as! CVDisplayLinkLoop).status)
+        //print((self.loop as! CVDisplayLinkLoop).status)
         self.processInput()
         for f in self.updateClosure {
             f(deltaTime)
@@ -84,24 +80,7 @@ class Conductor: EmulatorDelegate {
     }
 
     private func render() {
-//        guard self.nextFrameBuffer != nil else {
-//            return
-//        }
-
-
 //        let buffer = FrameBuffer(width: NintendoEntertainmentSystem.screenWidth, height: NintendoEntertainmentSystem.screenHeight)
-
-        // color palette debug
-//        let p = Palette()
-//        let sizeX = NintendoEntertainmentSystem.screenWidth / 8
-//        let sizeY = NintendoEntertainmentSystem.screenHeight / 4
-//        for y in 0..<NintendoEntertainmentSystem.screenHeight {
-//            for x in 0..<NintendoEntertainmentSystem.screenWidth {
-//                let i = y / sizeY + (x / sizeX * 4)
-//                let color_pointer = self.nes.ppu.paletteIndices[i]
-//                buffer.set(x: x, y: y, color: p.get(color_pointer))
-//            }
-//        }
 
         // pattern table debug
 //        let p = Palette()
@@ -159,14 +138,7 @@ class Conductor: EmulatorDelegate {
 //            }
 //        }
 
-
 //        autoreleasepool { self.renderer.draw(buffer) }
-        //autoreleasepool { self.renderer.draw(self.nextFrameBuffer!) }
         autoreleasepool { self.renderer.draw(self.nes.ppu.frameBuffer) }
-        //self.nextFrameBuffer = nil
-    }
-
-    func emulator(nes: NintendoEntertainmentSystem, shouldRenderFrame frameBuffer: FrameBuffer) {
-        //self.nextFrameBuffer = frameBuffer
     }
 }
