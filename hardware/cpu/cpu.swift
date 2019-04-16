@@ -368,13 +368,61 @@ class CoreProcessingUnit {
 
     private func buildOperand(using addressingMode: AddressingMode) -> Operand {
         switch addressingMode {
-        case .zeroPage(let alteration): return ZeroPageAddressingOperandBuilder(alteration).evaluate(&regs, memory)
-        case .absolute(let alteration, let shouldFetchValue): return AbsoluteAddressingOperandBuilder(alteration, shouldFetchValue).evaluate(&regs, memory)
-        case .relative: return RelativeAddressingOperandBuilder().evaluate(&regs, memory)
-        case .indirect(let alteration): return IndirectAddressingMode(alteration).evaluate(&regs, memory)
-        case .immediate: return ImmediateAddressingOperandBuilder().evaluate(&regs, memory)
+        case .zeroPage(let alteration):
+            let alterationValue: Byte = alteration != .none ? (alteration == .x ? regs.x : regs.y) : 0
+            var operand = Operand()
+            operand.address = (self.memory.readByte(at: regs.pc).asWord() + alterationValue) & 0xFF
+            operand.value = self.memory.readByte(at: operand.address).asWord()
+            regs.pc++
+            return operand
+        case .absolute(let alteration, let shouldFetchValue):
+            let alterationValue: Byte = alteration != .none ? (alteration == .x ? regs.x : regs.y) : 0
+            var operand = Operand()
+            operand.address = self.memory.readWord(at: regs.pc) + alterationValue
+            if shouldFetchValue { operand.value = self.memory.readByte(at: operand.address).asWord() }
+            regs.pc += 2
+            operand.additionalCycles = alteration == .none
+                ? 0
+                : UInt8(operand.address.isAtSamePage(than: operand.address - (alteration == .x
+                    ? regs.x
+                    : regs.y)))
+            return operand
+        case .relative:
+            var operand = Operand()
+
+            // transform the relative address into an absolute address
+            let value = self.memory.readByte(at: regs.pc)
+            regs.pc++
+            operand.address = regs.pc
+            if value.isSignBitOn() {
+                operand.address -= Word(128 - value & 0b01111111)
+            } else {
+                operand.address += value.asWord() & 0b01111111
+            }
+
+            operand.additionalCycles = UInt8(regs.pc.isAtSamePage(than: operand.address))
+            return operand
+        case .indirect(let alteration):
+            let addressPointer: Word = ((alteration == .none
+                ? self.memory.readWord(at: regs.pc)
+                : self.memory.readByte(at: regs.pc).asWord())
+                + (alteration == .x ? regs.x.asWord() : 0))
+                & (alteration == .none ? 0xFFFF : 0xFF)
+
+            var operand = Operand()
+            operand.address = self.memory.readWordGlitched(at: addressPointer) &+ (alteration == .y ? regs.y : 0)
+            operand.value = self.memory.readByte(at: operand.address).asWord()
+
+            regs.pc += alteration == .none ? 2 : 1
+            operand.additionalCycles = alteration == .y ? UInt8(operand.address.isAtSamePage(than: operand.address &- regs.y)) : 0
+            return operand
+        case .immediate:
+            var operand = Operand()
+            operand.value = self.memory.readByte(at: regs.pc).asWord()
+            regs.pc++
+            return operand
         case .implied, .accumulator: fallthrough
-        default: return EmptyOperandBuilder().evaluate(&regs, memory)
+        default: return Operand()
         }
     }
 

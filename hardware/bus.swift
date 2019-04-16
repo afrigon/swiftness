@@ -55,28 +55,20 @@ class Bus {
         delegate.bus(bus: self, didBlockFor: cycles)
     }
 
-    func readByte(at address: Word, of component: Component? = nil) -> Byte {
+    func readByte(at address: Word, rom: Bool = false) -> Byte {
         guard let delegate = self.delegate else {
             fatalError("A bus delegate must be assign before any read or write signal is sent over the bus")
         }
 
-        if let component = component {
-            return delegate.bus(bus: self, didSendReadSignalAt: address, of: component)
-        }
-
-        return delegate.bus(bus: self, didSendReadSignalAt: address)
+        return delegate.bus(bus: self, didSendReadSignalAt: address, rom: rom)
     }
 
-    func writeByte(_ data: Byte, at address: Word, of component: Component? = nil) {
+    func writeByte(_ data: Byte, at address: Word, rom: Bool = false) {
         guard let delegate = self.delegate else {
             fatalError("A bus delegate must be assign before any read or write signal is sent over the bus")
         }
 
-        if let component = component {
-            return delegate.bus(bus: self, didSendWriteSignalAt: address, of: component, data: data)
-        }
-
-        delegate.bus(bus: self, didSendWriteSignalAt: address, data: data)
+        delegate.bus(bus: self, didSendWriteSignalAt: address, data: data, rom: rom)
     }
 }
 
@@ -86,8 +78,6 @@ protocol BusDelegate: AnyObject {
     func bus(bus: Bus, shouldTriggerInterrupt type: InterruptType)
     func bus(bus: Bus, shouldRenderFrame frameBuffer: FrameBuffer)
     func bus(bus: Bus, didBlockFor cycles: UInt16)
-    func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte
-    func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte)
-    func bus(bus: Bus, didSendReadSignalAt address: Word, of component: Component) -> Byte
-    func bus(bus: Bus, didSendWriteSignalAt address: Word, of component: Component, data: Byte)
+    func bus(bus: Bus, didSendReadSignalAt address: Word, rom: Bool) -> Byte
+    func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte, rom: Bool)
 }

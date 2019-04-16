@@ -29,7 +29,6 @@ protocol EmulatorDelegate: AnyObject {
 }
 
 class Conductor: EmulatorDelegate {
-    private weak var nextFrameBuffer: FrameBuffer?
     private var nes: NintendoEntertainmentSystem! = nil
     private let renderer: Renderer
     private let loop: LogicLoop
@@ -66,6 +65,7 @@ class Conductor: EmulatorDelegate {
     }
 
     private func loopClosure(_ deltaTime: Double) {
+        print((self.loop as! CVDisplayLinkLoop).status)
         self.processInput()
         for f in self.updateClosure {
             f(deltaTime)
@@ -84,9 +84,9 @@ class Conductor: EmulatorDelegate {
     }
 
     private func render() {
-        guard self.nextFrameBuffer != nil else {
-            return
-        }
+//        guard self.nextFrameBuffer != nil else {
+//            return
+//        }
 
 
 //        let buffer = FrameBuffer(width: NintendoEntertainmentSystem.screenWidth, height: NintendoEntertainmentSystem.screenHeight)
@@ -161,11 +161,12 @@ class Conductor: EmulatorDelegate {
 
 
 //        autoreleasepool { self.renderer.draw(buffer) }
-        autoreleasepool { self.renderer.draw(self.nextFrameBuffer!) }
-        self.nextFrameBuffer = nil
+        //autoreleasepool { self.renderer.draw(self.nextFrameBuffer!) }
+        autoreleasepool { self.renderer.draw(self.nes.ppu.frameBuffer) }
+        //self.nextFrameBuffer = nil
     }
 
     func emulator(nes: NintendoEntertainmentSystem, shouldRenderFrame frameBuffer: FrameBuffer) {
-        self.nextFrameBuffer = frameBuffer
+        //self.nextFrameBuffer = frameBuffer
     }
 }

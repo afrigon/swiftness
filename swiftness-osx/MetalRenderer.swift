@@ -175,15 +175,15 @@ class MetalRenderer: Renderer {
         commandBuffer.commit()
     }
 
-    func draw(_ image: FrameBuffer) {
-        if self.textureDescriptor == nil || self.textureDescriptor!.width != image.size.width || self.textureDescriptor!.height != image.size.height {
-            self.configureTextureDescriptor(width: image.size.width, height: image.size.height)
+    func draw(_ image: UnsafeMutablePointer<FrameBuffer>) {
+        if self.textureDescriptor == nil || self.textureDescriptor!.width != image.pointee.size.width || self.textureDescriptor!.height != image.pointee.size.height {
+            self.configureTextureDescriptor(width: image.pointee.size.width, height: image.pointee.size.height)
         }
 
         self.texture.replace(region: self.textureRegion,
                              mipmapLevel: 0,
-                             withBytes: image.data,
-                             bytesPerRow: 4 * image.size.width)
+                             withBytes: image.pointee.data,
+                             bytesPerRow: 4 * image.pointee.size.width)
 
         self.createCommandEncoder { encoder in
             encoder.setRenderPipelineState(self.pipelineState)

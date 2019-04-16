@@ -37,33 +37,39 @@ class CNROM: Mapper {
     }
 
     func busRead(at address: Word) -> Byte {
-        switch address {
-        case 0..<0x2000:
+        if address < 0x2000 {
             let address: DWord = DWord(self.chrIndex * self.chrBankSize + address)
             return self.delegate.mapper(mapper: self, didReadAt: address, of: .chr)
-        case 0x6000..<0x8000:
+        }
+
+        if address >= 0x6000 && address < 0x8000 {
             let address: DWord = DWord(address - 0x6000)
             return self.delegate.mapper(mapper: self, didReadAt: address, of: .sram)
-        case 0x8000..<0xC000:
+        }
+
+        if address >= 0x8000 && address < 0xC000 {
             let address: DWord = DWord(address - 0x8000)
             return self.delegate.mapper(mapper: self, didReadAt: address, of: .prg)
-        case 0xC000...0xFFFF:
+        }
+
+        if address >= 0xC000 {
             let address: DWord = DWord(address - 0xC000)
                 + DWord(self.prgBankSize * (self.prgMirrored ? 0 : 1))
             return self.delegate.mapper(mapper: self, didReadAt: address, of: .prg)
-        default:
-            print("CNROM mapper invalid read at 0x\(address.hex())")
-            return 0
         }
+
+        print("CNROM mapper invalid read at 0x\(address.hex())")
+        return 0
     }
 
     func busWrite(_ data: Byte, at address: Word) {
-        switch address {
-        case 0..<0x2000:
+        if address < 0x2000 {
             let address = Word(self.chrIndex * self.chrBankSize + address)
             self.delegate.mapper(mapper: self, didWriteAt: address, of: .chr, data: data)
-        case 0x8000...0xFFFF: self.chrIndex = Word(data & 0b11)
-        default: print("CNROM mapper invalid write at 0x\(address.hex())")
+        } else if address >= 0x8000 {
+            self.chrIndex = Word(data & 0b11)
+        } else {
+            print("CNROM mapper invalid write at 0x\(address.hex())")
         }
     }
 }

@@ -24,48 +24,6 @@
 
 import Foundation
 
-fileprivate enum CycleType {
-    case visible, oam, pre, idle
-
-    init(_ value: UInt16) {
-        switch value {
-        case 1...256: self = .visible
-        case 257: self = .oam
-        case 321...336: self = .pre
-        default: self = .idle
-        }
-    }
-}
-
-fileprivate enum ScanlineType {
-    case visible, post, vblank, pre
-
-    init?(_ value: UInt16) {
-        switch value {
-        case 0...239: self = .visible
-        case 240: self = .post
-        case 241...260: self = .vblank
-        case 261: self = .pre
-        default: return nil
-        }
-    }
-}
-
-fileprivate enum DataFetchType {
-    case nameTable, attributeTable, lowTile, highTile, flush
-
-    init?(_ value: UInt16) {
-        switch value % 8 {
-        case 1: self = .nameTable
-        case 3: self = .attributeTable
-        case 4: self = .lowTile
-        case 7: self = .highTile
-        case 0: self = .flush
-        default: return nil
-        }
-    }
-}
-
 /*fileprivate*/ class Palette {
     var grayscale: Bool = false
     var emphasisRed: Bool = false
@@ -125,8 +83,8 @@ class MaskRegister { // 0x2001
     static func &= (left: inout MaskRegister, right: Byte) { left.value = right }
 
     var greyscale: Bool { return Bool(self.value & 0b00000001) }
-    var clipBackground: Bool { return Bool(self.value & 0b00000010) }
-    var clipSprites: Bool { return Bool(self.value & 0b00000100) }
+    var clipBackground: Bool { return !Bool(self.value & 0b00000010) }
+    var clipSprites: Bool { return !Bool(self.value & 0b00000100) }
     var showBackground: Bool { return Bool(self.value & 0b00001000) }
     var showSprites: Bool { return Bool(self.value & 0b00010000) }
     var emphasisRed: Bool { return Bool(self.value & 0b00100000) }
@@ -158,9 +116,10 @@ class StatusRegister { // 0x2002
 }
 
 class PictureProcessingUnit: BusConnectedComponent {
+    static let cyclePerScanline: UInt16 = 341
+    static let scanlinePerFrame: UInt16 = 262
+
     private weak var bus: Bus!
-    let cyclePerScanline: UInt16 = 341
-    let scanlinePerFrame: UInt16 = 262
 
     var cycle: UInt16 = 0 // private
     private var _scanline: UInt16 = 0
@@ -171,6 +130,7 @@ class PictureProcessingUnit: BusConnectedComponent {
     var vramPointer: Word = 0 // private
     private var vramTempPointer: Word = 0
     private var writeToggle: Byte = 0
+    private var evenFrame: Byte = 0
     private var fineX: Byte = 0
     private var vramBufferedData: Byte = 0
 
@@ -179,9 +139,10 @@ class PictureProcessingUnit: BusConnectedComponent {
     var controlRegister = ControlRegister() // private
     var maskRegister = MaskRegister() // private
     var statusRegister = StatusRegister() // private
+    var mirroring: ScreenMirroring = .horizontal
 
     private let palette = Palette()
-    /*private*/ var paletteIndices = [Byte](repeating: 0x00, count: 32)
+    private var paletteIndices = [Byte](repeating: 0x00, count: 32)
     private var nameTable = [Byte](repeating: 0x00, count: 2048)
     private var oam = [Byte](repeating: 0x00, count: 256)
 
@@ -191,10 +152,21 @@ class PictureProcessingUnit: BusConnectedComponent {
     private var highTileBuffer: Byte = 0
     private var shiftRegister: UInt64 = 0
 
-    private var frameBuffers = (rendered: FrameBuffer(), current: FrameBuffer())
-    var frameBuffer: FrameBuffer { return self.frameBuffers.rendered }
+    private var spriteCount: Byte = 0
+    private var spritePatterns: [DWord] = Array(repeating: 0x00000000, count: 8)
+    private var spritePositions: [Byte] = Array(repeating: 0x00, count: 8)
+    private var spritePriorities: [Byte] = Array(repeating: 0x00, count: 8)
+    private var spriteIndices: [Byte] = Array(repeating: 0x00, count: 8)
 
-    init(using bus: Bus) { self.bus = bus }
+    private var frameBufferA = FrameBuffer()
+    private var frameBufferB = FrameBuffer()
+    private var frameBuffers: (rendered: UnsafeMutablePointer<FrameBuffer>, current: UnsafeMutablePointer<FrameBuffer>)
+    var frameBuffer: UnsafeMutablePointer<FrameBuffer> { return self.frameBuffers.rendered }
+
+    init(using bus: Bus) {
+        self.bus = bus
+        self.frameBuffers = (rendered: UnsafeMutablePointer<FrameBuffer>(&self.frameBufferA), current: UnsafeMutablePointer<FrameBuffer>(&self.frameBufferB))
+    }
 
     private func normalize(_ address: Word) -> Word {
         if address >= 0x4000 { return address }
@@ -271,29 +243,43 @@ class PictureProcessingUnit: BusConnectedComponent {
 
     /*private*/ func vramRead(at address: Word) -> Byte {
         let address: Word = address % 0x4000
-        switch address {
-        case 0..<0x2000: return self.bus.readByte(at: address, of: .cartridge)
-        case 0x2000..<0x3F00: return self.nameTable[address % 2048] // handle mirroring stuff
-        case 0x3F00..<0x4000: return self.paletteIndices[address % 32]
-        default: return 0
+
+        if address < 0x2000 {
+            return self.bus.readByte(at: address, rom: true)
         }
+
+        if address < 0x3F00 {
+            return self.nameTable[self.mirroring.translate(address) % 2048]
+        }
+
+        if address < 0x4000 {
+            return self.paletteIndices[address % 32]
+        }
+
+        return 0
     }
 
     private func vramWrite(_ data: Byte, at address: Word) {
         let address: Word = address % 0x4000
-        switch address {
-        case 0..<0x2000: self.bus.writeByte(data, at: address, of: .cartridge)
-        case 0x2000..<0x3F00: self.nameTable[address % 2048] = data
-        case 0x3F00..<0x4000: self.paletteIndices[address % 32] = data
-        default: return
+
+        if address < 0x2000 {
+            return self.bus.writeByte(data, at: address, rom: true)
+        }
+
+        if address < 0x3F00 {
+            return self.nameTable[self.mirroring.translate(address) % 2048] = data
+        }
+
+        if address < 0x4000 {
+            return self.paletteIndices[address % 32] = data
         }
     }
 
     private func verticalBlank() {
-        // Swap buffers and render, TODO: make sure this is a constant time operation aka just swaping pointers
+        // Swap buffers and render
         self.frameBuffers = (current: self.frameBuffers.rendered,
                              rendered: self.frameBuffers.current)
-        self.bus.renderFrame(frameBuffer: self.frameBuffers.rendered)
+        //self.bus.renderFrame(frameBuffer: &self.frameBuffers.rendered)
         self.statusRegister.vblank = true
 
         if self.controlRegister.interruptEnabled {
@@ -343,26 +329,24 @@ class PictureProcessingUnit: BusConnectedComponent {
         self.vramPointer = (self.vramPointer & 0x841F) | (self.vramTempPointer & 0x7BE0)
     }
 
-    private func fetchData(type: DataFetchType?) {
-        guard let type = type else { return }
-
+    private func fetchData(type: Word) {
         switch type {
-        case .nameTable:
+        case 1: // name table
             let address: Word = 0x2000 | (self.vramPointer & 0x0FFF)
             self.nameTableBuffer = self.vramRead(at: address)
-        case .attributeTable:
+        case 3: // attribute table
             let address: Word = 0x23C0 | self.vramPointer & 0x0C00 | self.vramPointer >> 4 & 0x38 | self.vramPointer >> 2 & 0x07
             let shift: Word = self.vramPointer >> 4 & 4 | self.vramPointer & 2
             self.attributeTableBuffer = self.vramRead(at: address) >> shift & 3
-        case .lowTile:
+        case 5: // low tile
             let fineY: Word = self.vramPointer >> 12 & 7
             let address: Word = self.controlRegister.backgroundPatternAddress + Word(self.nameTableBuffer) * 16 + fineY
             self.lowTileBuffer = self.vramRead(at: address)
-        case .highTile:
+        case 7: // high tile
             let fineY: Word = self.vramPointer >> 12 & 7
             let address: Word = self.controlRegister.backgroundPatternAddress + Word(self.nameTableBuffer) * 16 + fineY
             self.highTileBuffer = self.vramRead(at: address + 8)
-        case .flush:
+        case 0: // flush
             var data: DWord = 0
             let a = self.attributeTableBuffer << 2
             for _ in 0..<8 {
@@ -375,62 +359,121 @@ class PictureProcessingUnit: BusConnectedComponent {
             }
             self.shiftRegister |= QWord(data)
             self.incrementX()
+        default: break
         }
+    }
+
+    private func fetchSpriteData() {
+
     }
 
     private func render(x: UInt16, y: UInt16) {
-        var background: Byte = 0
+        var backgroundColorIndex: Byte = 0
+        var spriteColorIndex: Byte = 0
+        var spriteIndex: Byte = 0
+        var colorIndex: Byte = 0
+
         if self.maskRegister.showBackground {
-            background = Byte((self.shiftRegister >> 32) >> ((7 - self.fineX) * 4) & 0x0F)
-        }
-
-        let paletteIndex: Byte = self.paletteIndices[background]
-        let color: DWord = self.palette[paletteIndex]
-        self.frameBuffers.current.set(x: Int(x), y: Int(y), color: color)
-    }
-
-    func step() {
-        let scanlineType = ScanlineType(self._scanline)!
-        let cycleType = CycleType(self.cycle)
-
-        switch (scanlineType, cycleType) {
-        case (.visible, .visible) where self.maskRegister.renderingEnabled:
-            self.render(x: self.cycle - 1, y: self._scanline)
-            self.shiftRegister <<= 4
-            self.fetchData(type: DataFetchType(self.cycle))
-
-        case (.pre, .visible) where self.maskRegister.renderingEnabled:
-            self.fetchData(type: DataFetchType(self.cycle))
-
-        case (.pre, .pre) where self.maskRegister.renderingEnabled:
-            self.fetchData(type: DataFetchType(self.cycle))
-
-        case (.vblank, _) where self._scanline == 241 && self.cycle == 1:
-            self.verticalBlank()
-
-        case (.pre, _) where self.cycle == 1:
-            self.statusRegister.clear()
-        default: break
-        }
-
-        if self.maskRegister.renderingEnabled {
-            if scanlineType == .pre && self.cycle >= 280 && self.cycle <= 304 { self.copyY() }
-            if scanlineType == .pre || scanlineType == .visible {
-                if self.cycle == 256 { self.incrementY() }
-                if self.cycle == 257 { self.copyX() }
+            if x >= 8 || !self.maskRegister.clipBackground {
+                backgroundColorIndex = Byte((self.shiftRegister >> 32) >> ((7 - self.fineX) * 4) & 0x0F)
             }
         }
 
-        // sprite stuff
+        if self.maskRegister.showSprites {
+            if x >= 8 || !self.maskRegister.clipSprites {
+                for i in 0..<self.spriteCount {
+                    var offset = self.cycle - 1 - Word(self.spritePositions[i])
+                    if offset < 0 || offset > 7 { continue }
+                    offset = 7 - offset
+                    let color = Byte(self.spritePatterns[i] >> Byte(offset * 4) & 0x0F)
+                    if color % 4 == 0 { continue }
+                    spriteIndex = i
+                    spriteColorIndex = color
+                    break
+                }
+            }
+        }
 
-        self.cycle = (self.cycle + 1) % self.cyclePerScanline
+        let renderBackground = backgroundColorIndex % 4 != 0
+        let renderSprite = spriteColorIndex % 4 != 0
+
+        if renderBackground && renderSprite {
+            if self.spriteIndices[spriteIndex] == 0 && x < 255 {
+                self.statusRegister.spriteZeroHit = true
+            }
+
+            if self.spritePriorities[spriteIndex] == 0 {
+                colorIndex = spriteColorIndex | 0x10
+            } else {
+                colorIndex = backgroundColorIndex
+            }
+        } else {
+            if renderSprite {
+                colorIndex = spriteColorIndex | 0x10
+            } else if renderBackground {
+                colorIndex = backgroundColorIndex
+            } else {
+                colorIndex = 0
+            }
+        }
+
+        let color: DWord = self.palette[self.paletteIndices[colorIndex]]
+        self.frameBuffers.current.pointee.set(x: Int(x), y: Int(y), color: color)
+    }
+
+    func step() {
+        let preRenderScanline = self.scanline == 261
+        let visibleScanline = self.scanline < 240
+        let renderScanline = preRenderScanline || visibleScanline
+
+        let preFetchCycle = self.cycle >= 321 && self.cycle <= 336
+        let visibleCycle = self.cycle >= 1 && self.cycle <= 256
+        let fetchCycle = preFetchCycle || visibleCycle
+        let copyYCycle = self.cycle >= 280 && self.cycle <= 304
+
+        if self.maskRegister.renderingEnabled {
+            // render pixel
+            if visibleScanline && visibleCycle {
+                self.render(x: self.cycle - 1, y: self._scanline)
+            }
+
+            // fetch data
+            if renderScanline && fetchCycle {
+                self.shiftRegister <<= 4
+                self.fetchData(type: self.cycle % 8)
+            }
+
+            // NTSC timing
+            if preRenderScanline && copyYCycle { self.copyY() }
+            if renderScanline {
+                if self.cycle == 256 { self.incrementY() }
+                if self.cycle == 257 { self.copyX() }
+            }
+
+            // sprite stuff
+            if self.cycle == 257 {
+                if visibleScanline {
+                    self.fetchSpriteData()
+                } else {
+                    self.spriteCount = 0
+                }
+            }
+        }
+
+
+        if self.scanline == 241 && self.cycle == 1 { self.verticalBlank() }
+        if preRenderScanline && self.cycle == 1 { self.statusRegister.clear() }
+
+        // tick
+        self.cycle = (self.cycle + 1) % PictureProcessingUnit.cyclePerScanline
         if self.cycle == 0 {
-            self._scanline = (self._scanline + 1) % self.scanlinePerFrame
+            self._scanline = (self._scanline + 1) % PictureProcessingUnit.scanlinePerFrame
 
             if self._scanline == 0 {
                 // skipping idle cycle on odd frames
-                if self._frame % 2 != 0 { self.cycle++ }
+                if !Bool(self.evenFrame) { self.cycle++ }
                 self._frame &+= 1
+                self.evenFrame ^= 1
             }
         }
     }
@@ -442,8 +485,5 @@ class PictureProcessingUnit: BusConnectedComponent {
         self.controlRegister &= 0
         self.maskRegister &= 0
         self.oamPointer = 0
-
-        self.frameBuffers = (rendered: FrameBuffer(), current: FrameBuffer())
-        self.bus.renderFrame(frameBuffer: self.frameBuffers.rendered)
     }
 }

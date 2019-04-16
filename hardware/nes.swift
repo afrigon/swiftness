@@ -22,10 +22,6 @@
 //    SOFTWARE.
 //
 
-enum Component {
-    case cpu, ppu, apu, controller1, controller2, controllers, cartridge
-}
-
 enum MemoryAccessMode {
     case read, write
 }
@@ -67,6 +63,7 @@ class NintendoEntertainmentSystem: BusDelegate {
         self.cpu = CoreProcessingUnit(using: self.bus)
         self.ppu = PictureProcessingUnit(using: self.bus)
         self.cartridge = game
+        self.ppu.mirroring = self.cartridge.mirroring
         self.bus.delegate = self
         self.reset()
     }
@@ -89,7 +86,12 @@ class NintendoEntertainmentSystem: BusDelegate {
     func step() -> UInt8 {
         let cpuCycle: UInt8 = self.cpu.step()
         if !self.disableGraphics {
-            for _ in 0..<cpuCycle * 3 { self.ppu.step() }
+            let ppuCycle = cpuCycle * 3
+            var i = 0
+            while i < ppuCycle {
+                self.ppu.step()
+                i += 1
+            }
         }
         self.apu.step()
 
@@ -110,7 +112,7 @@ class NintendoEntertainmentSystem: BusDelegate {
     @discardableResult
     func stepLine(_ count: UInt16 = 1) -> UInt64 {
         var cyclesCount: UInt64 = 0
-        let endLine = (self.ppu.scanline + count) % self.ppu.scanlinePerFrame
+        let endLine = (self.ppu.scanline + count) % PictureProcessingUnit.scanlinePerFrame
         while self.ppu.scanline != endLine { cyclesCount += UInt64(self.step()) }
         return cyclesCount
     }
@@ -135,51 +137,59 @@ class NintendoEntertainmentSystem: BusDelegate {
         self.cpu.stallCycles += cycles + UInt16(self.cpu.totalCycles % 2 != 0 ? 1 : 0)
     }
 
-    func bus(bus: Bus, didSendReadSignalAt address: Word) -> Byte {
-        guard let component = self.getComponent(at: address, mode: .read) else { return 0 }
-        return self.bus(bus: bus, didSendReadSignalAt: address, of: component)
+    func bus(bus: Bus, didSendReadSignalAt address: Word, rom: Bool = false) -> Byte {
+        //if rom { return self.cartridge.busRead(at: address) }
+
+//        switch address {
+//        case 0x0000..<0x2000: return self.ram.busRead(at: address)
+//        case 0x2000..<0x4000, 0x4014: return self.ppu.busRead(at: address)
+//        case 0x4000...0x4013, 0x4015: return self.apu.busRead(at: address)
+//        case 0x4016: return self.controller1.busRead(at: address)
+//        case 0x4017: return self.controller2.busRead(at: address)
+//        case 0x6000...0xFFFF: return self.cartridge.busRead(at: address)
+//        default: return 0
+//        }
+
+        if rom { return self.cartridge.busRead(at: address) }
+        if address < 0x2000 { return self.ram.busRead(at: address) }
+        if address < 0x4000 || address == 0x4014 { return self.ppu.busRead(at: address) }
+        if address <= 0x4013 || address == 0x4015 { return self.apu.busRead(at: address) }
+        if address == 0x4016 { return self.controller1.busRead(at: address) }
+        if address == 0x4017 { return self.controller2.busRead(at: address) }
+        if address >= 0x6000 { return self.cartridge.busRead(at: address) }
+        return 0
     }
 
-    func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte) {
-        guard let component = self.getComponent(at: address, mode: .write) else { return }
-        self.bus(bus: bus, didSendWriteSignalAt: address, of: component, data: data)
-    }
+    func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte, rom: Bool = false) {
 
-    func bus(bus: Bus, didSendReadSignalAt address: Word, of component: Component) -> Byte {
-        switch component {
-        case .cpu: return self.ram.busRead(at: address)
-        case .ppu: return self.ppu.busRead(at: address)
-        case .apu: return self.apu.busRead(at: address)
-        case .controller1: return self.controller1.busRead(at: address)
-        case .controller2: return self.controller2.busRead(at: address)
-        case .controllers: return 0
-        case .cartridge: return self.cartridge.busRead(at: address)
-        }
-    }
 
-    func bus(bus: Bus, didSendWriteSignalAt address: Word, of component: Component, data: Byte) {
-        switch component {
-        case .cpu: self.ram.busWrite(data, at: address)
-        case .ppu: self.ppu.busWrite(data, at: address)
-        case .apu: self.apu.busWrite(data, at: address)
-        case .controller1: self.controller1.busWrite(data, at: address)
-        case .controller2: self.controller2.busWrite(data, at: address)
-        case .controllers:
+//        switch address {
+//        case 0x0000..<0x2000: self.ram.busWrite(data, at: address)
+//        case 0x2000..<0x4000, 0x4014: self.ppu.busWrite(data, at: address)
+//        case 0x4000...0x4013, 0x4015: self.apu.busWrite(data, at: address)
+//        case 0x4016:
+//            self.controller1.busWrite(data, at: address)
+//            self.controller2.busWrite(data, at: address)
+//        case 0x4017: self.apu.busWrite(data, at: address)
+//        case 0x6000...0xFFFF: self.cartridge.busWrite(data, at: address)
+//        default: break
+//        }
+
+        if rom {
+            self.cartridge.busWrite(data, at: address)
+        } else if address < 0x2000 {
+            self.ram.busWrite(data, at: address)
+        } else if address < 0x4000 || address == 0x4014 {
+            self.ppu.busWrite(data, at: address)
+        } else if address <= 0x4013 || address == 0x4015 {
+            self.apu.busWrite(data, at: address)
+        } else if address == 0x4016 {
             self.controller1.busWrite(data, at: address)
             self.controller2.busWrite(data, at: address)
-        case .cartridge: self.cartridge.busWrite(data, at: address)
-        }
-    }
-
-    private func getComponent(at address: Word, mode: MemoryAccessMode) -> Component? {
-        switch address {
-        case 0x0000..<0x2000: return .cpu
-        case 0x2000..<0x4000, 0x4014: return .ppu
-        case 0x4000...0x4013, 0x4015: return .apu
-        case 0x4016: return mode == .read ? .controller1 : .controllers
-        case 0x4017: return mode == .read ? .controller2 : .apu
-        case 0x6000...0xFFFF: return .cartridge
-        default: return nil
+        } else if address == 0x4017 {
+            self.apu.busWrite(data, at: address)
+        } else if address >= 0x6000 {
+            self.cartridge.busWrite(data, at: address)
         }
     }
 }

@@ -35,34 +35,43 @@ class UNROM: Mapper {
     }
 
     func busRead(at address: Word) -> Byte {
-        switch address {
-        case 0..<0x2000:
+        if address < 0x2000 {
             let address: DWord = DWord(address)
             return self.delegate.mapper(mapper: self, didReadAt: address, of: .chr)
-        case 0x6000..<0x8000:
+        }
+
+        if address >= 0x6000 && address < 0x8000 {
             let address: DWord = DWord(address - 0x6000)
             return self.delegate.mapper(mapper: self, didReadAt: address, of: .sram)
-        case 0x8000..<0xC000:
+        }
+
+        if address >= 0x8000 && address < 0xC000 {
             let address: DWord = DWord(address - 0x8000) + DWord(self.prgIndex0) * DWord(self.prgBankSize)
             return self.delegate.mapper(mapper: self, didReadAt: address, of: .prg)
-        case 0xC000...0xFFFF:
+        }
+
+        if address >= 0xC000 {
             let address: DWord = DWord(address - 0xC000) + DWord(self.prgIndex1) * DWord(self.prgBankSize)
             return self.delegate.mapper(mapper: self, didReadAt: address, of: .prg)
-        default:
-            print("UNROM mapper invalid read at 0x\(address.hex())")
-            return 0
         }
+
+        print("UNROM mapper invalid read at 0x\(address.hex())")
+        return 0
     }
 
     func busWrite(_ data: Byte, at address: Word) {
-        switch address {
-        case 0..<0x2000:
-            self.delegate.mapper(mapper: self, didWriteAt: address, of: .chr, data: data)
-        case 0x6000..<0x8000:
-            self.delegate.mapper(mapper: self, didWriteAt: address - 0x6000, of: .sram, data: data)
-        case 0x8000...0xFFFF:
-            self.prgIndex0 = data % self.delegate.programBankCount(for: self)
-        default: print("UNROM mapper invalid write at 0x\(address.hex())")
+        if address < 0x2000 {
+            return self.delegate.mapper(mapper: self, didWriteAt: address, of: .chr, data: data)
         }
+
+        if address >= 0x6000 && address < 0x8000 {
+            return self.delegate.mapper(mapper: self, didWriteAt: address - 0x6000, of: .sram, data: data)
+        }
+
+        if address >= 0x8000 {
+            return self.prgIndex0 = data % self.delegate.programBankCount(for: self)
+        }
+
+        print("UNROM mapper invalid write at 0x\(address.hex())")
     }
 }

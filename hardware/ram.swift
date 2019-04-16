@@ -24,7 +24,6 @@
 
 class RandomAccessMemory: BusConnectedComponent {
     private var data: [Byte]
-    let addressRange: Range<Word> = 0x0000..<0x2000
     let size: Word = 0x0800 // Bytes
 
     init() {
@@ -32,14 +31,14 @@ class RandomAccessMemory: BusConnectedComponent {
     }
 
     func busRead(at address: Word) -> Byte {
-        guard self.addressRange.contains(address) else {
+        guard address < 0x2000 else {
             fatalError("RAM access restriction violation")
         }
         return self.data[address % self.size]
     }
 
     func busWrite(_ data: Byte, at address: Word) {
-        guard self.addressRange.contains(address) else {
+        guard address < 0x2000 else {
             fatalError("RAM access restriction violation")
         }
         self.data[address % self.size] = data
