@@ -27,14 +27,14 @@ import Cocoa
 class InputResponder: NSResponder, InputManager {
     override var acceptsFirstResponder: Bool { return true }
     let buttonMap: [UInt16: Controller.Button] = [
-        6: .a,
-        7: .b,
-        126: .up,
-        125: .down,
-        123: .left,
-        124: .right,
-        46: .start,
-        45: .select
+        6: .a,          // z
+        7: .b,          // x
+        126: .up,       // up arrow
+        125: .down,     // down arrow
+        123: .left,     // left arrow
+        124: .right,    // right arrow
+        46: .start,     // m
+        45: .select     // n
     ]
     var closures = [UInt16: () -> Void]()
     var buttons: Byte = 0
@@ -48,6 +48,8 @@ class InputResponder: NSResponder, InputManager {
     }
 
     override func keyDown(with event: NSEvent) {
+        //print(event.keyCode)
+
         if let button = self.buttonMap[event.keyCode] {
             self.buttons |= button.rawValue
             return
@@ -55,8 +57,6 @@ class InputResponder: NSResponder, InputManager {
 
         if let closure = self.closures[event.keyCode] {
             closure()
-        } else {
-            print(event.keyCode)
         }
     }
 

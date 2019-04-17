@@ -132,18 +132,6 @@ class NintendoEntertainmentSystem: BusDelegate {
     }
 
     func bus(bus: Bus, didSendReadSignalAt address: Word, rom: Bool = false) -> Byte {
-        //if rom { return self.cartridge.busRead(at: address) }
-
-//        switch address {
-//        case 0x0000..<0x2000: return self.ram.busRead(at: address)
-//        case 0x2000..<0x4000, 0x4014: return self.ppu.busRead(at: address)
-//        case 0x4000...0x4013, 0x4015: return self.apu.busRead(at: address)
-//        case 0x4016: return self.controller1.busRead(at: address)
-//        case 0x4017: return self.controller2.busRead(at: address)
-//        case 0x6000...0xFFFF: return self.cartridge.busRead(at: address)
-//        default: return 0
-//        }
-
         if rom { return self.cartridge.busRead(at: address) }
         if address < 0x2000 { return self.ram.busRead(at: address) }
         if address < 0x4000 || address == 0x4014 { return self.ppu.busRead(at: address) }
@@ -155,20 +143,6 @@ class NintendoEntertainmentSystem: BusDelegate {
     }
 
     func bus(bus: Bus, didSendWriteSignalAt address: Word, data: Byte, rom: Bool = false) {
-
-
-//        switch address {
-//        case 0x0000..<0x2000: self.ram.busWrite(data, at: address)
-//        case 0x2000..<0x4000, 0x4014: self.ppu.busWrite(data, at: address)
-//        case 0x4000...0x4013, 0x4015: self.apu.busWrite(data, at: address)
-//        case 0x4016:
-//            self.controller1.busWrite(data, at: address)
-//            self.controller2.busWrite(data, at: address)
-//        case 0x4017: self.apu.busWrite(data, at: address)
-//        case 0x6000...0xFFFF: self.cartridge.busWrite(data, at: address)
-//        default: break
-//        }
-
         if rom {
             self.cartridge.busWrite(data, at: address)
         } else if address < 0x2000 {

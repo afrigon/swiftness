@@ -25,18 +25,18 @@
 class Controller: BusConnectedComponent {
     private let player: Player
     private var strobe: Byte = 0
-    private var index: Byte = 1
+    private var index: Byte = 0
     var buttons: Byte = 0
 
     enum Button: Byte {
         case a = 1
         case b = 2
-        case up = 4
-        case down = 8
-        case left = 16
-        case right = 32
-        case select = 64
-        case start = 128
+        case select = 4
+        case start = 8
+        case up = 16
+        case down = 32
+        case left = 64
+        case right = 128
     }
 
     enum Player: UInt8 {
@@ -49,15 +49,15 @@ class Controller: BusConnectedComponent {
 
     func busRead(at address: Word) -> Byte {
         defer {
-            self.index = self.strobe.isLeastSignificantBitOn() ? 1 : self.index << 1
+            self.index = (self.index + 1) % 8
         }
 
-        return self.buttons & self.index
+        return self.buttons >> self.index & 1
     }
 
     func busWrite(_ data: Byte, at address: Word) {
         if data.isLeastSignificantBitOn() {
-            self.index = 1
+            self.index = 0
         }
         self.strobe = data
     }

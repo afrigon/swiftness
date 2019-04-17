@@ -261,7 +261,7 @@ class PictureProcessingUnit: BusConnectedComponent {
         }
     }
 
-    /*private*/ func vramRead(at address: Word) -> Byte {
+    private func vramRead(at address: Word) -> Byte {
         let address: Word = address % 0x4000
 
         if address < 0x2000 {
@@ -387,13 +387,11 @@ class PictureProcessingUnit: BusConnectedComponent {
                 var tileIndex = self.oam[i * 4 + 1]
                 var patternTable: Word = 0
 
-                if Bool(tileAttributes & 0x80) {
-                    row = self.controlRegister.spriteSize - 1 - row
-                }
-
                 if self.controlRegister.spriteSize == 8 {
+                    if Bool(tileAttributes & 0x80) { row = 7 - row }
                     patternTable = self.controlRegister.spritePatternAddress
                 } else {
+                    if Bool(tileAttributes & 0x80) { row = 15 - row }
                     patternTable = Word(tileIndex & 1) * 0x1000
                     tileIndex &= 0xFE
                     if row > 7 { tileIndex++; row -= 8 }
@@ -448,8 +446,8 @@ class PictureProcessingUnit: BusConnectedComponent {
             }
 
             colorIndex = self.sprites[spriteIndex].priority ?
-                spriteColorIndex | 0x10 :
-                backgroundColorIndex
+                backgroundColorIndex :
+                spriteColorIndex | 0x10
         } else {
             if renderSprite {
                 colorIndex = spriteColorIndex | 0x10

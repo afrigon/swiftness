@@ -62,6 +62,7 @@ class Conductor {
 
     private func loopClosure(_ deltaTime: Double) {
         //print((self.loop as! CVDisplayLinkLoop).status)
+
         self.processInput()
         for f in self.updateClosure {
             f(deltaTime)
@@ -75,7 +76,9 @@ class Conductor {
 
     private func update(_ deltaTime: Double) {
         if self.options.mode == .normal {
-            self.nes.run(for: deltaTime)
+            // dirty hack to make the emulator slow down when the fps is too slow
+            // doesn't work very well
+            self.nes.run(for: max(0.02, deltaTime))
         }
     }
 
