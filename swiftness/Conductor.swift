@@ -53,6 +53,10 @@ class Conductor {
         self.loop.start(closure: self.loopClosure)
     }
 
+    func reset() {
+        self.nes.reset()
+    }
+
     func attach() -> Debugger {
         self.options.mode = .debug
         let debugger = Debugger(nes: self.nes)
@@ -78,28 +82,28 @@ class Conductor {
         if self.options.mode == .normal {
             // dirty hack to make the emulator slow down when the fps is too slow
             // doesn't work very well
-            self.nes.run(for: max(0.02, deltaTime))
+            self.nes.run(for: min(0.02, deltaTime))
         }
     }
 
     private func render() {
-//        let buffer = FrameBuffer(width: NintendoEntertainmentSystem.screenWidth, height: NintendoEntertainmentSystem.screenHeight)
-
-        // pattern table debug
+//        var buffer = FrameBuffer(width: NintendoEntertainmentSystem.screenWidth, height: NintendoEntertainmentSystem.screenHeight)
+//
+//        // pattern table debug
 //        let p = Palette()
 //        for y in 0..<16 * 8 {
 //            for x in 0..<16 * 8 {
 //                let tileIndex = Word(x) / 8 + Word(y) / 8 * 16
 //                let address: Word = tileIndex * 16 + Word(y) % 8
 //
-//                let low = self.nes.ppu.vramTempRead(at: address)
-//                let high = self.nes.ppu.vramTempRead(at: address + 8)
+//                let low = self.nes.ppu.vramRead(at: address)
+//                let high = self.nes.ppu.vramRead(at: address + 8)
 //
 //                let offset = x % 8
 //                let h: Byte = high >> (Byte(7) - Byte(offset)) & Byte(1)
 //                let l: Byte = low >> (Byte(7) - Byte(offset)) & Byte(1)
 //                let i: Byte = h << 1 | l
-//                buffer.set(x: x, y: y, color: p.get(self.nes.ppu.paletteIndices[i]))
+//                buffer.set(x: x, y: y, color: p[self.nes.ppu.paletteIndices[i]])
 //            }
 //        }
 //
@@ -108,16 +112,29 @@ class Conductor {
 //                let tileIndex = Word(x) / 8 + Word(y) / 8 * 16
 //                let address: Word = tileIndex * 16 + Word(y) % 8 + 0x1000
 //
-//                let low = self.nes.ppu.vramTempRead(at: address)
-//                let high = self.nes.ppu.vramTempRead(at: address + 8)
+//                let low = self.nes.ppu.vramRead(at: address)
+//                let high = self.nes.ppu.vramRead(at: address + 8)
 //
 //                let offset = x % 8
 //                let h: Byte = high >> (Byte(7) - Byte(offset)) & Byte(1)
 //                let l: Byte = low >> (Byte(7) - Byte(offset)) & Byte(1)
 //                let i: Byte = h << 1 | l
-//                buffer.set(x: x + 16*8, y: y, color: p.get(self.nes.ppu.paletteIndices[i]))
+//                buffer.set(x: x + 16*8, y: y, color: p[self.nes.ppu.paletteIndices[i]])
 //            }
 //        }
+//
+//        let height = NintendoEntertainmentSystem.screenHeight - 16 * 8
+//
+//        let sizeX = NintendoEntertainmentSystem.screenWidth / 8
+//        let sizeY = height / 4
+//        for y in 0..<height {
+//            for x in 0..<NintendoEntertainmentSystem.screenWidth {
+//                let i = y / sizeY + (x / sizeX * 4)
+//                let color_pointer = self.nes.ppu.paletteIndices[i]
+//                buffer.set(x: x, y: y + (NintendoEntertainmentSystem.screenHeight - height), color: p[color_pointer])
+//            }
+//        }
+
 
         // nametable debug
 //        let p = Palette()
@@ -141,7 +158,7 @@ class Conductor {
 //            }
 //        }
 
-//        autoreleasepool { self.renderer.draw(buffer) }
+//        autoreleasepool { self.renderer.draw(&buffer) }
         autoreleasepool { self.renderer.draw(self.nes.ppu.frameBuffer) }
     }
 }

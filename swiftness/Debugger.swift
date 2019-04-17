@@ -240,80 +240,80 @@ class Debugger {
     }
 
     private func disassembleMemory() {
-        self.memoryDump.removeAll()
-        var lineNumber: Word = 0
-        var localProgramCounter: DWord = 0
-
-        repeat {
-            // dirty fix to avoid increasing vram pointer
-            if (0x2000..<0x4000).contains(localProgramCounter) {
-                localProgramCounter = 0x4000
-            }
-
-            let info: DebuggerInfo = DebuggerInfo(atLine: lineNumber, addressPointer: localProgramCounter)
-            info.opcode = self.nes.bus.readByte(at: Word(localProgramCounter))
-
-            let (name, addressingMode) = self.nes.opcodeInfo(for: info.opcode)
-            info.name = name
-            info.addressingMode = addressingMode
-
-            localProgramCounter++
-
-            switch addressingMode {
-            case .zeroPage(let alteration):
-                let value = self.nes.bus.readByte(at: Word(localProgramCounter)).hex()
-                info.textOperand += "$\(value)"
-                info.textOperand += alteration == .none ? "" : ",\(String(describing: alteration))"
-                info.operand += value
-                localProgramCounter++
-            case .absolute(let alteration, _):
-                let lowByte = self.nes.bus.readByte(at: Word(localProgramCounter))
-                let highByte = self.nes.bus.readByte(at: Word(localProgramCounter) &+ 1)
-                info.textOperand += "$\(highByte.hex())\(lowByte.hex())"
-                info.textOperand += alteration == .none ? "" : ",\(String(describing: alteration))"
-                info.operand += "\(lowByte.hex())\(highByte.hex())"
-                localProgramCounter += 2
-            case .relative:
-                let value = self.nes.bus.readByte(at: Word(localProgramCounter))
-                let offset = (value.isSignBitOn() ? Word(128 - value & 0b01111111) : value.asWord() & 0b01111111)
-                info.textOperand += "\(value.isSignBitOn() ? "-" : "+")$\(offset)"
-                localProgramCounter++
-
-                if localProgramCounter > 0xFFFF { continue }
-                var address = Word(localProgramCounter)
-                if value.isSignBitOn() {
-                    address = address &- offset
-                } else {
-                    address = address &+ offset
-                }
-                info.textOperand += " ($\(address.hex()))"
-
-                info.operand += value.hex()
-            case .indirect(let alteration):
-                let lowByte = self.nes.bus.readByte(at: Word(localProgramCounter))
-                info.operand += "\(lowByte.hex())"
-
-                if alteration == .none {
-                    let highByte = self.nes.bus.readByte(at: Word(localProgramCounter) &+ 1)
-                    info.operand += "\(highByte.hex())"
-                }
-
-                info.textOperand += "indirect"
-                localProgramCounter += alteration == .none ? 2 : 1
-            case .immediate:
-                let value = self.nes.bus.readByte(at: Word(localProgramCounter)).hex()
-                info.textOperand += "#$\(value)"
-                info.operand += value
-                localProgramCounter++
-            case .accumulator: info.textOperand += "a"
-            case .implied: break
-            }
-
-            if info.opcode == 0x60 { info.textOperand = "--------------------" }
-
-            lineNumber++
-            self.memoryDump.append(info)
-        } while (localProgramCounter <= 0xFFFF)
+//        self.memoryDump.removeAll()
+//        var lineNumber: Word = 0
+//        var localProgramCounter: DWord = 0
+//
+//        repeat {
+//            // dirty fix to avoid increasing vram pointer
+//            if (0x2000..<0x4000).contains(localProgramCounter) {
+//                localProgramCounter = 0x4000
+//            }
+//
+//            let info: DebuggerInfo = DebuggerInfo(atLine: lineNumber, addressPointer: localProgramCounter)
+//            info.opcode = self.nes.bus.readByte(at: Word(localProgramCounter))
+//
+//            let (name, addressingMode) = self.nes.opcodeInfo(for: info.opcode)
+//            info.name = name
+//            info.addressingMode = addressingMode
+//
+//            localProgramCounter++
+//
+//            switch addressingMode {
+//            case .zeroPage(let alteration):
+//                let value = self.nes.bus.readByte(at: Word(localProgramCounter)).hex()
+//                info.textOperand += "$\(value)"
+//                info.textOperand += alteration == .none ? "" : ",\(String(describing: alteration))"
+//                info.operand += value
+//                localProgramCounter++
+//            case .absolute(let alteration, _):
+//                let lowByte = self.nes.bus.readByte(at: Word(localProgramCounter))
+//                let highByte = self.nes.bus.readByte(at: Word(localProgramCounter) &+ 1)
+//                info.textOperand += "$\(highByte.hex())\(lowByte.hex())"
+//                info.textOperand += alteration == .none ? "" : ",\(String(describing: alteration))"
+//                info.operand += "\(lowByte.hex())\(highByte.hex())"
+//                localProgramCounter += 2
+//            case .relative:
+//                let value = self.nes.bus.readByte(at: Word(localProgramCounter))
+//                let offset = (value.isSignBitOn() ? Word(128 - value & 0b01111111) : value.asWord() & 0b01111111)
+//                info.textOperand += "\(value.isSignBitOn() ? "-" : "+")$\(offset)"
+//                localProgramCounter++
+//
+//                if localProgramCounter > 0xFFFF { continue }
+//                var address = Word(localProgramCounter)
+//                if value.isSignBitOn() {
+//                    address = address &- offset
+//                } else {
+//                    address = address &+ offset
+//                }
+//                info.textOperand += " ($\(address.hex()))"
+//
+//                info.operand += value.hex()
+//            case .indirect(let alteration):
+//                let lowByte = self.nes.bus.readByte(at: Word(localProgramCounter))
+//                info.operand += "\(lowByte.hex())"
+//
+//                if alteration == .none {
+//                    let highByte = self.nes.bus.readByte(at: Word(localProgramCounter) &+ 1)
+//                    info.operand += "\(highByte.hex())"
+//                }
+//
+//                info.textOperand += "indirect"
+//                localProgramCounter += alteration == .none ? 2 : 1
+//            case .immediate:
+//                let value = self.nes.bus.readByte(at: Word(localProgramCounter)).hex()
+//                info.textOperand += "#$\(value)"
+//                info.operand += value
+//                localProgramCounter++
+//            case .accumulator: info.textOperand += "a"
+//            case .implied: break
+//            }
+//
+//            if info.opcode == 0x60 { info.textOperand = "--------------------" }
+//
+//            lineNumber++
+//            self.memoryDump.append(info)
+//        } while (localProgramCounter <= 0xFFFF)
     }
 
     private func updateMemoryDump() {

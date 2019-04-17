@@ -35,7 +35,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         self.window!.tintColor = .blue
         self.window!.backgroundColor = .white
 
-        self.window!.rootViewController = ViewController()
+        self.window!.rootViewController = GameViewController()
         self.window!.makeKeyAndVisible()
 
         return true

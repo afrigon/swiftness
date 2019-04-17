@@ -31,13 +31,26 @@ guard var options: StartupOptions = StartupOptions.parse(arguments) else {
 
 // options injection for debuging
 if options.mode != .test {
-    options.filepath = "/Users/frigon/.nes/roms/super-mario-bros.nes"
-    options.filepath = "/Users/frigon/.nes/roms/donkey-kong.nes"
+    //options.filepath = "/Users/frigon/Downloads/blargg_ppu_tests_2005.09.15b/palette_ram.nes"
+    //options.filepath = "/Users/frigon/Downloads/blargg_ppu_tests_2005.09.15b/sprite_ram.nes"
+    //options.filepath = "/Users/frigon/Downloads/blargg_ppu_tests_2005.09.15b/vram_access.nes"
+    //options.filepath = "/Users/frigon/Downloads/blargg_ppu_tests_2005.09.15b/vbl_clear_time.nes"
+    //options.filepath = "/Users/frigon/Downloads/oam_read/oam_read.nes"
+    options.filepath = "/Users/frigon/Downloads/ppu_vbl_nmi/ppu_vbl_nmi.nes"
+    options.filepath = "/Users/frigon/Downloads/ppu_vbl_nmi/rom_singles/06-suppression.nes"
+    options.filepath = "/Users/frigon/Downloads/ppu_vbl_nmi/rom_singles/07-nmi_on_timing.nes"
+    options.filepath = "/Users/frigon/Downloads/ppu_vbl_nmi/rom_singles/08-nmi_off_timing.nes"
+    options.filepath = "/Users/frigon/Downloads/ppu_vbl_nmi/rom_singles/10-even_odd_timing.nes"
+    options.filepath = "/Users/frigon/Downloads/ppu_sprite_hit/ppu_sprite_hit.nes"
+    options.filepath = "/Users/frigon/Downloads/ppu_sprite_hit/rom_singles/09-timing.nes"
+    options.filepath = "/Users/frigon/Downloads/scanline/scanline.nes"
+    //options.filepath = "/Users/frigon/Downloads/ppu_sprite_overflow/ppu_sprite_overflow.nes"
+    //options.filepath = "/Users/frigon/.nes/roms/donkey-kong.nes"
+    //options.filepath = "/Users/frigon/.nes/roms/balloon-fight.nes"
+    //options.filepath = "/Users/frigon/.nes/roms/ice-climber.nes"
     //options.filepath = "/Users/frigon/.nes/roms/zelda.nes"
+    //options.filepath = "/Users/frigon/.nes/roms/super-mario-bros.nes"
     //options.filepath = "/Users/frigon/Downloads/nes/palette.nes"
-    //options.filepath = "/Users/frigon/Downloads/cpu_interrupts_v2/rom_singles/1-cli_latency.nes"
-    //options.filepath = "/Users/frigon/Downloads/instr_timing/rom_singles/1-instr_timing.nes"
-    //options.filepath = "/Users/frigon/Downloads/cpu_interrupts_v2/rom_singles/2-nmi_and_brk.nes"
 }
 
 let delegate = AppDelegate(options)

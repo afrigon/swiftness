@@ -356,10 +356,13 @@ class CoreProcessingUnit {
     private func interrupt(type: InterruptType) -> UInt8 {
         self.interruptRequest = nil
 
-        if type == .reset { self.regs.sp = 0xFD }
+        if type == .reset {
+            self.regs.sp = 0xFD
+        } else {
+            stack.pushWord(data: regs.pc)
+            stack.pushByte(data: regs.p.value | Flag.alwaysOne.rawValue)
+        }
 
-        stack.pushWord(data: regs.pc)
-        stack.pushByte(data: regs.p.value | Flag.alwaysOne.rawValue)
         self.regs.p.set(.interrupt)
         self.regs.pc = memory.readWord(at: type.address)
 

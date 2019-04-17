@@ -61,8 +61,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let width = CGFloat(256 * self.scale)
-        let height = CGFloat(240 * self.scale)
+        let width = CGFloat(NintendoEntertainmentSystem.screenWidth * self.scale)
+        let height = CGFloat(NintendoEntertainmentSystem.screenHeight * self.scale)
 
         self.window = ConsoleWindow(width: width, height: height, options: self.options)
         self.window.makeFirstResponder(self.window.inputResponder)

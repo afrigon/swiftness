@@ -33,7 +33,7 @@ enum ScreenMirroring: Int {
 
     func translate(_ address: Word) -> Word {
         let address = (address - 0x2000) % 0x1000
-        let tableIndex = address / 0x4000
+        let tableIndex = address / 0x0400
         let offset = address % 0x0400
         return 0x2000 + ScreenMirroring.lookupTable[self.rawValue][tableIndex] * 0x0400 + offset
     }

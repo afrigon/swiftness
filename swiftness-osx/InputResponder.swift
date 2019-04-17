@@ -25,7 +25,6 @@
 import Cocoa
 
 class InputResponder: NSResponder, InputManager {
-    override var acceptsFirstResponder: Bool { return true }
     let buttonMap: [UInt16: Controller.Button] = [
         6: .a,          // z
         7: .b,          // x
@@ -38,6 +37,8 @@ class InputResponder: NSResponder, InputManager {
     ]
     var closures = [UInt16: () -> Void]()
     var buttons: Byte = 0
+
+    override var acceptsFirstResponder: Bool { return true }
 
     func add(closure: @escaping () -> Void, forKey key: UInt16) {
         self.closures[key] = closure

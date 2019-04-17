@@ -68,7 +68,6 @@ class NintendoEntertainmentSystem: BusDelegate {
 
     func reset() {
         // reset mapper
-        // reset ram
         self.ppu.reset()
         self.cpu.requestInterrupt(type: .reset)
     }
@@ -85,11 +84,7 @@ class NintendoEntertainmentSystem: BusDelegate {
         let cpuCycle: UInt8 = self.cpu.step()
         if !self.disableGraphics {
             let ppuCycle = cpuCycle * 3
-            var i = 0
-            while i < ppuCycle {
-                self.ppu.step()
-                i += 1
-            }
+            for _ in 0..<ppuCycle { self.ppu.step() }
         }
         self.apu.step()
 

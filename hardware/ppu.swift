@@ -70,26 +70,26 @@ class ControlRegister { // 0x2000
     static func &= (left: inout ControlRegister, right: Byte) { left.value = right }
 
     var nameTableAddress: Word { return 0x2000 + Word(value & 0b11) * 0x400 }       // 0: 0x2000; 1: 0x2400; 2: 0x2800; 3: 0x2C00
-    var increment: Word { return Bool(self.value & 0b00000100) ? 32 : 1 }           // 0: add 1; 1: add 32
-    var spritePatternAddress: Word { return Word((value >> 3) & 1) * 0x1000 }       // 0: $0000; 1: $1000; ignored in 8x16 mode
-    var backgroundPatternAddress: Word { return Word((value >> 4) & 1) * 0x1000 }   // 0: $0000; 1: $1000
-    var spriteSize: Byte { return Bool(self.value & 0b00010000) ? 16 : 8 }          // 0: 8x8; 1: 8x16
-    var masterSlave: Bool { return Bool(self.value & 0b01000000) }
-    var interruptEnabled: Bool { return Bool(self.value & 0b10000000) }
+    var increment: Word { return Bool(self.value & 4) ? 32 : 1 }                    // 0: add 1; 1: add 32
+    var spritePatternAddress: Word { return Word(value >> 3 & 1) * 0x1000 }         // 0: $0000; 1: $1000; ignored in 8x16 mode
+    var backgroundPatternAddress: Word { return Word(value >> 4 & 1) * 0x1000 }     // 0: $0000; 1: $1000
+    var spriteSize: Byte { return Bool(self.value & 0x20) ? 16 : 8 }                // 0: 8x8; 1: 8x16
+    var masterSlave: Bool { return Bool(self.value & 0x40) }
+    var interruptEnabled: Bool { return Bool(self.value & 0x80) }
 }
 
 class MaskRegister { // 0x2001
     var value: Byte = 0
     static func &= (left: inout MaskRegister, right: Byte) { left.value = right }
 
-    var greyscale: Bool { return Bool(self.value & 0b00000001) }
-    var clipBackground: Bool { return !Bool(self.value & 0b00000010) }
-    var clipSprites: Bool { return !Bool(self.value & 0b00000100) }
-    var showBackground: Bool { return Bool(self.value & 0b00001000) }
-    var showSprites: Bool { return Bool(self.value & 0b00010000) }
-    var emphasisRed: Bool { return Bool(self.value & 0b00100000) }
-    var emphasisGreen: Bool { return Bool(self.value & 0b01000000) }
-    var emphasisBlue: Bool { return Bool(self.value & 0b10000000) }
+    var greyscale: Bool { return Bool(self.value & 1) }
+    var clipBackground: Bool { return !Bool(self.value & 2) }
+    var clipSprites: Bool { return !Bool(self.value & 4) }
+    var showBackground: Bool { return Bool(self.value & 8) }
+    var showSprites: Bool { return Bool(self.value & 0x10) }
+    var emphasisRed: Bool { return Bool(self.value & 0x20) }
+    var emphasisGreen: Bool { return Bool(self.value & 0x40) }
+    var emphasisBlue: Bool { return Bool(self.value & 0x80) }
 
     var renderingEnabled: Bool { return self.showBackground || self.showSprites }
 }
@@ -159,6 +159,7 @@ class PictureProcessingUnit: BusConnectedComponent {
     private var evenFrame: Byte = 0
     private var fineX: Byte = 0
     private var vramBufferedData: Byte = 0
+    private var nmiTimeout: Byte = 0
 
     private var oamPointer: Byte = 0
 
@@ -168,7 +169,7 @@ class PictureProcessingUnit: BusConnectedComponent {
     var mirroring: ScreenMirroring = .horizontal
 
     private let palette = Palette()
-    private var paletteIndices = [Byte](repeating: 0x00, count: 32)
+     var paletteIndices = [Byte](repeating: 0x00, count: 32)
     private var nameTable = [Byte](repeating: 0x00, count: 2048)
     private var oam = [Byte](repeating: 0x00, count: 256)
 
@@ -203,12 +204,17 @@ class PictureProcessingUnit: BusConnectedComponent {
         case 0x2004:
             return self.oam[self.oamPointer]
         case 0x2007:
-            defer {
-                self.vramBufferedData = self.vramRead(at: address)
-                self.vramPointer += self.controlRegister.increment
+            var value = self.vramRead(at: self.vramPointer)
+            if self.vramPointer % 0x4000 < 0x3F00 {
+                let tmp = self.vramBufferedData
+                self.vramBufferedData = value
+                value = tmp
+            } else {
+                self.vramBufferedData = self.vramRead(at: self.vramPointer - 0x1000)
             }
-            if self.vramPointer >= 0x3F00 { return self.vramRead(at: self.vramPointer) }
-            return self.vramBufferedData
+
+            self.vramPointer += self.controlRegister.increment
+            return value
         default: return 0
         }
     }
@@ -218,7 +224,13 @@ class PictureProcessingUnit: BusConnectedComponent {
         self.statusRegister.lastWrite = data
 
         switch address {
-        case 0x2000: self.controlRegister &= data
+        case 0x2000:
+            let oldInterruptFlag = self.controlRegister.interruptEnabled
+            self.controlRegister &= data
+            if self.statusRegister.vblank && !oldInterruptFlag {
+                //self.nmiTimeout = 15
+                self.verticalBlank()
+            }
         case 0x2001:
             self.maskRegister &= data
             self.palette.grayscale = self.maskRegister.greyscale
@@ -235,7 +247,7 @@ class PictureProcessingUnit: BusConnectedComponent {
                 self.vramTempPointer = (self.vramTempPointer & 0xFC1F) | ((Word(data) & 0xF8) << 2)
                 self.writeToggle = 0
             } else {
-                self.vramTempPointer = (self.vramTempPointer & 0xFFE0) | Word(data) >> 3
+                self.vramTempPointer = (self.vramTempPointer & 0xFFE0) | (Word(data) >> 3)
                 self.fineX = data & 0x07
                 self.writeToggle = 1
             }
@@ -261,7 +273,7 @@ class PictureProcessingUnit: BusConnectedComponent {
         }
     }
 
-    private func vramRead(at address: Word) -> Byte {
+     func vramRead(at address: Word) -> Byte {
         let address: Word = address % 0x4000
 
         if address < 0x2000 {
@@ -273,7 +285,9 @@ class PictureProcessingUnit: BusConnectedComponent {
         }
 
         if address < 0x4000 {
-            return self.paletteIndices[address % 32]
+            var address = address % 32
+            if address >= 16 && address % 4 == 0 { address -= 16 }
+            return self.paletteIndices[address]
         }
 
         return 0
@@ -287,11 +301,14 @@ class PictureProcessingUnit: BusConnectedComponent {
         }
 
         if address < 0x3F00 {
-            return self.nameTable[self.mirroring.translate(address) % 2048] = data
+            let address = self.mirroring.translate(address) % 2048
+            return self.nameTable[address] = data
         }
 
         if address < 0x4000 {
-            return self.paletteIndices[address % 32] = data
+            var address = address % 32
+            if address >= 16 && address % 4 == 0 { address -= 16 }
+            return self.paletteIndices[address] = data
         }
     }
 
@@ -301,7 +318,7 @@ class PictureProcessingUnit: BusConnectedComponent {
         self.statusRegister.vblank = true
 
         if self.controlRegister.interruptEnabled {
-            self.bus.triggerInterrupt(of: .nmi)
+            self.nmiTimeout = 15
         }
     }
 
@@ -511,10 +528,23 @@ class PictureProcessingUnit: BusConnectedComponent {
             self._scanline = (self._scanline + 1) % PictureProcessingUnit.scanlinePerFrame
 
             if self._scanline == 0 {
-                // skipping idle cycle on odd frames
-                if !Bool(self.evenFrame) { self.cycle++ }
                 self._frame &+= 1
                 self.evenFrame ^= 1
+            }
+        }
+
+        // skipping idle cycle on odd frames
+        if self.maskRegister.renderingEnabled && !Bool(self.evenFrame) && preRenderScanline && self.cycle == 340 {
+            self.cycle = 0
+            self._scanline = 0
+            self._frame &+= 1
+            self.evenFrame ^= 1
+        }
+
+        if self.nmiTimeout > 0 {
+            self.nmiTimeout -= 1
+            if self.nmiTimeout == 0 {
+                self.bus.triggerInterrupt(of: .nmi)
             }
         }
     }
