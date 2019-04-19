@@ -51,5 +51,5 @@ class FrameBuffer {
 }
 
 protocol Renderer {
-    func draw(_ image: UnsafeMutablePointer<FrameBuffer>)
+    func draw(_ image: UnsafePointer<FrameBuffer>)
 }

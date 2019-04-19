@@ -22,11 +22,7 @@
 //    SOFTWARE.
 //
 
-enum MemoryAccessMode {
-    case read, write
-}
-
-class NintendoEntertainmentSystem: BusDelegate {
+class NintendoEntertainmentSystem: Console, BusDelegate {
     static let screenWidth: Int = 256
     static let screenHeight: Int = 240
 
@@ -56,6 +52,9 @@ class NintendoEntertainmentSystem: BusDelegate {
     var mirroringMode: ScreenMirroring {
         return self.cartridge.mirroring
     }
+
+    var needsRender: Bool { return self.ppu.needsRender }
+    var framebuffer: UnsafePointer<FrameBuffer> { return self.ppu.frameBuffer }
 
     init(load game: Cartridge) {
         self.cpu = CoreProcessingUnit(using: self.bus)

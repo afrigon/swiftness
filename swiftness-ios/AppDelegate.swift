@@ -25,19 +25,35 @@
 import UIKit
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
-    private var window: UIWindow?
+    private var viewController: RootViewController!
+    var window: UIWindow?
+
+    var options: StartupOptions!
+
+    override init() {
+        super.init()
+        let arguments = Array(CommandLine.arguments.dropFirst())
+        self.options = StartupOptions.parse(arguments)
+        guard self.options != nil else { exit(0) }
+    }
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [
                         UIApplication.LaunchOptionsKey: Any
                      ]?) -> Bool {
+        self.viewController = RootViewController(options: self.options)
         self.window = UIWindow(frame: UIScreen.main.bounds)
         self.window!.tintColor = .blue
-        self.window!.backgroundColor = .white
+        self.window!.backgroundColor = .darkBlue
 
-        self.window!.rootViewController = GameViewController()
+        self.window!.rootViewController = self.viewController
         self.window!.makeKeyAndVisible()
 
+        return true
+    }
+
+    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        self.options.fileurl = url
         return true
     }
 }

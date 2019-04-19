@@ -22,43 +22,30 @@
 //    SOFTWARE.
 //
 
-import XCTest
-@testable import swiftness_osx
+import UIKit
 
-class NintendoEntertainmentSystemTestsRoms: XCTestCase {
-    private var nes: NintendoEntertainmentSystem!
+class InputResponder: InputManager {
+    var buttons: Byte = 0
 
-    override func setUp() {
-        self.nes = nil
+    func button(for type: Controller.Button) -> ControllerButton {
+        let button = ControllerButton(type: type)
+        button.buttonDown = self.buttonDown
+        button.buttonUp = self.buttonUp
+        return button
     }
 
-    func testInstructions() {
-//        let bundle = Bundle(for: type(of: self))
-//        let path = bundle.path(forResource: "cpu-instructions-tests", ofType: "nes")!
-//        guard let program = NesFile.load(path: path) else {
-//            return
-//        }
-//        self.nes = NintendoEntertainmentSystem(load: program)
-//
-//        self.nes.disableGraphics = true
-//        self.nes.stepFrame(60)
-//        while self.nes.bus.readByte(at: 0x6000) == 0x80 {
-//            self.nes.stepFrame()
-//        }
-//        let result = self.stringSRAM()
-//
-//        XCTAssert(self.nes.bus.readByte(at: 0x6000) == 0, result)
+    func directionalPad() -> DirectionalPad {
+        let dpad = DirectionalPad()
+        dpad.buttonDown = self.buttonDown
+        dpad.buttonUp = self.buttonUp
+        return dpad
     }
 
-//    func stringSRAM() -> String {
-//        var i: Word = 0x6004
-//        var value: Byte = 0
-//        var string = ""
-//        repeat {
-//            value = self.nes.bus.readByte(at: i)
-//            string += String(Character(UnicodeScalar(value)))
-//            i++
-//        } while (value != 0)
-//        return string
-//    }
+    func buttonDown(_ type: Controller.Button) {
+        self.buttons |= type.rawValue
+    }
+
+    func buttonUp(_ type: Controller.Button) {
+        self.buttons &= ~type.rawValue
+    }
 }

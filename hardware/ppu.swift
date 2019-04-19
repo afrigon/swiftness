@@ -168,8 +168,8 @@ class PictureProcessingUnit: BusConnectedComponent {
     var statusRegister = StatusRegister() // private
     var mirroring: ScreenMirroring = .horizontal
 
-    private let palette = Palette()
-     var paletteIndices = [Byte](repeating: 0x00, count: 32)
+    let palette = Palette()
+    var paletteIndices = [Byte](repeating: 0x00, count: 32)
     private var nameTable = [Byte](repeating: 0x00, count: 2048)
     private var oam = [Byte](repeating: 0x00, count: 256)
 
@@ -182,7 +182,11 @@ class PictureProcessingUnit: BusConnectedComponent {
     private var frameBufferA = FrameBuffer()
     private var frameBufferB = FrameBuffer()
     private var frameBuffers: (rendered: UnsafeMutablePointer<FrameBuffer>, current: UnsafeMutablePointer<FrameBuffer>)
-    var frameBuffer: UnsafeMutablePointer<FrameBuffer> { return self.frameBuffers.rendered }
+    var frameBuffer: UnsafePointer<FrameBuffer> {
+        self.needsRender = false
+        return UnsafePointer<FrameBuffer>(self.frameBuffers.rendered)
+    }
+    var needsRender: Bool = false
 
     init(using bus: Bus) {
         self.bus = bus
@@ -544,6 +548,7 @@ class PictureProcessingUnit: BusConnectedComponent {
         if self.nmiTimeout > 0 {
             self.nmiTimeout -= 1
             if self.nmiTimeout == 0 {
+                self.needsRender = true
                 self.bus.triggerInterrupt(of: .nmi)
             }
         }

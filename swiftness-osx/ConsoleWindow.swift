@@ -44,8 +44,10 @@ class ConsoleWindow: CenteredWindow {
                                        with: self.renderer!,
                                        drivenBy: self.loop,
                                        interactingWith: self.inputResponder)
-            //self.inputResponder.add(closure: self.conductor.dump, forKey: 99) // dump 0x6004, key: F3
-            self.inputResponder.add(closure: self.conductor.reset, forKey: 15) // dump 0x6004, key: F3
+
+            if self.conductor != nil {
+                self.inputResponder.add(closure: self.conductor.reset, forKey: 15) // dump 0x6004, key: F3
+            }
         }
 
         if let filepath = self.options.filepath {

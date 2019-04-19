@@ -22,7 +22,11 @@
 //    SOFTWARE.
 //
 
-import Cocoa
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+    import Cocoa
+#endif
 import Metal
 import simd
 
@@ -42,6 +46,14 @@ struct Vertex {
     }
 }
 
+#if targetEnvironment(simulator)
+class MetalRenderer: Renderer {
+    let layer = CALayer()
+
+    init() { self.layer.backgroundColor = UIColor.gray.cgColor }
+    func draw(_ image: UnsafeMutablePointer<FrameBuffer>) {}
+}
+#else
 class MetalRenderer: Renderer {
     private var device: MTLDevice! = nil
     private var pipelineState: MTLRenderPipelineState! = nil
@@ -175,7 +187,7 @@ class MetalRenderer: Renderer {
         commandBuffer.commit()
     }
 
-    func draw(_ image: UnsafeMutablePointer<FrameBuffer>) {
+    func draw(_ image: UnsafePointer<FrameBuffer>) {
         if self.textureDescriptor == nil || self.textureDescriptor!.width != image.pointee.size.width || self.textureDescriptor!.height != image.pointee.size.height {
             self.configureTextureDescriptor(width: image.pointee.size.width, height: image.pointee.size.height)
         }
@@ -197,3 +209,4 @@ class MetalRenderer: Renderer {
         }
     }
 }
+#endif

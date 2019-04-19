@@ -53,10 +53,30 @@ class NesFile {
     }
 
     static func load(path: String) -> Cartridge? {
+        // if is url
+        if path.range(of: #"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)"#, options: .regularExpression) != nil {
+            guard let url = URL(string: path) else { return nil }
+            return NesFile.download(url: url)
+        } else {
+            return NesFile.open(path: path)
+        }
+    }
+
+    static func open(path: String) -> Cartridge? {
         guard let data: NSData = NSData(contentsOfFile: path) else {
             fatalError("Could not open file at: \(path)")
         }
+        return NesFile.parse(data: data)
+    }
 
+    static func download(url: URL) -> Cartridge? {
+        guard let data = NSData(contentsOf: url) else {
+            fatalError("Could not download file at: \(url)")
+        }
+        return NesFile.parse(data: data)
+    }
+
+    static func parse(data: NSData) -> Cartridge? {
         var headerData = [UInt8](repeating:0, count: Header.size)
         data.getBytes(&headerData, length: Header.size)
         guard let header = Header(headerData) else {
@@ -90,7 +110,7 @@ class NesFile {
         return Cartridge(prg: prg, chr: chr, mapperType: mapperType, mirroring: mirroring, battery: battery)
     }
 
-    static func loadRaw(path: String) -> [Byte] {
+    static func raw(path: String) -> [Byte] {
         guard let data: NSData = NSData(contentsOfFile: path) else {
             fatalError("Could not open file at: \(path)")
         }

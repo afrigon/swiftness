@@ -25,65 +25,52 @@
 import Foundation
 
 class Conductor {
-    private var nes: NintendoEntertainmentSystem! = nil
-    private let renderer: Renderer
+    private var console: Console
     private let loop: LogicLoop
-    private let inputManager: InputManager
-    private var updateClosure = [(Double) -> Void]()
-    private let options: StartupOptions
+    private let inputManager: InputManager!
+    private let renderer: Renderer!
 
-    init?(use options: StartupOptions,
+    private var updateClosure = [(Double) -> Void]()
+
+    init(use console: Console,
          with renderer: Renderer,
          drivenBy loop: LogicLoop,
          interactingWith inputManager: InputManager) {
-        self.options = options
+        self.console = console
         self.renderer = renderer
         self.loop = loop
         self.inputManager = inputManager
-
-        guard self.options.mode != .test, let filepath = self.options.filepath else {
-            return nil
-        }
-
-        guard let game: Cartridge = NesFile.load(path: filepath) else { return nil }
-        // * blows a bit into the cardridge *
-        self.nes = NintendoEntertainmentSystem(load: game)
 
         self.updateClosure.append(self.update(_:))
         self.loop.start(closure: self.loopClosure)
     }
 
     func reset() {
-        self.nes.reset()
+        self.console.reset()
     }
 
-    func attach() -> Debugger {
-        self.options.mode = .debug
-        let debugger = Debugger(nes: self.nes)
-        self.updateClosure.append(debugger.loopClosure(_:))
-        return debugger
+    func add(closure: @escaping (Double) -> Void) {
+        self.updateClosure.append(closure)
     }
 
     private func loopClosure(_ deltaTime: Double) {
-        //print((self.loop as! CVDisplayLinkLoop).status)
-
         self.processInput()
-        for f in self.updateClosure {
-            f(deltaTime)
-        }
+        for f in self.updateClosure { f(deltaTime) }
         self.render()
     }
 
+    private func headlessLoopClosure(_ deltaTime: Double) {
+        for f in self.updateClosure { f(deltaTime) }
+    }
+
     private func processInput() {
-        self.nes.setInputs(to: self.inputManager.buttons, for: .primary)
+        self.console.setInputs(to: self.inputManager.buttons, for: .primary)
     }
 
     private func update(_ deltaTime: Double) {
-        if self.options.mode == .normal {
-            // dirty hack to make the emulator slow down when the fps is too slow
-            // doesn't work very well
-            self.nes.run(for: min(0.02, deltaTime))
-        }
+        // dirty hack to make the emulator slow down when the fps is too slow
+        // doesn't work very well
+        self.console.run(for: min(0.02, deltaTime))
     }
 
     private func render() {
@@ -159,6 +146,8 @@ class Conductor {
 //        }
 
 //        autoreleasepool { self.renderer.draw(&buffer) }
-        autoreleasepool { self.renderer.draw(self.nes.ppu.frameBuffer) }
+        if self.console.needsRender {
+            autoreleasepool { self.renderer.draw(self.console.framebuffer) }
+        }
     }
 }

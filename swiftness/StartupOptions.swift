@@ -22,6 +22,8 @@
 //    SOFTWARE.
 //
 
+import Foundation
+
 enum RunMode {
     case debug      // step cpu cycle manually
     case test       // unit tests
@@ -31,6 +33,7 @@ enum RunMode {
 class StartupOptions {
     var mode: RunMode = .normal
     var filepath: String?
+    var fileurl: URL?
 
     static func parse(_ arguments: [String]) -> StartupOptions? {
         let options = StartupOptions()

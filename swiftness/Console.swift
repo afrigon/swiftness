@@ -22,43 +22,11 @@
 //    SOFTWARE.
 //
 
-import XCTest
-@testable import swiftness_osx
+protocol Console {
+    var needsRender: Bool { get }
+    var framebuffer: UnsafePointer<FrameBuffer> { get }
 
-class NintendoEntertainmentSystemTestsRoms: XCTestCase {
-    private var nes: NintendoEntertainmentSystem!
-
-    override func setUp() {
-        self.nes = nil
-    }
-
-    func testInstructions() {
-//        let bundle = Bundle(for: type(of: self))
-//        let path = bundle.path(forResource: "cpu-instructions-tests", ofType: "nes")!
-//        guard let program = NesFile.load(path: path) else {
-//            return
-//        }
-//        self.nes = NintendoEntertainmentSystem(load: program)
-//
-//        self.nes.disableGraphics = true
-//        self.nes.stepFrame(60)
-//        while self.nes.bus.readByte(at: 0x6000) == 0x80 {
-//            self.nes.stepFrame()
-//        }
-//        let result = self.stringSRAM()
-//
-//        XCTAssert(self.nes.bus.readByte(at: 0x6000) == 0, result)
-    }
-
-//    func stringSRAM() -> String {
-//        var i: Word = 0x6004
-//        var value: Byte = 0
-//        var string = ""
-//        repeat {
-//            value = self.nes.bus.readByte(at: i)
-//            string += String(Character(UnicodeScalar(value)))
-//            i++
-//        } while (value != 0)
-//        return string
-//    }
+    func run(for deltaTime: Double)
+    func reset()
+    func setInputs(to value: Byte, for player: Controller.Player)
 }

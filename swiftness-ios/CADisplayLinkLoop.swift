@@ -22,43 +22,43 @@
 //    SOFTWARE.
 //
 
-import XCTest
-@testable import swiftness_osx
+import UIKit
 
-class NintendoEntertainmentSystemTestsRoms: XCTestCase {
-    private var nes: NintendoEntertainmentSystem!
+class CADisplayLinkLoop: LogicLoop {
+    private var timer: CADisplayLink! = nil
 
-    override func setUp() {
-        self.nes = nil
+    private var currentTime: Double = CACurrentMediaTime()
+    private var fps: UInt32 = 0
+    private var closure: ((Double) -> Void)?
+
+    weak var delegate: LogicLoopDelegate?
+
+    var status: String {
+        return " FPS: \(self.fps)"
     }
 
-    func testInstructions() {
-//        let bundle = Bundle(for: type(of: self))
-//        let path = bundle.path(forResource: "cpu-instructions-tests", ofType: "nes")!
-//        guard let program = NesFile.load(path: path) else {
-//            return
-//        }
-//        self.nes = NintendoEntertainmentSystem(load: program)
-//
-//        self.nes.disableGraphics = true
-//        self.nes.stepFrame(60)
-//        while self.nes.bus.readByte(at: 0x6000) == 0x80 {
-//            self.nes.stepFrame()
-//        }
-//        let result = self.stringSRAM()
-//
-//        XCTAssert(self.nes.bus.readByte(at: 0x6000) == 0, result)
+    init() {
+        self.timer = CADisplayLink(target: self, selector: #selector(self.loopClosure))
     }
 
-//    func stringSRAM() -> String {
-//        var i: Word = 0x6004
-//        var value: Byte = 0
-//        var string = ""
-//        repeat {
-//            value = self.nes.bus.readByte(at: i)
-//            string += String(Character(UnicodeScalar(value)))
-//            i++
-//        } while (value != 0)
-//        return string
-//    }
+    deinit {
+        self.timer.remove(from: .main, forMode: .default)
+    }
+
+    @objc private func loopClosure() {
+        let newTime = CACurrentMediaTime()
+        let deltaTime = newTime - self.currentTime
+        self.currentTime = newTime
+        self.fps = UInt32(1 / deltaTime)
+
+        if let closure = self.closure {
+            closure(deltaTime)
+            self.delegate?.logicLoop(loop: self, didExecuteCallback: deltaTime)
+        }
+    }
+
+    func start(closure: @escaping (Double) -> Void) {
+        self.closure = closure
+        self.timer.add(to: .main, forMode: .common)
+    }
 }

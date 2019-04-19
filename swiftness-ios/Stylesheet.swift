@@ -24,24 +24,8 @@
 
 import UIKit
 
-class GameViewController: UIViewController {
-    override var prefersStatusBarHidden: Bool { return true }
-    override var preferredStatusBarUpdateAnimation: UIStatusBarAnimation { return .slide }
-    override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation { return .portrait }
-
-    private var mainView: GameView {
-        return self.view as! GameView
+extension UIColor {
+    class var darkBlue: UIColor {
+        return UIColor(hex: 0x14181e)
     }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-    }
-
-    override func loadView() {
-        self.view = GameView()
-        self.mainView.delegate = self
-    }
-}
-
-extension GameViewController: GameViewDelegate {
 }
