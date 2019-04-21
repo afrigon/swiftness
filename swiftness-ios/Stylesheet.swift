@@ -25,6 +25,10 @@
 import UIKit
 
 extension UIColor {
+    class var primary: UIColor {
+        return UIColor(hex: 0xfa5a28)
+    }
+
     class var darkBlue: UIColor {
         return UIColor(hex: 0x14181e)
     }

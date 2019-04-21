@@ -21,49 +21,22 @@
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //    SOFTWARE.
 //
-
 import Foundation
+import CommonCrypto
 
-enum RunMode {
-    case debug      // step cpu cycle manually
-    case test       // unit tests
-    case normal     // as expected
-}
+extension Data {
+    public func md5sum() -> String {
+        guard self.count > 0 else { return "" }
 
-class StartupOptions {
-    var mode: RunMode = .normal
-    var romURL: URL?
+        var digest = [UInt8](repeating: 0, count: Int(CC_MD5_DIGEST_LENGTH))
+        let dataPointer = self.withUnsafeBytes { $0 }
+        CC_MD5(dataPointer.baseAddress!, CC_LONG(self.count), &digest)
 
-    static func parse(_ arguments: [String]) -> StartupOptions? {
-        let options = StartupOptions()
-        var temp: String?
-
-        for argument in arguments {
-            switch argument {
-            case "-h", "--help", "-help", "help": StartupOptions.printUsage(); return nil
-            case "-d", "--debug": options.mode = .debug
-            case "-t", "--test": options.mode = .test
-            default:
-                if argument.hasPrefix("-") {
-                    temp = argument
-                    continue
-                }
-
-                guard let option = temp else {
-                    options.romURL = URL(string: argument)
-                    continue
-                }
-
-                switch option {
-                default: continue
-                }
-            }
+        var digestHex = ""
+        for index in 0..<Int(CC_MD5_DIGEST_LENGTH) {
+            digestHex += String(format: "%02x", digest[index])
         }
 
-        return options
-    }
-
-    static func printUsage() {
-        print("USAGE: swiftness <options> [gamepath]")
+        return digestHex
     }
 }

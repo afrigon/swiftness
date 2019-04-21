@@ -24,136 +24,17 @@
 
 import Foundation
 
-/*fileprivate*/ class Palette {
-    var grayscale: Bool = false
-    var emphasisRed: Bool = false
-    var emphasisGreen: Bool = false
-    var emphasisBlue: Bool = false
-
-    // From http://nesdev.com//NESTechFAQ.htm#56
-    private let colors: [DWord] = [
-        0x808080, 0x003DA6, 0x0012B0, 0x440096,
-        0xA1005E, 0xC70028, 0xBA0600, 0x8C1700,
-        0x5C2F00, 0x104500, 0x054A00, 0x00472E,
-        0x004166, 0x000000, 0x050505, 0x050505,
-        0xC7C7C7, 0x0077FF, 0x2155FF, 0x8237FA,
-        0xEB2FB5, 0xFF2950, 0xFF2200, 0xD63200,
-        0xC46200, 0x358000, 0x058F00, 0x008A55,
-        0x0099CC, 0x212121, 0x090909, 0x090909,
-        0xFFFFFF, 0x0FD7FF, 0x69A2FF, 0xD480FF,
-        0xFF45F3, 0xFF618B, 0xFF8833, 0xFF9C12,
-        0xFABC20, 0x9FE30E, 0x2BF035, 0x0CF0A4,
-        0x05FBFF, 0x5E5E5E, 0x0D0D0D, 0x0D0D0D,
-        0xFFFFFF, 0xA6FCFF, 0xB3ECFF, 0xDAABEB,
-        0xFFA8F9, 0xFFABB3, 0xFFD2B0, 0xFFEFA6,
-        0xFFF79C, 0xD7E895, 0xA6EDAF, 0xA2F2DA,
-        0x99FFFC, 0xDDDDDD, 0x111111, 0x111111
-    ]
-
-    subscript(_ index: Byte) -> DWord {
-        get {
-            let index = index % 64
-
-            if self.grayscale {
-                return self.colors[Int(floor(Double(index) / 16)) * 16]
-            }
-
-            // TODO: handle emphasis modes
-
-            return self.colors[index]
-        }
-    }
-}
-
-class ControlRegister { // 0x2000
-    var value: Byte = 0
-    static func &= (left: inout ControlRegister, right: Byte) { left.value = right }
-
-    var nameTableAddress: Word { return 0x2000 + Word(value & 0b11) * 0x400 }       // 0: 0x2000; 1: 0x2400; 2: 0x2800; 3: 0x2C00
-    var increment: Word { return Bool(self.value & 4) ? 32 : 1 }                    // 0: add 1; 1: add 32
-    var spritePatternAddress: Word { return Word(value >> 3 & 1) * 0x1000 }         // 0: $0000; 1: $1000; ignored in 8x16 mode
-    var backgroundPatternAddress: Word { return Word(value >> 4 & 1) * 0x1000 }     // 0: $0000; 1: $1000
-    var spriteSize: Byte { return Bool(self.value & 0x20) ? 16 : 8 }                // 0: 8x8; 1: 8x16
-    var masterSlave: Bool { return Bool(self.value & 0x40) }
-    var interruptEnabled: Bool { return Bool(self.value & 0x80) }
-}
-
-class MaskRegister { // 0x2001
-    var value: Byte = 0
-    static func &= (left: inout MaskRegister, right: Byte) { left.value = right }
-
-    var greyscale: Bool { return Bool(self.value & 1) }
-    var clipBackground: Bool { return !Bool(self.value & 2) }
-    var clipSprites: Bool { return !Bool(self.value & 4) }
-    var showBackground: Bool { return Bool(self.value & 8) }
-    var showSprites: Bool { return Bool(self.value & 0x10) }
-    var emphasisRed: Bool { return Bool(self.value & 0x20) }
-    var emphasisGreen: Bool { return Bool(self.value & 0x40) }
-    var emphasisBlue: Bool { return Bool(self.value & 0x80) }
-
-    var renderingEnabled: Bool { return self.showBackground || self.showSprites }
-}
-
-class StatusRegister { // 0x2002
-    var lastWrite: Byte = 0
-    var spriteOverflow: Bool = false
-    var spriteZeroHit: Bool = false
-    var vblank: Bool = false
-
-    var value: Byte {
-        defer { self.vblank = false }
-        return Byte(self.lastWrite & 0x1F)
-            | Byte(self.spriteOverflow) << 5
-            | Byte(self.spriteZeroHit) << 6
-            | Byte(self.vblank) << 7
-    }
-
-    func clear() {
-        self.spriteOverflow = false
-        self.spriteZeroHit = false
-        self.vblank = false
-    }
-}
-
-fileprivate struct Tile {
-    var nameTable: Byte = 0
-    var attributeTable: Byte = 0
-    var lowTile: Byte = 0
-    var highTile: Byte = 0
-
-    func pixelData(flip: Bool = false) -> DWord {
-        var data: DWord = 0
-        let a = self.attributeTable << 2
-        for i in 0..<8 {
-            let lo = self.lowTile >> (7 - i) & Byte(1)
-            let hi = self.highTile >> (6 - i) & Byte(2)
-            let shift = 4 * (flip ? i : (7 - i))
-            data |= DWord(a | hi | lo) << shift
-        }
-        return data
-    }
-}
-
-fileprivate struct Sprite {
-    var pattern: DWord = 0
-    var position: Byte = 0
-    var index: Byte = 0
-    var priority: Bool = false
-}
-
 class PictureProcessingUnit: BusConnectedComponent {
-    static let cyclePerScanline: UInt16 = 341
-    static let scanlinePerFrame: UInt16 = 262
+    private static let cyclePerScanline: UInt16 = 341
+    private static let scanlinePerFrame: UInt16 = 262
 
     private weak var bus: Bus!
 
-    var cycle: UInt16 = 0 // private
-    private var _scanline: UInt16 = 0
-    private var _frame: Int64 = 0
-    var scanline: UInt16 { get { return self._scanline } }
-    var frame: Int64 { get { return self._frame } }
+    private var cycle: UInt16 = 0
+    private var scanline: UInt16 = 0
+    private var frame: Int64 = 0
 
-    var vramPointer: Word = 0 // private
+    private var vramPointer: Word = 0
     private var vramTempPointer: Word = 0
     private var writeToggle: Byte = 0
     private var evenFrame: Byte = 0
@@ -163,13 +44,12 @@ class PictureProcessingUnit: BusConnectedComponent {
 
     private var oamPointer: Byte = 0
 
-    var controlRegister = ControlRegister() // private
-    var maskRegister = MaskRegister() // private
-    var statusRegister = StatusRegister() // private
-    var mirroring: ScreenMirroring = .horizontal
+    private var controlRegister = ControlRegister()
+    private var maskRegister = MaskRegister()
+    private var statusRegister = StatusRegister()
+    private var mirroring: ScreenMirroring = .horizontal
 
-    let palette = Palette()
-    var paletteIndices = [Byte](repeating: 0x00, count: 32)
+    private let palette: Palette
     private var nameTable = [Byte](repeating: 0x00, count: 2048)
     private var oam = [Byte](repeating: 0x00, count: 256)
 
@@ -179,17 +59,22 @@ class PictureProcessingUnit: BusConnectedComponent {
     private var spriteCount: Byte = 0
     private var sprites: [Sprite] = Array(repeating: Sprite(), count: 8)
 
+    var mainColor: DWord { return self.palette.at(indices: 0) }
+    var needsRender: Bool { get { return self._needsRender } }
+    private var _needsRender: Bool = false
+
+    var frameBuffer: UnsafePointer<FrameBuffer> {
+        self._needsRender = false
+        return UnsafePointer<FrameBuffer>(self.frameBuffers.rendered)
+    }
     private var frameBufferA = FrameBuffer()
     private var frameBufferB = FrameBuffer()
     private var frameBuffers: (rendered: UnsafeMutablePointer<FrameBuffer>, current: UnsafeMutablePointer<FrameBuffer>)
-    var frameBuffer: UnsafePointer<FrameBuffer> {
-        self.needsRender = false
-        return UnsafePointer<FrameBuffer>(self.frameBuffers.rendered)
-    }
-    var needsRender: Bool = false
 
-    init(using bus: Bus) {
+    init(using bus: Bus, mirroring: ScreenMirroring = .horizontal) {
         self.bus = bus
+        self.mirroring = mirroring
+        self.palette = Palette(maskRegister: self.maskRegister)
         self.frameBuffers = (rendered: UnsafeMutablePointer<FrameBuffer>(&self.frameBufferA), current: UnsafeMutablePointer<FrameBuffer>(&self.frameBufferB))
     }
 
@@ -237,10 +122,6 @@ class PictureProcessingUnit: BusConnectedComponent {
             }
         case 0x2001:
             self.maskRegister &= data
-            self.palette.grayscale = self.maskRegister.greyscale
-            self.palette.emphasisRed = self.maskRegister.emphasisRed
-            self.palette.emphasisGreen = self.maskRegister.emphasisGreen
-            self.palette.emphasisBlue = self.maskRegister.emphasisBlue
         case 0x2003: self.oamPointer = data
         case 0x2004:
             self.oam[self.oamPointer] = data
@@ -291,7 +172,7 @@ class PictureProcessingUnit: BusConnectedComponent {
         if address < 0x4000 {
             var address = address % 32
             if address >= 16 && address % 4 == 0 { address -= 16 }
-            return self.paletteIndices[address]
+            return self.palette.indices[address]
         }
 
         return 0
@@ -312,17 +193,7 @@ class PictureProcessingUnit: BusConnectedComponent {
         if address < 0x4000 {
             var address = address % 32
             if address >= 16 && address % 4 == 0 { address -= 16 }
-            return self.paletteIndices[address] = data
-        }
-    }
-
-    private func verticalBlank() {
-        self.frameBuffers = (current: self.frameBuffers.rendered,
-                             rendered: self.frameBuffers.current)
-        self.statusRegister.vblank = true
-
-        if self.controlRegister.interruptEnabled {
-            self.nmiTimeout = 15
+            return self.palette.indices[address] = data
         }
     }
 
@@ -431,7 +302,7 @@ class PictureProcessingUnit: BusConnectedComponent {
         }
     }
 
-    private func render(x: UInt16, y: UInt16) {
+    private func renderPixel(x: UInt16, y: UInt16) {
         var backgroundColorIndex: Byte = 0
         var spriteColorIndex: Byte = 0
         var spriteIndex: Byte = 0
@@ -479,8 +350,19 @@ class PictureProcessingUnit: BusConnectedComponent {
             }
         }
 
-        let color: DWord = self.palette[self.paletteIndices[colorIndex]]
-        self.frameBuffers.current.pointee.set(x: Int(x), y: Int(y), color: color)
+        self.frameBuffers.current.pointee.set(x: Int(x),
+                                              y: Int(y),
+                                              color: self.palette.at(indices: colorIndex))
+    }
+
+    private func verticalBlank() {
+        self.frameBuffers = (current: self.frameBuffers.rendered,
+                             rendered: self.frameBuffers.current)
+        self.statusRegister.vblank = true
+
+        if self.controlRegister.interruptEnabled {
+            self.nmiTimeout = 15
+        }
     }
 
     func step() {
@@ -496,7 +378,7 @@ class PictureProcessingUnit: BusConnectedComponent {
         if self.maskRegister.renderingEnabled {
             // render pixel
             if visibleScanline && visibleCycle {
-                self.render(x: self.cycle - 1, y: self._scanline)
+                self.renderPixel(x: self.cycle - 1, y: self.scanline)
             }
 
             // fetch data
@@ -529,10 +411,10 @@ class PictureProcessingUnit: BusConnectedComponent {
         // tick
         self.cycle = (self.cycle + 1) % PictureProcessingUnit.cyclePerScanline
         if self.cycle == 0 {
-            self._scanline = (self._scanline + 1) % PictureProcessingUnit.scanlinePerFrame
+            self.scanline = (self.scanline + 1) % PictureProcessingUnit.scanlinePerFrame
 
-            if self._scanline == 0 {
-                self._frame &+= 1
+            if self.scanline == 0 {
+                self.frame &+= 1
                 self.evenFrame ^= 1
             }
         }
@@ -540,15 +422,16 @@ class PictureProcessingUnit: BusConnectedComponent {
         // skipping idle cycle on odd frames
         if self.maskRegister.renderingEnabled && !Bool(self.evenFrame) && preRenderScanline && self.cycle == 340 {
             self.cycle = 0
-            self._scanline = 0
-            self._frame &+= 1
+            self.scanline = 0
+            self.frame &+= 1
             self.evenFrame ^= 1
         }
 
+        // check for nmi
         if self.nmiTimeout > 0 {
             self.nmiTimeout -= 1
             if self.nmiTimeout == 0 {
-                self.needsRender = true
+                self._needsRender = true
                 self.bus.triggerInterrupt(of: .nmi)
             }
         }
@@ -556,10 +439,134 @@ class PictureProcessingUnit: BusConnectedComponent {
 
     func reset() {
         self.cycle = 321
-        self._scanline = 261
-        self._frame = -1
+        self.scanline = 261
+        self.frame = -1
         self.controlRegister &= 0
         self.maskRegister &= 0
         self.oamPointer = 0
     }
+}
+
+fileprivate class Palette {
+    // From http://nesdev.com//NESTechFAQ.htm#56
+    private let colors: [DWord] = [
+        0x808080, 0x003DA6, 0x0012B0, 0x440096,
+        0xA1005E, 0xC70028, 0xBA0600, 0x8C1700,
+        0x5C2F00, 0x104500, 0x054A00, 0x00472E,
+        0x004166, 0x000000, 0x050505, 0x050505,
+        0xC7C7C7, 0x0077FF, 0x2155FF, 0x8237FA,
+        0xEB2FB5, 0xFF2950, 0xFF2200, 0xD63200,
+        0xC46200, 0x358000, 0x058F00, 0x008A55,
+        0x0099CC, 0x212121, 0x090909, 0x090909,
+        0xFFFFFF, 0x0FD7FF, 0x69A2FF, 0xD480FF,
+        0xFF45F3, 0xFF618B, 0xFF8833, 0xFF9C12,
+        0xFABC20, 0x9FE30E, 0x2BF035, 0x0CF0A4,
+        0x05FBFF, 0x5E5E5E, 0x0D0D0D, 0x0D0D0D,
+        0xFFFFFF, 0xA6FCFF, 0xB3ECFF, 0xDAABEB,
+        0xFFA8F9, 0xFFABB3, 0xFFD2B0, 0xFFEFA6,
+        0xFFF79C, 0xD7E895, 0xA6EDAF, 0xA2F2DA,
+        0x99FFFC, 0xDDDDDD, 0x111111, 0x111111
+    ]
+
+    weak var maskRegister: MaskRegister?
+    var indices: [Byte] = [Byte](repeating: 0x00, count: 32)
+
+    init(maskRegister: MaskRegister) {
+        self.maskRegister = maskRegister
+    }
+
+    subscript(_ index: Byte) -> DWord {
+        get {
+            let index = index % 64
+
+            if self.maskRegister?.greyscale ?? false {
+                return self.colors[Int(floor(Double(index) / 16)) * 16]
+            }
+
+            // TODO: handle emphasis modes
+
+            return self.colors[index]
+        }
+    }
+
+    /// Returns the color from the palette pointed to by indices entry at index.
+    func at(indices index: Byte) -> DWord {
+        return self[self.indices[Int(index) % 32]]
+    }
+}
+
+fileprivate class ControlRegister { // 0x2000
+    private var value: Byte = 0
+    static func &= (left: inout ControlRegister, right: Byte) { left.value = right }
+
+    var nameTableAddress: Word { return 0x2000 + Word(value & 0b11) * 0x400 }       // 0: 0x2000; 1: 0x2400; 2: 0x2800; 3: 0x2C00
+    var increment: Word { return Bool(self.value & 4) ? 32 : 1 }                    // 0: add 1; 1: add 32
+    var spritePatternAddress: Word { return Word(value >> 3 & 1) * 0x1000 }         // 0: $0000; 1: $1000; ignored in 8x16 mode
+    var backgroundPatternAddress: Word { return Word(value >> 4 & 1) * 0x1000 }     // 0: $0000; 1: $1000
+    var spriteSize: Byte { return Bool(self.value & 0x20) ? 16 : 8 }                // 0: 8x8; 1: 8x16
+    var masterSlave: Bool { return Bool(self.value & 0x40) }
+    var interruptEnabled: Bool { return Bool(self.value & 0x80) }
+}
+
+fileprivate class MaskRegister { // 0x2001
+    private var value: Byte = 0
+    static func &= (left: inout MaskRegister, right: Byte) { left.value = right }
+
+    var greyscale: Bool { return Bool(self.value & 1) }
+    var clipBackground: Bool { return !Bool(self.value & 2) }
+    var clipSprites: Bool { return !Bool(self.value & 4) }
+    var showBackground: Bool { return Bool(self.value & 8) }
+    var showSprites: Bool { return Bool(self.value & 0x10) }
+    var emphasisRed: Bool { return Bool(self.value & 0x20) }
+    var emphasisGreen: Bool { return Bool(self.value & 0x40) }
+    var emphasisBlue: Bool { return Bool(self.value & 0x80) }
+
+    var renderingEnabled: Bool { return self.showBackground || self.showSprites }
+}
+
+fileprivate class StatusRegister { // 0x2002
+    var lastWrite: Byte = 0
+    var spriteOverflow: Bool = false
+    var spriteZeroHit: Bool = false
+    var vblank: Bool = false
+
+    var value: Byte {
+        defer { self.vblank = false }
+        return Byte(self.lastWrite & 0x1F)
+            | Byte(self.spriteOverflow) << 5
+            | Byte(self.spriteZeroHit) << 6
+            | Byte(self.vblank) << 7
+    }
+
+    func clear() {
+        self.spriteOverflow = false
+        self.spriteZeroHit = false
+        self.vblank = false
+    }
+}
+
+fileprivate struct Tile {
+    var nameTable: Byte = 0
+    var attributeTable: Byte = 0
+    var lowTile: Byte = 0
+    var highTile: Byte = 0
+
+    func pixelData(flip: Bool = false) -> DWord {
+        var data: DWord = 0
+        let a = self.attributeTable << 2
+        for i in 0..<8 {
+            let lo = self.lowTile >> (7 - i) & Byte(1)
+            let hi = self.highTile >> (6 - i) & Byte(2)
+            let shift = 4 * (flip ? i : (7 - i))
+            data |= DWord(a | hi | lo) << shift
+        }
+        return data
+    }
+}
+
+fileprivate struct Sprite {
+    var pattern: DWord = 0
+    var position: Byte = 0
+    var index: Byte = 0
+    var priority: Bool = false
 }

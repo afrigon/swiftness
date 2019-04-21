@@ -24,37 +24,33 @@
 
 import UIKit
 
-class RootViewController: UIViewController {
-    private var options: StartupOptions
-    private let renderer: MetalRenderer? = MetalRenderer()
-    private var loop = CADisplayLinkLoop()
-    private var conductor: Conductor!
-    private var inputResponder = InputResponder()
+
+class ConsoleViewController: UIViewController {
+    private var conductor: Conductor! = nil
+    private var console: Console
+    private let loop = CADisplayLinkLoop()
+    private let renderer: MetalRenderer! = MetalRenderer()
+    private let inputManager = InputResponder()
 
     override var prefersStatusBarHidden: Bool { return true }
     override var preferredStatusBarUpdateAnimation: UIStatusBarAnimation { return .slide }
     override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation { return .portrait }
 
-    private var mainView: RootView {
-        return self.view as! RootView
+    private var mainView: ConsoleView {
+        return self.view as! ConsoleView
     }
 
-    init(options: StartupOptions) {
-        self.options = options
+    init?(_ console: Console) {
+        self.console = console
         super.init(nibName: nil, bundle: nil)
 
         #if !targetEnvironment(simulator)
-            if self.renderer != nil {
-                self.conductor = Conductor(use: self.options,
-                                           with: self.renderer!,
-                                           drivenBy: self.loop,
-                                           interactingWith: self.inputResponder)
+        guard self.renderer != nil else { return nil }
 
-                guard self.conductor != nil else { return }
-                self.conductor!.addUpdateClosure { (deltaTime) in
-                    self.view.backgroundColor = UIColor(hex: Int(self.conductor!.backgroundColor))
-                }
-            }
+        self.conductor = Conductor(use: self.console, drivenBy: self.loop, renderedBy: self.renderer, interactingWith: self.inputManager)
+        self.conductor.onUpdate { _ in
+            self.view.backgroundColor = UIColor(hex: Int(self.console.mainColor))
+        }
         #endif
     }
 
@@ -63,14 +59,15 @@ class RootViewController: UIViewController {
     }
 
     override func viewDidLayoutSubviews() {
-        if self.renderer != nil {
-            self.renderer!.layer.frame = self.mainView.gameView.bounds
-        }
+        super.viewDidLayoutSubviews()
+        self.renderer.layer.frame = self.mainView.gameView.bounds
     }
 
     override func loadView() {
-        self.view = RootView(interactingWith: self.inputResponder)
-        self.mainView.gameView.layer.addSublayer(self.renderer!.layer)
+        super.loadView()
+        self.view = ConsoleView(interactingWith: self.inputManager)
+        self.mainView.screenRatio = CGFloat(self.console.screenHeight) / CGFloat(self.console.screenWidth)
+        self.mainView.gameView.layer.addSublayer(self.renderer.layer)
         self.view.setNeedsLayout()
     }
 }

@@ -23,6 +23,9 @@
 //
 
 protocol Console {
+    var screenWidth: Int { get }
+    var screenHeight: Int { get }
+
     var needsRender: Bool { get }
     var framebuffer: UnsafePointer<FrameBuffer> { get }
 

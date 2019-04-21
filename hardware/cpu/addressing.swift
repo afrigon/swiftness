@@ -46,21 +46,21 @@ enum AddressingMode {
 }
 
 protocol OperandBuilder {
-    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand
+    func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand
 }
 
 class EmptyOperandBuilder: OperandBuilder {
-    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand { return Operand() }
+    func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand { return Operand() }
 }
 
 class AlteredOperandBuilder: OperandBuilder {   // Abstract
     let alteration: AddressingMode.Alteration
     init(_ alteration: AddressingMode.Alteration = .none) { self.alteration = alteration }
-    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand { return Operand() }
+    func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand { return Operand() }
 }
 
 class ZeroPageAddressingOperandBuilder: AlteredOperandBuilder {
-    override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
+    override func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand {
         let alterationValue: Byte = self.alteration != .none ? (self.alteration == .x ? regs.x : regs.y) : 0
         var operand = Operand()
         operand.address = (memory.readByte(at: regs.pc).asWord() + alterationValue) & 0xFF
@@ -78,7 +78,7 @@ class AbsoluteAddressingOperandBuilder: AlteredOperandBuilder {
         super.init(alteration)
     }
 
-    override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
+    override func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand {
         let alterationValue: Byte = self.alteration != .none ? (self.alteration == .x ? regs.x : regs.y) : 0
         var operand = Operand()
         operand.address = memory.readWord(at: regs.pc) + alterationValue
@@ -94,7 +94,7 @@ class AbsoluteAddressingOperandBuilder: AlteredOperandBuilder {
 }
 
 class RelativeAddressingOperandBuilder: OperandBuilder {
-    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
+    func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand {
         var operand = Operand()
 
         // transform the relative address into an absolute address
@@ -113,7 +113,7 @@ class RelativeAddressingOperandBuilder: OperandBuilder {
 }
 
 class ImmediateAddressingOperandBuilder: OperandBuilder {
-    func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
+    func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand {
         var operand = Operand()
         operand.value = memory.readByte(at: regs.pc).asWord()
         regs.pc++
@@ -122,7 +122,7 @@ class ImmediateAddressingOperandBuilder: OperandBuilder {
 }
 
 class IndirectAddressingMode: AlteredOperandBuilder {
-    override func evaluate(_ regs: inout RegisterSet, _ memory: CoreProcessingUnitMemory) -> Operand {
+    override func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand {
         let addressPointer: Word = ((self.alteration == .none
             ? memory.readWord(at: regs.pc)
             : memory.readByte(at: regs.pc).asWord())

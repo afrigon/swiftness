@@ -27,40 +27,27 @@ class NintendoEntertainmentSystem: Console, BusDelegate {
     static let screenHeight: Int = 240
 
     private let cpu: CoreProcessingUnit
-    let ppu: PictureProcessingUnit // private
+    private let ppu: PictureProcessingUnit
     private let apu = AudioProcessingUnit()
     private let ram = RandomAccessMemory()
     private let controller1 = Controller(.primary)
     private let controller2 = Controller(.secondary)
-    let cartridge: Cartridge // private
+    private let cartridge: Cartridge
     let bus = Bus()
 
-    var disableGraphics: Bool = false
-    var deficitCycles: Int64 = 0
-    var frequency: Double { return self.cpu.frequency }
+    private var deficitCycles: Int64 = 0
 
-    var cpuCycle: UInt64 { return self.cpu.totalCycles }
-    var cpuRegisters: RegisterSet { return self.cpu.registers }
-    var ppuFrame: Int64 { return self.ppu.frame }
-    var ppuScanline: UInt16 { return self.ppu.scanline }
-    var ppuCycle: UInt16 { return self.ppu.cycle }
+    var screenWidth: Int { return NintendoEntertainmentSystem.screenWidth }
+    var screenHeight: Int { return NintendoEntertainmentSystem.screenHeight }
 
-    func opcodeInfo(for opcode: Byte) -> (String, AddressingMode) {
-        return self.cpu.opcodeInfo(for: opcode)
-    }
-
-    var mirroringMode: ScreenMirroring {
-        return self.cartridge.mirroring
-    }
-
+    var mainColor: DWord { return self.ppu.mainColor }
     var needsRender: Bool { return self.ppu.needsRender }
     var framebuffer: UnsafePointer<FrameBuffer> { return self.ppu.frameBuffer }
 
-    init(load game: Cartridge) {
+    init(load rom: Cartridge) {
         self.cpu = CoreProcessingUnit(using: self.bus)
-        self.ppu = PictureProcessingUnit(using: self.bus)
-        self.cartridge = game
-        self.ppu.mirroring = self.cartridge.mirroring
+        self.ppu = PictureProcessingUnit(using: self.bus, mirroring: rom.mirroring)
+        self.cartridge = rom
         self.bus.delegate = self
         self.reset()
     }
@@ -81,16 +68,15 @@ class NintendoEntertainmentSystem: Console, BusDelegate {
     @discardableResult
     func step() -> UInt8 {
         let cpuCycle: UInt8 = self.cpu.step()
-        if !self.disableGraphics {
-            let ppuCycle = cpuCycle * 3
-            for _ in 0..<ppuCycle { self.ppu.step() }
-        }
+
+        let ppuCycle = cpuCycle * 3
+        for _ in 0..<ppuCycle { self.ppu.step() }
+
         self.apu.step()
 
         return cpuCycle
     }
 
-    // TODO: what to do when the emulation is running behind
     func run(for deltaTime: Double) {
         var cycles: Int64 = Int64(self.cpu.frequency * deltaTime) + self.deficitCycles
 
@@ -99,22 +85,6 @@ class NintendoEntertainmentSystem: Console, BusDelegate {
         }
 
         self.deficitCycles = cycles
-    }
-
-    @discardableResult
-    func stepLine(_ count: UInt16 = 1) -> UInt64 {
-        var cyclesCount: UInt64 = 0
-        let endLine = (self.ppu.scanline + count) % PictureProcessingUnit.scanlinePerFrame
-        while self.ppu.scanline != endLine { cyclesCount += UInt64(self.step()) }
-        return cyclesCount
-    }
-
-    @discardableResult
-    func stepFrame(_ count: Int64 = 1) -> UInt64 {
-        var cyclesCount: UInt64 = 0
-        let endFrame = self.ppu.frame + count
-        while self.ppu.frame < endFrame { cyclesCount += UInt64(self.step()) }
-        return cyclesCount
     }
 
     func bus(bus: Bus, shouldTriggerInterrupt type: InterruptType) {

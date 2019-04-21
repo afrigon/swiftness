@@ -30,10 +30,6 @@ protocol BusConnectedComponent {
 class Bus {
     weak var delegate: BusDelegate?
 
-    var mirroringMode: ScreenMirroring {
-        return self.delegate?.mirroringMode ?? .horizontal
-    }
-
     func triggerInterrupt(of type: InterruptType) {
         guard let delegate = self.delegate else {
             fatalError("A bus delegate must be assign before any interrupt signal is sent over the bus")
@@ -66,8 +62,6 @@ class Bus {
 }
 
 protocol BusDelegate: AnyObject {
-    var mirroringMode: ScreenMirroring { get }
-
     func bus(bus: Bus, shouldTriggerInterrupt type: InterruptType)
     func bus(bus: Bus, didBlockFor cycles: UInt16)
     func bus(bus: Bus, didSendReadSignalAt address: Word, rom: Bool) -> Byte

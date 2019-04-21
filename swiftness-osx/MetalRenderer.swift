@@ -51,7 +51,7 @@ class MetalRenderer: Renderer {
     let layer = CALayer()
 
     init() { self.layer.backgroundColor = UIColor.gray.cgColor }
-    func draw(_ image: UnsafeMutablePointer<FrameBuffer>) {}
+    func draw(_ image: UnsafePointer<FrameBuffer>) {}
 }
 #else
 class MetalRenderer: Renderer {

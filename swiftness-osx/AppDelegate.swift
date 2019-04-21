@@ -24,59 +24,40 @@
 
 import Cocoa
 
-class CenteredWindow: NSWindow {
-    init(width: CGFloat, height: CGFloat, styleMask style: NSWindow.StyleMask) {
-        guard let screen = NSScreen.main else {
-            fatalError("User has no screen, wtf?!")
-        }
-
-        let frame = CGRect(x: screen.frame.midX - width / 2,
-                           y: screen.frame.midY - height / 2,
-                           width: width,
-                           height: height)
-
-        super.init(contentRect: frame,
-                   styleMask: style,
-                   backing: .buffered,
-                   defer: false)
-
-        self.contentView?.wantsLayer = true
-    }
-
-    func getWindowController() -> NSWindowController {
-        return NSWindowController(window: self)
-    }
-}
-
 class AppDelegate: NSObject, NSApplicationDelegate {
-    private let scale = 3
-    private var windowController: NSWindowController!
-    private var window: ConsoleWindow!
+    private var options: StartupOptions!
+    var window: ConsoleWindow!
 
-    let options: StartupOptions
-    var conductor: Conductor { return self.window.conductor }
+    override init() {
+        super.init()
+        let arguments = Array(CommandLine.arguments.dropFirst())
+        self.options = StartupOptions.parse(arguments)
+        guard self.options != nil else { exit(0) }
 
-    init(_ options: StartupOptions) {
-        self.options = options
+        self.options.romURL = URL(string: "file:///Users/frigon/.nes/roms/donkey-kong.nes")
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let width = CGFloat(NintendoEntertainmentSystem.screenWidth * self.scale)
-        let height = CGFloat(NintendoEntertainmentSystem.screenHeight * self.scale)
-
-        self.window = ConsoleWindow(width: width, height: height, options: self.options)
-        self.window.makeFirstResponder(self.window.inputResponder)
-        self.windowController = self.window.getWindowController()
-        self.windowController.showWindow(self)
-        NSApplication.shared.mainMenu = Menu()
-
-        guard self.options.mode != .test else {
+        guard let url = self.options.romURL else {
+            print("No url found to load the rom from")
             return
         }
 
-        if self.options.mode == .debug {
-            let debugger = self.conductor.attach()
-            DebuggerWindow(debugger: debugger).getWindowController().showWindow(self)
+        guard let data = try? Data(contentsOf: url) else {
+            print("Could not load data from \(url)")
+            return
         }
+
+        guard let rom = NesFile.parse(data: NSData(data: data)) else {
+            print("Could not parse input file into a cartridge")
+            return
+        }
+
+        self.window = ConsoleWindow(NintendoEntertainmentSystem(load: rom))
+        self.window.title = Bundle.main.infoDictionary?[kCFBundleNameKey as String] as? String ?? "Swiftness"
+        if let filepath = options.romURL { self.window.title += " - \(filepath.lastPathComponent)" }
+
+        self.window.windowController?.showWindow(self)
+        NSApplication.shared.mainMenu = ConsoleMenu()
     }
 }

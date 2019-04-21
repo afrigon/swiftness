@@ -23,37 +23,47 @@
 //
 
 import UIKit
+import SSZipArchive
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
-    private var viewController: RootViewController!
+    private var options: StartupOptions!
     var window: UIWindow?
-
-    var options: StartupOptions!
 
     override init() {
         super.init()
         let arguments = Array(CommandLine.arguments.dropFirst())
         self.options = StartupOptions.parse(arguments)
         guard self.options != nil else { exit(0) }
+
+        guard (try? FileHelper.initDocuments()) != nil else {
+            // show could not init files or something
+            return
+        }
     }
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [
                         UIApplication.LaunchOptionsKey: Any
                      ]?) -> Bool {
-        self.viewController = RootViewController(options: self.options)
         self.window = UIWindow(frame: UIScreen.main.bounds)
-        self.window!.tintColor = .blue
+        self.window!.tintColor = .primary
         self.window!.backgroundColor = .darkBlue
 
-        self.window!.rootViewController = self.viewController
-        self.window!.makeKeyAndVisible()
+        // should be changed for game browser vc
+        self.window?.rootViewController = UIViewController()
+        self.window?.makeKeyAndVisible()
 
         return true
     }
 
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-        self.options.fileurl = url
+        self.options.romURL = url
+        
+        guard let data = try? FileHelper.open(url: url) else { return false }
+        guard let rom = NesFile.parse(data: NSData(data: data)) else { return false }
+        guard let vc = ConsoleViewController(NintendoEntertainmentSystem(load: rom)) else { return false }
+
+        self.window?.rootViewController?.present(vc, animated: true, completion: nil)
         return true
     }
 }

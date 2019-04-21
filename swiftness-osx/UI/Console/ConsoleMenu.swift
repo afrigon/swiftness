@@ -24,14 +24,14 @@
 
 import Cocoa
 
-class Menu: NSMenu, NSMenuDelegate {
+class ConsoleMenu: NSMenu, NSMenuDelegate {
     init() {
         super.init(title: "Main Menu")
 
         // swiftness
         let swiftness = NSMenuItem(title: "Swiftness", action: nil, keyEquivalent: "")
         let swiftnessMenu = NSMenu(title: "Swiftness")
-        swiftnessMenu.addItem(withTitle: "About Swiftness", action: #selector(Menu.about(_:)), keyEquivalent: "")
+        swiftnessMenu.addItem(withTitle: "About Swiftness", action: #selector(ConsoleMenu.about(_:)), keyEquivalent: "")
         swiftnessMenu.addItem(withTitle: "Quit Swiftness", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         swiftness.submenu = swiftnessMenu
 
@@ -44,7 +44,7 @@ class Menu: NSMenu, NSMenuDelegate {
         // tools
         let tools = NSMenuItem(title: "Tools", action: nil, keyEquivalent: "")
         let toolsMenu = NSMenu(title: "Tools")
-        toolsMenu.addItem(withTitle: "Debugger", action: #selector(Menu.debugger(_:)), keyEquivalent: "d")
+        toolsMenu.addItem(withTitle: "Debugger", action: #selector(ConsoleMenu.debugger(_:)), keyEquivalent: "d")
         tools.submenu = toolsMenu
 
         self.addItem(swiftness)

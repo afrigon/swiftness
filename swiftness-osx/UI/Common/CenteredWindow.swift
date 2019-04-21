@@ -22,30 +22,32 @@
 //    SOFTWARE.
 //
 
-import UIKit
+import Cocoa
 
-class RootView: UIView {
-    let gameView = UIView()
-    let controllerView: ControllerView!
+class CenteredWindow: NSWindow {
+    var _windowController: NSWindowController?
+    override var windowController: NSWindowController? {
+        get {
+            if self._windowController == nil { self._windowController = NSWindowController(window: self) }
+            return self._windowController
+        }
 
-    init(interactingWith inputResponder: InputResponder) {
-        self.controllerView = ControllerView(inputResponder)
-        super.init(frame: .zero)
-
-        self.addSubview(self.gameView)
-        self.addSubview(self.controllerView)
+        set { self._windowController = newValue }
     }
 
-    required init(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    init(width: CGFloat, height: CGFloat, styleMask style: NSWindow.StyleMask) {
+        guard let screen = NSScreen.main else { fatalError("User has no screen, huh?") }
 
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        self.frame = UIScreen.main.bounds
+        let frame = CGRect(x: screen.frame.midX - width / 2,
+                           y: screen.frame.midY - height / 2,
+                           width: width,
+                           height: height)
 
-        let ratio = CGFloat(NintendoEntertainmentSystem.screenHeight) / CGFloat(NintendoEntertainmentSystem.screenWidth)
-        self.gameView.frame = CGRect(x: 0, y: self.safeAreaInsets.top, width: self.bounds.width, height: self.bounds.width * ratio)
-        self.controllerView.frame = CGRect(x: 0, y: self.gameView.bounds.maxY + self.safeAreaInsets.top, width: self.bounds.width, height: self.bounds.height - self.gameView.bounds.maxY - self.safeAreaInsets.top - self.safeAreaInsets.bottom)
+        super.init(contentRect: frame,
+                   styleMask: style,
+                   backing: .buffered,
+                   defer: false)
+
+        self.contentView?.wantsLayer = true
     }
 }

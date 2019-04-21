@@ -34,13 +34,7 @@ class NesFile {
         let padding = [Byte](repeating: 0x00, count: 7)
 
         init?(_ values: [Byte]) {
-            guard values.count == Header.size &&
-                UInt32(values[0]) << 24
-                | UInt32(values[1]) << 16
-                | UInt32(values[2]) << 8
-                | UInt32(values[3]) == 0x4E45531A else {    // NES^
-                    return nil
-            }
+            guard values.count == Header.size && NesFile.validateMagic(a: values[0], b: values[1], c: values[2], d: values[3]) else { return nil }
 
             self.prgSize = values[4]
             self.chrSize = values[5]
@@ -52,28 +46,12 @@ class NesFile {
         static var size: Int = 16
     }
 
-    static func load(path: String) -> Cartridge? {
-        // if is url
-        if path.range(of: #"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)"#, options: .regularExpression) != nil {
-            guard let url = URL(string: path) else { return nil }
-            return NesFile.download(url: url)
-        } else {
-            return NesFile.open(path: path)
-        }
+    static func validateMagic(a: UInt8, b: UInt8, c: UInt8, d: UInt8) -> Bool {
+        return UInt32(a) << 24 | UInt32(b) << 16 | UInt32(c) << 8 | UInt32(d) == 0x4E45531A // NES^
     }
 
-    static func open(path: String) -> Cartridge? {
-        guard let data: NSData = NSData(contentsOfFile: path) else {
-            fatalError("Could not open file at: \(path)")
-        }
-        return NesFile.parse(data: data)
-    }
-
-    static func download(url: URL) -> Cartridge? {
-        guard let data = NSData(contentsOf: url) else {
-            fatalError("Could not download file at: \(url)")
-        }
-        return NesFile.parse(data: data)
+    static func validateMagic(_ data: Data) -> Bool {
+        return data.count >= 4 && NesFile.validateMagic(a: data[0], b: data[1], c: data[2], d: data[3])
     }
 
     static func parse(data: NSData) -> Cartridge? {

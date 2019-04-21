@@ -78,7 +78,7 @@ enum Flag: UInt8 {
     static prefix func ~ (value: Flag) -> UInt8 { return ~value.rawValue }
 }
 
-struct RegisterSet {
+struct Registers {
     var a: AccumulatorRegister      = 0x00
     var x: XIndexRegister           = 0x00
     var y: YIndexRegister           = 0x00
@@ -94,7 +94,7 @@ enum InterruptType: Word {
     var address: Word { return self.rawValue }
 }
 
-struct Opcode {
+fileprivate struct Opcode {
     let closure: (inout Operand) -> Void
     let name: String
     let cycles: UInt8
@@ -122,23 +122,19 @@ struct Operand {
 
 class CoreProcessingUnit {
     private weak var bus: Bus!
+
     private let memory: CoreProcessingUnitMemory
     private let stack: Stack
-    private var regs: RegisterSet
+    private var regs: Registers = Registers()
     private var opcodes: [Byte: Opcode]! = nil
     private var interruptRequest: InterruptType?
-    var registers: RegisterSet { return self.regs }
+
     let frequency: Double = 1789773
     var stallCycles: UInt16 = 0
     var totalCycles: UInt64 = 0
 
-    func opcodeInfo(for opcode: Byte) -> (String, AddressingMode) {
-        return (self.opcodes[opcode]?.name ?? "undefined", self.opcodes[opcode]?.addressingMode ?? .implied)
-    }
-
-    init(using bus: Bus, with registers: RegisterSet = RegisterSet()) {
+    init(using bus: Bus) {
         self.bus = bus
-        self.regs = registers
         self.memory = CoreProcessingUnitMemory(using: bus)
         self.stack = Stack(using: self.bus, sp: &self.regs.sp)
 
@@ -298,28 +294,9 @@ class CoreProcessingUnit {
     }
 
     func requestInterrupt(type: InterruptType) {
-        // maybe handle interrupt priority as described in this document at page 13
-        // http://nesdev.com/NESDoc.pdf
-        guard type != .irq || self.regs.p.isNotSet(.interrupt) else {
-            return
-        }
-
+        guard type != .irq || self.regs.p.isNotSet(.interrupt) else { return }
         self.interruptRequest = type
-
-        // maybe will have to switch to a queue of interrupts ?
     }
-
-    // Method used to inject instructions for testing
-    func process(opcode: Byte, operand: Operand = Operand()) {
-        guard let opcode: Opcode = self.opcodes[opcode] else {
-            fatalError("Unknown opcode used (outside of the 151 available)")
-        }
-
-        var operand = operand
-        opcode.closure(&operand)
-    }
-
-//    var trace = [Word](repeating: 0, count: 50)
 
     @discardableResult
     func step() -> UInt8 {
@@ -336,8 +313,6 @@ class CoreProcessingUnit {
         }
 
         let opcodeHex: Byte = self.memory.readByte(at: regs.pc)
-//        self.trace.append(regs.pc)
-//        self.trace.removeFirst()
         regs.pc++
 
         guard let opcode: Opcode = self.opcodes[opcodeHex] else {
@@ -359,8 +334,8 @@ class CoreProcessingUnit {
         if type == .reset {
             self.regs.sp = 0xFD
         } else {
-            stack.pushWord(data: regs.pc)
-            stack.pushByte(data: regs.p.value | Flag.alwaysOne.rawValue)
+            self.stack.pushWord(data: self.regs.pc)
+            self.stack.pushByte(data: self.regs.p.value | Flag.alwaysOne.rawValue)
         }
 
         self.regs.p.set(.interrupt)

@@ -24,7 +24,7 @@
 
 fileprivate enum RegisterType { case control, prgBank, chrBank0, chrBank1 }
 
-fileprivate class Registers {
+fileprivate class MMC1Registers {
     private var shiftRegister: Byte = 0b10000
     private var controlRegister: Byte = 0
     private var prgBankRegister: Byte = 0
@@ -60,7 +60,7 @@ class MMC1: Mapper {
     private var lowerPrgIndex: UInt8 = 0
     private var higherPrgIndex: UInt8 = 1
 
-    private var registers = Registers()
+    private var registers = MMC1Registers()
 
     required init(_ delegate: MapperDelegate) {
         self.delegate = delegate

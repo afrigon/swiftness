@@ -25,36 +25,28 @@
 import Cocoa
 
 class ConsoleWindow: CenteredWindow {
-    private var options: StartupOptions
-    private let renderer: MetalRenderer? = MetalRenderer()
-    private var loop = CVDisplayLinkLoop()
-    var conductor: Conductor!
-    var inputResponder = InputResponder()
+    private var conductor: Conductor! = nil
+    private var console: Console
+    private let loop = CVDisplayLinkLoop()
+    private let renderer: MetalRenderer! = MetalRenderer()
+    private let inputManager = InputResponder()
+    private static let scale: Int = 3
 
-    private var elapsedTime: Double = 0
+    init?(_ console: Console) {
+        self.console = console
+        super.init(width: CGFloat(self.console.screenWidth * ConsoleWindow.scale),
+                   height: CGFloat(self.console.screenHeight * ConsoleWindow.scale),
+                   styleMask: [.closable, .miniaturizable, .titled])
 
-    init(width: CGFloat, height: CGFloat, options: StartupOptions) {
-        self.options = options
-        super.init(width: width, height: height, styleMask: [.closable, .miniaturizable, .titled])
+        guard self.renderer != nil else { return nil }
 
-        if self.renderer != nil {
-            self.contentView?.layer?.addSublayer(self.renderer!.layer)
-            self.contentView?.layer?.setNeedsLayout()
-            self.conductor = Conductor(use: self.options,
-                                       with: self.renderer!,
-                                       drivenBy: self.loop,
-                                       interactingWith: self.inputResponder)
+        self.conductor = Conductor(use: self.console, drivenBy: self.loop, renderedBy: self.renderer, interactingWith: self.inputManager)
 
-            if self.conductor != nil {
-                self.inputResponder.add(closure: self.conductor.reset, forKey: 15) // dump 0x6004, key: F3
-            }
-        }
+        self.inputManager.add(closure: self.conductor.reset, forKey: 15) // reset, key: R
+        self.makeFirstResponder(self.inputManager)
 
-        if let filepath = self.options.filepath {
-            self.title = "Swiftness - \((filepath as NSString).lastPathComponent)"
-        } else {
-            self.title = "Swiftness"
-        }
+        self.contentView?.layer?.addSublayer(self.renderer.layer)
+        self.contentView?.layer?.setNeedsLayout()
     }
 
     override func layoutIfNeeded() {

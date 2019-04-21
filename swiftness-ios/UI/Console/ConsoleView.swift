@@ -22,48 +22,30 @@
 //    SOFTWARE.
 //
 
-import Foundation
+import UIKit
 
-enum RunMode {
-    case debug      // step cpu cycle manually
-    case test       // unit tests
-    case normal     // as expected
-}
+class ConsoleView: UIView {
+    private let controllerView: ControllerView!
+    let gameView = UIView()
+    var screenRatio: CGFloat = 1
 
-class StartupOptions {
-    var mode: RunMode = .normal
-    var romURL: URL?
+    init(interactingWith inputResponder: InputResponder) {
+        self.controllerView = ControllerView(inputResponder)
+        super.init(frame: .zero)
 
-    static func parse(_ arguments: [String]) -> StartupOptions? {
-        let options = StartupOptions()
-        var temp: String?
-
-        for argument in arguments {
-            switch argument {
-            case "-h", "--help", "-help", "help": StartupOptions.printUsage(); return nil
-            case "-d", "--debug": options.mode = .debug
-            case "-t", "--test": options.mode = .test
-            default:
-                if argument.hasPrefix("-") {
-                    temp = argument
-                    continue
-                }
-
-                guard let option = temp else {
-                    options.romURL = URL(string: argument)
-                    continue
-                }
-
-                switch option {
-                default: continue
-                }
-            }
-        }
-
-        return options
+        self.addSubview(self.gameView)
+        self.addSubview(self.controllerView)
     }
 
-    static func printUsage() {
-        print("USAGE: swiftness <options> [gamepath]")
+    required init(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        self.frame = UIScreen.main.bounds
+
+        self.gameView.frame = CGRect(x: 0, y: self.safeAreaInsets.top, width: self.bounds.width, height: self.bounds.width * self.screenRatio)
+        self.controllerView.frame = CGRect(x: 0, y: self.gameView.bounds.maxY + self.safeAreaInsets.top, width: self.bounds.width, height: self.bounds.height - self.gameView.bounds.maxY - self.safeAreaInsets.top - self.safeAreaInsets.bottom)
     }
 }
