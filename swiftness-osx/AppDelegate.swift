@@ -34,6 +34,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.options = StartupOptions.parse(arguments)
         guard self.options != nil else { exit(0) }
 
+        self.options.romURL = URL(string: "file:///Users/frigon/Downloads/nes/palette.nes")
         self.options.romURL = URL(string: "file:///Users/frigon/.nes/roms/donkey-kong.nes")
     }
 
