@@ -1,8 +1,6 @@
 FROM node:10-alpine
 ENV NPM_CONFIG_LOGLEVEL info
 
-RUN apk update
-
 RUN mkdir -p /opt/app
 WORKDIR /opt/app
 
