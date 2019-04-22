@@ -1,0 +1,34 @@
+body {
+    margin: 0;
+    font-family: Roboto, Helvetica, Arial, sans-serif;
+    color: #262626;
+}
+
+#container-games {
+    text-align: center;
+}
+
+#container-games a {
+   margin: 0 24px;
+   color: inherit;
+}
+
+#container-games div {
+    display: inline-block;
+    text-align: center;
+    width: 256px;
+    margin: 24px 0;
+}
+
+#container-games div h2 {
+    margin: 0px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; 
+    font-size: 16px;
+    margin-top: 12px;
+}
+
+#container-games div img {
+    border-radius: 5px;
+}
