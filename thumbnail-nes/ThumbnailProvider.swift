@@ -25,12 +25,13 @@ import UIKit
 import QuickLook
 
 class ThumbnailProvider: QLThumbnailProvider {
-    static let repo: String = "https://swiftness.frigstudio.com/static/img"
+    static let repo: String = "https://swiftness.frigstudio.com/static/img/nes"
 
     override func provideThumbnail(for request: QLFileThumbnailRequest, _ handler: @escaping (QLThumbnailReply?, Error?) -> Void) {
-//        let checksum = request.fileURL.deletingPathExtension().lastPathComponent
+        //let checksum = request.fileURL.deletingPathExtension().lastPathComponent
 
         do {
+            let file = request.fileURL
             let data = try Data(contentsOf: request.fileURL)
             let url = URL(string: "\(ThumbnailProvider.repo)/\(data.md5sum()).png")!
 

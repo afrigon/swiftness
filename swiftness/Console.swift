@@ -26,6 +26,7 @@ protocol Console {
     var screenWidth: Int { get }
     var screenHeight: Int { get }
 
+    var mainColor: DWord { get }
     var needsRender: Bool { get }
     var framebuffer: UnsafePointer<FrameBuffer> { get }
 
