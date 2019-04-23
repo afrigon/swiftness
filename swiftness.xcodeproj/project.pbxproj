@@ -29,6 +29,7 @@
 		FE3F925821859C260000B574 /* mmc1.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8A218459A7006C3096 /* mmc1.swift */; };
 		FE3F925921859C260000B574 /* mmc3.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8C21845CF7006C3096 /* mmc3.swift */; };
 		FE50D195226CA90C0009E283 /* CenteredWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE50D194226CA90C0009E283 /* CenteredWindow.swift */; };
+		FE50D199226DA4490009E283 /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE22192A2269F4030058D195 /* Request.swift */; };
 		FE53C80421821344002BD71F /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C80321821344002BD71F /* main.swift */; };
 		FE53C808218224C5002BD71F /* MetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C807218224C5002BD71F /* MetalRenderer.swift */; };
 		FE53C80A218225C4002BD71F /* CVDisplayLinkLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C809218225C4002BD71F /* CVDisplayLinkLoop.swift */; };
@@ -171,6 +172,8 @@
 		FE22192A2269F4030058D195 /* Request.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
 		FE3AE29A226794950072BB53 /* ConsoleViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleViewController.swift; sourceTree = "<group>"; };
 		FE50D194226CA90C0009E283 /* CenteredWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CenteredWindow.swift; sourceTree = "<group>"; };
+		FE50D197226DA2250009E283 /* swiftness-ios.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "swiftness-ios.entitlements"; sourceTree = "<group>"; };
+		FE50D198226DA2B20009E283 /* thumbnail-nes.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "thumbnail-nes.entitlements"; sourceTree = "<group>"; };
 		FE53C80321821344002BD71F /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		FE53C807218224C5002BD71F /* MetalRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalRenderer.swift; sourceTree = "<group>"; };
 		FE53C809218225C4002BD71F /* CVDisplayLinkLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CVDisplayLinkLoop.swift; sourceTree = "<group>"; };
@@ -290,6 +293,7 @@
 		FE22191E2269F1450058D195 /* thumbnail-nes */ = {
 			isa = PBXGroup;
 			children = (
+				FE50D198226DA2B20009E283 /* thumbnail-nes.entitlements */,
 				FE22191F2269F1450058D195 /* ThumbnailProvider.swift */,
 				FE2219212269F1450058D195 /* Info.plist */,
 			);
@@ -531,6 +535,7 @@
 		FEBA1F3D21820D610044DC8B /* swiftness-ios */ = {
 			isa = PBXGroup;
 			children = (
+				FE50D197226DA2250009E283 /* swiftness-ios.entitlements */,
 				FE53C80321821344002BD71F /* main.swift */,
 				FEBA1F3E21820D610044DC8B /* AppDelegate.swift */,
 				FE5673B422679F1600846420 /* CADisplayLinkLoop.swift */,
@@ -658,6 +663,11 @@
 				TargetAttributes = {
 					FE22191C2269F1450058D195 = {
 						CreatedOnToolsVersion = 10.2.1;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 1;
+							};
+						};
 					};
 					FE53C830218369ED002BD71F = {
 						CreatedOnToolsVersion = 10.0;
@@ -671,6 +681,14 @@
 					FEBA1F3B21820D610044DC8B = {
 						CreatedOnToolsVersion = 10.0;
 						LastSwiftMigration = 1020;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 1;
+							};
+							com.apple.BackgroundModes = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
@@ -828,6 +846,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FE2219202269F1450058D195 /* ThumbnailProvider.swift in Sources */,
+				FE50D199226DA4490009E283 /* Request.swift in Sources */,
 				FE2219292269F2270058D195 /* Data.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -982,6 +1001,7 @@
 		FE2219262269F1450058D195 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "thumbnail-nes/thumbnail-nes.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 7LYG6KRX2T;
@@ -1004,6 +1024,7 @@
 		FE2219272269F1450058D195 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "thumbnail-nes/thumbnail-nes.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 7LYG6KRX2T;
@@ -1252,6 +1273,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "swiftness-ios/swiftness-ios.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 7LYG6KRX2T;
@@ -1276,6 +1298,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "swiftness-ios/swiftness-ios.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 7LYG6KRX2T;

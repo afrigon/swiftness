@@ -23,7 +23,6 @@
 //
 
 import UIKit
-import SSZipArchive
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
     private var options: StartupOptions!

@@ -426,6 +426,7 @@ public class Request {
     private var validation: RequestValidation?
 
     var urlRequest: URLRequest?
+    var urlSession: URLSession?
     fileprivate var response: RawResponse?
     fileprivate var task: URLSessionTask?
 
@@ -543,37 +544,39 @@ public class Request {
 
         RequestLogger.log(.info, "\(self.urlRequest!.method.rawValue) \(self.urlRequest!.url?.absoluteString ?? "nil")")
 
-        self.task = URLSession.shared.dataTask(with: self.urlRequest!) { (data, response, error) in
-            RequestLogger.log(.debug, "response from (\(self.requestId))")
+        self.task = self.urlSession != nil ?
+            self.urlSession?.downloadTask(with: self.urlRequest!) :
+            URLSession.shared.dataTask(with: self.urlRequest!) { (data, response, error) in
+                RequestLogger.log(.debug, "response from (\(self.requestId))")
 
-            if error != nil {
-                self.set(error: RequestError(url: self.urlRequest!.url, method: self.urlRequest!.method, statusCode: .urlSessionError))
-                self.response!.parse(data: data, error: self._error)
-                return DispatchQueue.main.async { return callback() }
-            }
-
-            if let response = response as? HTTPURLResponse {
-                self.response!._statusCode = response.statusCode
-                self.response!._headers = response.allHeaderFields as? [String: String]
-
-                if let error = self.validation?.validate(response: response) {
-                    self.set(error: error)
-                    self.response?.parse(data: data, error: self._error)
+                if error != nil {
+                    self.set(error: RequestError(url: self.urlRequest!.url, method: self.urlRequest!.method, statusCode: .urlSessionError))
+                    self.response!.parse(data: data, error: self._error)
+                    return DispatchQueue.main.async { return callback() }
                 }
+
+                if let response = response as? HTTPURLResponse {
+                    self.response!._statusCode = response.statusCode
+                    self.response!._headers = response.allHeaderFields as? [String: String]
+
+                    if let error = self.validation?.validate(response: response) {
+                        self.set(error: error)
+                        self.response?.parse(data: data, error: self._error)
+                    }
+                }
+
+                guard let data = data else {
+                    self.set(error: RequestError(url: self.urlRequest!.url, method: self.urlRequest!.method, statusCode: .invalidData))
+                    self.response!.parse(data: nil, error: self._error)
+                    return DispatchQueue.main.async { return callback() }
+                }
+
+                RequestLogger.log(.debug, "parsing (\(self.requestId))")
+
+                self.response!.parse(data: data, error: self._error)
+                self._status = .completed
+                DispatchQueue.main.async { return callback() }
             }
-
-            guard let data = data else {
-                self.set(error: RequestError(url: self.urlRequest!.url, method: self.urlRequest!.method, statusCode: .invalidData))
-                self.response!.parse(data: nil, error: self._error)
-                return DispatchQueue.main.async { return callback() }
-            }
-
-            RequestLogger.log(.debug, "parsing (\(self.requestId))")
-
-            self.response!.parse(data: data, error: self._error)
-            self._status = .completed
-            DispatchQueue.main.async { return callback() }
-        }
 
         self.task!.resume()
     }

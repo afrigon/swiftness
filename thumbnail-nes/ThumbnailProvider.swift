@@ -30,14 +30,41 @@ class ThumbnailProvider: QLThumbnailProvider {
     override func provideThumbnail(for request: QLFileThumbnailRequest, _ handler: @escaping (QLThumbnailReply?, Error?) -> Void) {
         //let checksum = request.fileURL.deletingPathExtension().lastPathComponent
 
+//        do {
+//            let file = request.fileURL
+//            let data = try Data(contentsOf: request.fileURL)
+//            let url = URL(string: "\(ThumbnailProvider.repo)/\(data.md5sum()).png")!
+//
+//            handler(QLThumbnailReply(imageFileURL: url), nil)
+//        } catch {
+//            return handler(nil, error)
+//        }
+
         do {
             let file = request.fileURL
             let data = try Data(contentsOf: request.fileURL)
             let url = URL(string: "\(ThumbnailProvider.repo)/\(data.md5sum()).png")!
 
-            handler(QLThumbnailReply(imageFileURL: url), nil)
+            let config = URLSessionConfiguration.background(withIdentifier: "com.frigstudio.swiftness.background-session-\(UUID().uuidString)")
+            config.sharedContainerIdentifier = "group.swiftness.shared"
+
+            let r = Request(url)
+            r.urlSession = URLSession(configuration: config, delegate: DownloadDelegate(handler), delegateQueue: nil)
+            r.send()
         } catch {
             return handler(nil, error)
         }
+    }
+}
+
+class DownloadDelegate: NSObject, URLSessionDownloadDelegate {
+    let handler: (QLThumbnailReply?, Error?) -> Void
+
+    init(_ handler: @escaping (QLThumbnailReply?, Error?) -> Void) {
+        self.handler = handler
+    }
+
+    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
+        self.handler(QLThumbnailReply(imageFileURL: location), nil)
     }
 }
