@@ -46,7 +46,7 @@ class NintendoEntertainmentSystem: Console, BusDelegate {
 
     init(load rom: Cartridge) {
         self.cpu = CoreProcessingUnit(using: self.bus)
-        self.ppu = PictureProcessingUnit(using: self.bus, mirroring: rom.mirroring)
+        self.ppu = PictureProcessingUnit(using: self.bus, mirroring: rom.mirroringPointer)
         self.cartridge = rom
         self.bus.delegate = self
         self.reset()

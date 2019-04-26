@@ -25,13 +25,15 @@
 class UNROM: Mapper {
     weak var delegate: MapperDelegate!
 
-    private let prgBankSize: Word = 0x4000
-    private var prgIndex0: Byte = 0
-    private var prgIndex1: Byte = 0
+    private let prgSize: Word = 0x4000
+    private var prgCount: Byte = 0
+
+    private var prgOffsets: [Word] = [0, 0]
 
     required init(_ delegate: MapperDelegate) {
         self.delegate = delegate
-        self.prgIndex1 = self.delegate.programBankCount(for: self) - 1
+        self.prgCount = self.delegate.prgBankCount(mapper: self, ofsize: self.prgSize)
+        self.prgOffsets[1] = Word(self.prgCount - 1) * self.prgSize
     }
 
     func busRead(at address: Word) -> Byte {
@@ -45,13 +47,9 @@ class UNROM: Mapper {
             return self.delegate.mapper(mapper: self, didReadAt: address, of: .sram)
         }
 
-        if address >= 0x8000 && address < 0xC000 {
-            let address: DWord = DWord(address - 0x8000) + DWord(self.prgIndex0) * DWord(self.prgBankSize)
-            return self.delegate.mapper(mapper: self, didReadAt: address, of: .prg)
-        }
-
-        if address >= 0xC000 {
-            let address: DWord = DWord(address - 0xC000) + DWord(self.prgIndex1) * DWord(self.prgBankSize)
+        if address >= 0x8000 {
+            var address: DWord = DWord(address - 0x8000)
+            address = DWord(self.prgOffsets[0]) + address % DWord(self.prgSize)
             return self.delegate.mapper(mapper: self, didReadAt: address, of: .prg)
         }
 
@@ -61,15 +59,15 @@ class UNROM: Mapper {
 
     func busWrite(_ data: Byte, at address: Word) {
         if address < 0x2000 {
-            return self.delegate.mapper(mapper: self, didWriteAt: address, of: .chr, data: data)
+            return self.delegate.mapper(mapper: self, didWriteAt: DWord(address), of: .chr, data: data)
         }
 
         if address >= 0x6000 && address < 0x8000 {
-            return self.delegate.mapper(mapper: self, didWriteAt: address - 0x6000, of: .sram, data: data)
+            return self.delegate.mapper(mapper: self, didWriteAt: DWord(address - 0x6000), of: .sram, data: data)
         }
 
         if address >= 0x8000 {
-            return self.prgIndex0 = data % self.delegate.programBankCount(for: self)
+            return self.prgOffsets[0] = Word(data % self.prgCount) * self.prgSize
         }
 
         print("UNROM mapper invalid write at 0x\(address.hex())")

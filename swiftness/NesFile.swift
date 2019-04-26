@@ -61,8 +61,7 @@ class NesFile {
             return nil
         }
 
-        let battery = Bool(header.control1 & 0b10)
-        let mirroring: ScreenMirroring = !Bool(header.control1 & 0b1000)
+        let mirroring: Mirroring = !Bool(header.control1 & 0b1000)
             ? (Bool(header.control1 & 1)
                 ? .vertical
                 : .horizontal)
@@ -85,7 +84,7 @@ class NesFile {
             data.getBytes(&chr, range: chrRange)
         }
 
-        return Cartridge(prg: prg, chr: chr, mapperType: mapperType, mirroring: mirroring, battery: battery)
+        return Cartridge(prg: prg, chr: chr, mapperType: mapperType, mirroring: mirroring)
     }
 
     static func raw(path: String) -> [Byte] {

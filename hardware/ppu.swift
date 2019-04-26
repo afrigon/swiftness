@@ -29,6 +29,7 @@ class PictureProcessingUnit: BusConnectedComponent {
     private static let scanlinePerFrame: UInt16 = 262
 
     private weak var bus: Bus!
+    private var mirroring: UnsafePointer<Mirroring>
 
     private var cycle: UInt16 = 0
     private var scanline: UInt16 = 0
@@ -47,7 +48,6 @@ class PictureProcessingUnit: BusConnectedComponent {
     private var controlRegister = ControlRegister()
     private var maskRegister = MaskRegister()
     private var statusRegister = StatusRegister()
-    private var mirroring: ScreenMirroring = .horizontal
 
     private let palette: Palette
     private var nameTable = [Byte](repeating: 0x00, count: 2048)
@@ -71,7 +71,7 @@ class PictureProcessingUnit: BusConnectedComponent {
     private var frameBufferB = FrameBuffer()
     private var frameBuffers: (rendered: UnsafeMutablePointer<FrameBuffer>, current: UnsafeMutablePointer<FrameBuffer>)
 
-    init(using bus: Bus, mirroring: ScreenMirroring = .horizontal) {
+    init(using bus: Bus, mirroring: UnsafePointer<Mirroring>) {
         self.bus = bus
         self.mirroring = mirroring
         self.palette = Palette(maskRegister: self.maskRegister)
@@ -166,7 +166,7 @@ class PictureProcessingUnit: BusConnectedComponent {
         }
 
         if address < 0x3F00 {
-            return self.nameTable[self.mirroring.translate(address) % 2048]
+            return self.nameTable[self.mirroring.pointee.translate(address) % 2048]
         }
 
         if address < 0x4000 {
@@ -186,7 +186,7 @@ class PictureProcessingUnit: BusConnectedComponent {
         }
 
         if address < 0x3F00 {
-            let address = self.mirroring.translate(address) % 2048
+            let address = self.mirroring.pointee.translate(address) % 2048
             return self.nameTable[address] = data
         }
 

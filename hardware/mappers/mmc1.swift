@@ -22,19 +22,34 @@
 //    SOFTWARE.
 //
 
-fileprivate enum RegisterType { case control, prgBank, chrBank0, chrBank1 }
+class MMC1: Mapper {
+    weak var delegate: MapperDelegate!
 
-fileprivate class MMC1Registers {
+    private let prgSize: DWord = 0x4000
+    private let chrSize: DWord = 0x1000
+    private var prgCount: Byte = 0
+    private var chrCount: Byte = 0
+
+    private var prgBankOffsets: [DWord] = [0, 0]
+    private var chrBankOffsets: [DWord] = [0, 0]
+
     private var shiftRegister: Byte = 0b10000
     private var controlRegister: Byte = 0
     private var prgBankRegister: Byte = 0
     private var chrBankRegister0: Byte = 0
     private var chrBankRegister1: Byte = 0
 
-    fileprivate func write(_ data: Byte, to register: RegisterType) {
-        guard !Bool(data & 0b10000000) else {
+    required init(_ delegate: MapperDelegate) {
+        self.delegate = delegate
+        self.prgCount = self.delegate.prgBankCount(mapper: self, ofsize: Word(self.prgSize))
+        self.chrCount = self.delegate.chrBankCount(mapper: self, ofsize: Word(self.chrSize))
+        self.prgBankOffsets[0] = DWord(self.prgCount - 1) * self.prgSize
+    }
+
+    private func loadRegister(_ data: Byte, for register: Byte) {
+        guard !Bool(data & 0x80) else {
             self.shiftRegister = 0b10000
-            self.controlRegister |= Byte(0b1100)
+            self.controlRegister |= 0xC0
             return
         }
 
@@ -43,58 +58,93 @@ fileprivate class MMC1Registers {
 
         if shouldPush {
             switch register {
-            case .control: self.controlRegister = self.shiftRegister
-            case .prgBank: self.prgBankRegister = self.shiftRegister
-            case .chrBank0: self.chrBankRegister0 = self.shiftRegister
-            case .chrBank1: self.chrBankRegister1 = self.shiftRegister
+            case 0:
+                self.controlRegister = self.shiftRegister
+                var mirroring: Mirroring!
+                switch self.controlRegister & 0b11 {
+                case 0: mirroring = .oneScreenLow
+                case 1: mirroring = .oneScreenHigh
+                case 2: mirroring = .vertical
+                case 3: mirroring = .horizontal
+                default: mirroring = .vertical
+                }
+                self.delegate.mapper(mapper: self, didChangeMirroring: mirroring)
+            case 1: self.chrBankRegister0 = self.shiftRegister
+            case 2: self.chrBankRegister1 = self.shiftRegister
+            case 3: self.prgBankRegister = self.shiftRegister & 0x0F
+            default: break
             }
             self.shiftRegister = 0b10000
+            self.updateBanks(prgMode: self.controlRegister >> 2 & 0b11,
+                             chrMode: self.controlRegister >> 4 & 1)
         }
     }
-}
 
-class MMC1: Mapper {
-    weak var delegate: MapperDelegate!
+    private func updateBanks(prgMode: Byte, chrMode: Byte) {
+        switch prgMode {
+        case 0, 1:
+            self.prgBankOffsets[0] = DWord(self.prgBankRegister & ~1)
+            self.prgBankOffsets[1] = DWord(self.prgBankRegister | 1)
+        case 2:
+            self.prgBankOffsets[0] = 0
+            self.prgBankOffsets[1] = DWord(self.prgBankRegister)
+        case 3:
+            self.prgBankOffsets[0] = DWord(self.prgBankRegister)
+            self.prgBankOffsets[1] = DWord(self.prgCount - 1)
+        default: break
+        }
 
-    private let bankSize: DWord = 0x4000
-    private var lowerPrgIndex: UInt8 = 0
-    private var higherPrgIndex: UInt8 = 1
+        switch chrMode {
+        case 0:
+            self.chrBankOffsets[0] = DWord(self.chrBankRegister0 & ~1)
+            self.chrBankOffsets[1] = DWord(self.chrBankRegister0 | 1)
+        case 1:
+            self.chrBankOffsets[0] = DWord(self.chrBankRegister0)
+            self.chrBankOffsets[1] = DWord(self.chrBankRegister1)
+        default: break
+        }
 
-    private var registers = MMC1Registers()
-
-    required init(_ delegate: MapperDelegate) {
-        self.delegate = delegate
-        self.higherPrgIndex = self.delegate.programBankCount(for: self) - 1
+        self.prgBankOffsets[0] = self.prgBankOffsets[0] % DWord(self.prgCount) * self.prgSize
+        self.prgBankOffsets[1] = self.prgBankOffsets[1] % DWord(self.prgCount) * self.prgSize
+        self.chrBankOffsets[0] = self.chrBankOffsets[0] % DWord(self.chrCount) * self.chrSize
+        self.chrBankOffsets[1] = self.chrBankOffsets[1] % DWord(self.chrCount) * self.chrSize
     }
 
     func busRead(at address: Word) -> Byte {
-        // missing ppu reads
-        switch address {
-        case 0..<0x2000:
-            let address: DWord = DWord(address)
-            return self.delegate.mapper(mapper: self, didReadAt: address, of: .chr)
-        case 0x6000..<0x8000:
+        if address < 0x2000 {
+            let address: DWord = self.chrBankOffsets[address / 0x1000] + DWord(address % 0x1000)
+            return self.delegate.mapper(mapper: self, didReadAt: DWord(address), of: .chr)
+        }
+
+        if address >= 0x6000 && address < 0x8000 {
             let address: DWord = DWord(address - 0x6000)
             return self.delegate.mapper(mapper: self, didReadAt: address, of: .sram)
-        case 0x8000..<0xC000:
-            let address: DWord = DWord(address - 0x8000) + DWord(self.lowerPrgIndex) * self.bankSize
-            return self.delegate.mapper(mapper: self, didReadAt: address, of: .prg)
-        case 0xC000...0xFFFF:
-            let address: DWord = DWord(address - 0xC000) + DWord(self.higherPrgIndex) * self.bankSize
-            return self.delegate.mapper(mapper: self, didReadAt: address, of: .prg)
-        default: return 0x00
         }
+
+        if address >= 0x8000 {
+            var address: DWord = DWord(address - 0x8000)
+            address = DWord(self.prgBankOffsets[address / 0x4000]) + address % 0x4000
+            return self.delegate.mapper(mapper: self, didReadAt: address, of: .prg)
+        }
+
+        print("MMC1 mapper invalid read at 0x\(address.hex())")
+        return 0
     }
 
     func busWrite(_ data: Byte, at address: Word) {
-        switch address {
-        case 0..<0x2000: self.delegate.mapper(mapper: self, didWriteAt: address, of: .chr, data: data)
-        case 0x6000..<0x8000: self.delegate.mapper(mapper: self, didWriteAt: address - 0x6000, of: .sram, data: data)
-        case 0x8000..<0xA000: self.registers.write(data, to: .control)
-        case 0xA000..<0xC000: self.registers.write(data, to: .chrBank0)
-        case 0xC000..<0xE000: self.registers.write(data, to: .chrBank1)
-        case 0xE000...0xFFFF: self.registers.write(data, to: .prgBank)
-        default: return
+        if address < 0x2000 {
+            let address: DWord = self.chrBankOffsets[address / 0x1000] + DWord(address % 0x1000)
+            return self.delegate.mapper(mapper: self, didWriteAt: address, of: .chr, data: data)
         }
+
+        if address >= 0x6000 && address < 0x8000 {
+            return self.delegate.mapper(mapper: self, didWriteAt: DWord(address - 0x6000), of: .sram, data: data)
+        }
+
+        if (address >= 0x8000 && address <= 0xFFFF) {
+            return self.loadRegister(data, for: Byte(address >> 13 & 0b11))
+        }
+
+        print("MMC1 mapper invalid write 0x\(address.hex()) = 0x\(data.hex())")
     }
 }

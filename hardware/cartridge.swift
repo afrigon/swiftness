@@ -22,42 +22,42 @@
 //    SOFTWARE.
 //
 
-enum ScreenMirroring: Int {
-    case horizontal = 0, vertical = 1, quad = 2
+enum Mirroring: Int {
+    case horizontal = 0, vertical = 1, quad = 2, oneScreenLow = 3, oneScreenHigh = 4
 
     private static let lookupTable: [[Word]] = [
         [0, 0, 1, 1],
         [0, 1, 0, 1],
-        [0, 1, 2, 3]
+        [0, 1, 2, 3],
+        [0, 0, 0, 0],
+        [1, 1, 1, 1]
     ]
 
     func translate(_ address: Word) -> Word {
         let address = (address - 0x2000) % 0x1000
         let tableIndex = address / 0x0400
         let offset = address % 0x0400
-        return 0x2000 + ScreenMirroring.lookupTable[self.rawValue][tableIndex] * 0x0400 + offset
+        return 0x2000 + Mirroring.lookupTable[self.rawValue][tableIndex] * 0x0400 + offset
     }
 }
 
-enum CartridgeRegion {
-    case prg, chr, sram
-}
+enum CartridgeRegion { case prg, chr, sram }
 
 class Cartridge: BusConnectedComponent, MapperDelegate {
-    let mirroring: ScreenMirroring // should be private (required access from debugger)
-    let battery: Bool // should be private (required access from debugger)
-    let mapperType: MapperType // should be private (required access from debugger)
+    let mirroringPointer: UnsafePointer<Mirroring>
+    private var mirroring: Mirroring
+    private let mapperType: MapperType
     private var mapper: Mapper!
 
-    var programRom: [Byte] // should be private (required access from debugger)
-    var characterRom: [Byte] // should be private (required access from debugger)
-    private var saveRam = [Byte](repeating: 0x00, count: 0x2000) // should probably be assigned only when supported by the mapper ?
+    private var programRom: [Byte]
+    private var characterRom: [Byte]
+    private var saveRam = [Byte](repeating: 0x00, count: 0x2000)
 
-    init(prg: [Byte], chr: [Byte], mapperType: MapperType, mirroring: ScreenMirroring, battery: Bool) {
+    init(prg: [Byte], chr: [Byte], mapperType: MapperType, mirroring: Mirroring) {
         self.programRom = prg
         self.characterRom = chr
         self.mirroring = mirroring
-        self.battery = battery
+        self.mirroringPointer = UnsafePointer<Mirroring>(&self.mirroring)
         self.mapperType = mapperType
         self.mapper = MapperFactory.create(mapperType, withDelegate: self)
     }
@@ -70,7 +70,6 @@ class Cartridge: BusConnectedComponent, MapperDelegate {
         }
     }
 
-    // actions from the bus delivered to the mapper
     func busRead(at address: Word) -> Byte {
         return self.mapper.busRead(at: address)
     }
@@ -79,8 +78,17 @@ class Cartridge: BusConnectedComponent, MapperDelegate {
         self.mapper.busWrite(data, at: address)
     }
 
-    func programBankCount(for mapper: Mapper) -> UInt8 {
-        return UInt8(UInt32(self.programRom.count) / 0x4000)    // Assuming 0x4000 sized banks
+    func mapper(mapper: Mapper, didChangeMirroring mirroring: Mirroring) {
+        self.mirroring = mirroring
+    }
+
+
+    func prgBankCount(mapper: Mapper, ofsize size: Word) -> Byte {
+        return Byte(DWord(self.programRom.count) / DWord(size))
+    }
+
+    func chrBankCount(mapper: Mapper, ofsize size: Word) -> Byte {
+        return Byte(DWord(self.characterRom.count) / DWord(size))
     }
 
     // actions from the mapper
@@ -97,8 +105,8 @@ class Cartridge: BusConnectedComponent, MapperDelegate {
         }
     }
 
-    func mapper(mapper: Mapper, didWriteAt address: Word, of region: CartridgeRegion, data: Byte) {
-        guard self.validate(region, contains: DWord(address)) else {
+    func mapper(mapper: Mapper, didWriteAt address: DWord, of region: CartridgeRegion, data: Byte) {
+        guard self.validate(region, contains: address) else {
             print("Illegal rom write at: 0x\(address.hex()) on region \(String(describing: region).uppercased())")
             return
         }

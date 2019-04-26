@@ -33,7 +33,7 @@ class CNROM: Mapper {
 
     required init(_ delegate: MapperDelegate) {
         self.delegate = delegate
-        self.prgMirrored = self.delegate.programBankCount(for: self) == 1
+        self.prgMirrored = self.delegate.prgBankCount(mapper: self, ofsize: 0x4000) == 1
     }
 
     func busRead(at address: Word) -> Byte {
@@ -64,12 +64,14 @@ class CNROM: Mapper {
 
     func busWrite(_ data: Byte, at address: Word) {
         if address < 0x2000 {
-            let address = Word(self.chrIndex * self.chrBankSize + address)
-            self.delegate.mapper(mapper: self, didWriteAt: address, of: .chr, data: data)
-        } else if address >= 0x8000 {
-            self.chrIndex = Word(data & 0b11)
-        } else {
-            print("CNROM mapper invalid write at 0x\(address.hex())")
+            let address = DWord(self.chrIndex * self.chrBankSize + address)
+            return self.delegate.mapper(mapper: self, didWriteAt: address, of: .chr, data: data)
         }
+
+        if address >= 0x8000 {
+            return self.chrIndex = Word(data & 0b11)
+        }
+
+        print("CNROM mapper invalid write at 0x\(address.hex())")
     }
 }

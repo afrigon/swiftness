@@ -21,8 +21,10 @@ enum MapperType: Byte {
 
 protocol MapperDelegate: AnyObject {
     func mapper(mapper: Mapper, didReadAt address: DWord, of region: CartridgeRegion) -> Byte
-    func mapper(mapper: Mapper, didWriteAt address: Word, of region: CartridgeRegion, data: Byte)
-    func programBankCount(for mapper: Mapper) -> UInt8
+    func mapper(mapper: Mapper, didWriteAt address: DWord, of region: CartridgeRegion, data: Byte)
+    func mapper(mapper: Mapper, didChangeMirroring mirroring: Mirroring)
+    func prgBankCount(mapper: Mapper, ofsize: Word) -> Byte
+    func chrBankCount(mapper: Mapper, ofsize: Word) -> Byte
 }
 
 protocol Mapper: BusConnectedComponent {
