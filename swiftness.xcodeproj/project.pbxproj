@@ -17,9 +17,6 @@
 		FE2219002269D96D0058D195 /* FileHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2218FE2269D1CB0058D195 /* FileHelper.swift */; };
 		FE2219022269E0B20058D195 /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2219012269E0B20058D195 /* Data.swift */; };
 		FE2219032269E1AD0058D195 /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2219012269E0B20058D195 /* Data.swift */; };
-		FE2219202269F1450058D195 /* ThumbnailProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE22191F2269F1450058D195 /* ThumbnailProvider.swift */; };
-		FE2219242269F1450058D195 /* thumbnail-nes.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = FE22191D2269F1450058D195 /* thumbnail-nes.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		FE2219292269F2270058D195 /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2219012269E0B20058D195 /* Data.swift */; };
 		FE22192B2269F4030058D195 /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE22192A2269F4030058D195 /* Request.swift */; };
 		FE3AE29B226794950072BB53 /* ConsoleViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE3AE29A226794950072BB53 /* ConsoleViewController.swift */; };
 		FE3F925421859C1C0000B574 /* NesFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8821842789006C3096 /* NesFile.swift */; };
@@ -29,7 +26,6 @@
 		FE3F925821859C260000B574 /* mmc1.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8A218459A7006C3096 /* mmc1.swift */; };
 		FE3F925921859C260000B574 /* mmc3.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC79C8C21845CF7006C3096 /* mmc3.swift */; };
 		FE50D195226CA90C0009E283 /* CenteredWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE50D194226CA90C0009E283 /* CenteredWindow.swift */; };
-		FE50D199226DA4490009E283 /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE22192A2269F4030058D195 /* Request.swift */; };
 		FE53C80421821344002BD71F /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C80321821344002BD71F /* main.swift */; };
 		FE53C808218224C5002BD71F /* MetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C807218224C5002BD71F /* MetalRenderer.swift */; };
 		FE53C80A218225C4002BD71F /* CVDisplayLinkLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE53C809218225C4002BD71F /* CVDisplayLinkLoop.swift */; };
@@ -121,13 +117,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		FE2219222269F1450058D195 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = FEA27400217C45F70072530A /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = FE22191C2269F1450058D195;
-			remoteInfo = "thumbnail-nes";
-		};
 		FE53C836218369ED002BD71F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = FEA27400217C45F70072530A /* Project object */;
@@ -144,7 +133,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				FE2219242269F1450058D195 /* thumbnail-nes.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -166,14 +154,10 @@
 		FE2218FE2269D1CB0058D195 /* FileHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileHelper.swift; sourceTree = "<group>"; };
 		FE2219012269E0B20058D195 /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
 		FE2219092269EFFD0058D195 /* QuickLook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickLook.framework; path = System/Library/Frameworks/QuickLook.framework; sourceTree = SDKROOT; };
-		FE22191D2269F1450058D195 /* thumbnail-nes.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "thumbnail-nes.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
-		FE22191F2269F1450058D195 /* ThumbnailProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailProvider.swift; sourceTree = "<group>"; };
-		FE2219212269F1450058D195 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FE22192A2269F4030058D195 /* Request.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
 		FE3AE29A226794950072BB53 /* ConsoleViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleViewController.swift; sourceTree = "<group>"; };
 		FE50D194226CA90C0009E283 /* CenteredWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CenteredWindow.swift; sourceTree = "<group>"; };
 		FE50D197226DA2250009E283 /* swiftness-ios.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "swiftness-ios.entitlements"; sourceTree = "<group>"; };
-		FE50D198226DA2B20009E283 /* thumbnail-nes.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "thumbnail-nes.entitlements"; sourceTree = "<group>"; };
 		FE53C80321821344002BD71F /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		FE53C807218224C5002BD71F /* MetalRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalRenderer.swift; sourceTree = "<group>"; };
 		FE53C809218225C4002BD71F /* CVDisplayLinkLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CVDisplayLinkLoop.swift; sourceTree = "<group>"; };
@@ -232,13 +216,6 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		FE22191A2269F1450058D195 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		FE53C82E218369ED002BD71F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -288,16 +265,6 @@
 				FE2219092269EFFD0058D195 /* QuickLook.framework */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		FE22191E2269F1450058D195 /* thumbnail-nes */ = {
-			isa = PBXGroup;
-			children = (
-				FE50D198226DA2B20009E283 /* thumbnail-nes.entitlements */,
-				FE22191F2269F1450058D195 /* ThumbnailProvider.swift */,
-				FE2219212269F1450058D195 /* Info.plist */,
-			);
-			path = "thumbnail-nes";
 			sourceTree = "<group>";
 		};
 		FE3AE29C226794BF0072BB53 /* UI */ = {
@@ -472,7 +439,6 @@
 				FEA2740A217C45F70072530A /* swiftness-osx */,
 				FEBA1F3D21820D610044DC8B /* swiftness-ios */,
 				FE53C832218369ED002BD71F /* swiftness-osx-tests */,
-				FE22191E2269F1450058D195 /* thumbnail-nes */,
 				FEA27409217C45F70072530A /* Products */,
 				1D5ADE9A69BBE1CE0F4A2B6A /* Pods */,
 				E923D3BBEFC3CC2156BBEDA4 /* Frameworks */,
@@ -485,7 +451,6 @@
 				FEA27408217C45F70072530A /* swiftness-osx.app */,
 				FEBA1F3C21820D610044DC8B /* swiftness-ios.app */,
 				FE53C831218369ED002BD71F /* swiftness-osx-tests.xctest */,
-				FE22191D2269F1450058D195 /* thumbnail-nes.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -576,23 +541,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		FE22191C2269F1450058D195 /* thumbnail-nes */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = FE2219252269F1450058D195 /* Build configuration list for PBXNativeTarget "thumbnail-nes" */;
-			buildPhases = (
-				FE2219192269F1450058D195 /* Sources */,
-				FE22191A2269F1450058D195 /* Frameworks */,
-				FE22191B2269F1450058D195 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = "thumbnail-nes";
-			productName = "thumbnail-nes";
-			productReference = FE22191D2269F1450058D195 /* thumbnail-nes.appex */;
-			productType = "com.apple.product-type.app-extension";
-		};
 		FE53C830218369ED002BD71F /* swiftness-osx-tests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = FE53C838218369ED002BD71F /* Build configuration list for PBXNativeTarget "swiftness-osx-tests" */;
@@ -644,7 +592,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				FE2219232269F1450058D195 /* PBXTargetDependency */,
 			);
 			name = "swiftness-ios";
 			productName = "swiftness-ios";
@@ -661,14 +608,6 @@
 				LastUpgradeCheck = 1000;
 				ORGANIZATIONNAME = Frigstudio;
 				TargetAttributes = {
-					FE22191C2269F1450058D195 = {
-						CreatedOnToolsVersion = 10.2.1;
-						SystemCapabilities = {
-							com.apple.ApplicationGroups.iOS = {
-								enabled = 1;
-							};
-						};
-					};
 					FE53C830218369ED002BD71F = {
 						CreatedOnToolsVersion = 10.0;
 						LastSwiftMigration = 1020;
@@ -708,19 +647,11 @@
 				FEA27407217C45F70072530A /* swiftness-osx */,
 				FEBA1F3B21820D610044DC8B /* swiftness-ios */,
 				FE53C830218369ED002BD71F /* swiftness-osx-tests */,
-				FE22191C2269F1450058D195 /* thumbnail-nes */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		FE22191B2269F1450058D195 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		FE53C82F218369ED002BD71F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -841,16 +772,6 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		FE2219192269F1450058D195 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				FE2219202269F1450058D195 /* ThumbnailProvider.swift in Sources */,
-				FE50D199226DA4490009E283 /* Request.swift in Sources */,
-				FE2219292269F2270058D195 /* Data.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		FE53C82D218369ED002BD71F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -974,11 +895,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		FE2219232269F1450058D195 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = FE22191C2269F1450058D195 /* thumbnail-nes */;
-			targetProxy = FE2219222269F1450058D195 /* PBXContainerItemProxy */;
-		};
 		FE53C837218369ED002BD71F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = FEA27407217C45F70072530A /* swiftness-osx */;
@@ -998,53 +914,6 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
-		FE2219262269F1450058D195 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = "thumbnail-nes/thumbnail-nes.entitlements";
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 7LYG6KRX2T;
-				INFOPLIST_FILE = "thumbnail-nes/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.2;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swiftness-ios.thumbnail-nes";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		FE2219272269F1450058D195 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = "thumbnail-nes/thumbnail-nes.entitlements";
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 7LYG6KRX2T;
-				INFOPLIST_FILE = "thumbnail-nes/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.2;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.frigstudio.swiftness-ios.thumbnail-nes";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
 		FE53C839218369ED002BD71F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 5737D011E21A288305060394 /* Pods-swiftness-osx-tests.debug.xcconfig */;
@@ -1321,15 +1190,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		FE2219252269F1450058D195 /* Build configuration list for PBXNativeTarget "thumbnail-nes" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				FE2219262269F1450058D195 /* Debug */,
-				FE2219272269F1450058D195 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		FE53C838218369ED002BD71F /* Build configuration list for PBXNativeTarget "swiftness-osx-tests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

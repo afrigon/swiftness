@@ -54,13 +54,6 @@
 			<key>orderHint</key>
 			<integer>1</integer>
 		</dict>
-		<key>thumbnail-nes.xcscheme_^#shared#^_</key>
-		<dict>
-			<key>isShown</key>
-			<true/>
-			<key>orderHint</key>
-			<integer>9</integer>
-		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
