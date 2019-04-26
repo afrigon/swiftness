@@ -49,7 +49,7 @@ class UNROM: Mapper {
 
         if address >= 0x8000 {
             var address: DWord = DWord(address - 0x8000)
-            address = DWord(self.prgOffsets[0]) + address % DWord(self.prgSize)
+            address = DWord(self.prgOffsets[address / DWord(self.prgSize)]) + address % DWord(self.prgSize)
             return self.delegate.mapper(mapper: self, didReadAt: address, of: .prg)
         }
 
