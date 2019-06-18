@@ -126,7 +126,7 @@ class CoreProcessingUnit {
     private let memory: CoreProcessingUnitMemory
     private let stack: Stack
     private var regs: Registers = Registers()
-    private var opcodes: [Byte: Opcode]! = nil
+    private var opcodes: [Opcode?]! = nil
     private var interruptRequest: InterruptType?
 
     let frequency: Double = 1789773
@@ -139,157 +139,261 @@ class CoreProcessingUnit {
         self.stack = Stack(using: self.bus, sp: &self.regs.sp)
 
         self.opcodes = [
-            0x00: Opcode(brk, "brk", 7, .implied),
-            0x01: Opcode(ora, "ora", 6, .indirect(.x)),
-            0x05: Opcode(ora, "ora", 3, .zeroPage(.none)),
-            0x06: Opcode(asl, "asl", 5, .zeroPage(.none)),
-            0x08: Opcode(php, "php", 3, .implied),
-            0x09: Opcode(ora, "ora", 2, .immediate),
-            0x0A: Opcode(asla, "asl", 2, .accumulator),
-            0x0D: Opcode(ora, "ora", 4, .absolute(.none, true)),
-            0x0E: Opcode(asl, "asl", 6, .absolute(.none, true)),
-            0x10: Opcode(bpl, "bpl", 2, .relative),
-            0x11: Opcode(ora, "ora", 5, .indirect(.y)),
-            0x15: Opcode(ora, "ora", 4, .zeroPage(.x)),
-            0x16: Opcode(asl, "asl", 6, .zeroPage(.x)),
-            0x18: Opcode(clc, "clc", 2, .implied),
-            0x19: Opcode(ora, "ora", 4, .absolute(.y, true)),
-            0x1D: Opcode(ora, "ora", 4, .absolute(.x, true)),
-            0x1E: Opcode(asl, "asl", 7, .absolute(.x, true)),
-            0x20: Opcode(jsr, "jsr", 6, .absolute(.none, false)),
-            0x21: Opcode(and, "and", 6, .indirect(.x)),
-            0x24: Opcode(bit, "bit", 3, .zeroPage(.none)),
-            0x25: Opcode(and, "and", 3, .zeroPage(.none)),
-            0x26: Opcode(rol, "rol", 5, .zeroPage(.none)),
-            0x28: Opcode(plp, "plp", 4, .implied),
-            0x29: Opcode(and, "and", 2, .immediate),
-            0x2A: Opcode(rola, "rol", 2, .accumulator),
-            0x2C: Opcode(bit, "bit", 4, .absolute(.none, true)),
-            0x2D: Opcode(and, "and", 2, .absolute(.none, true)),
-            0x2E: Opcode(rol, "rol", 6, .absolute(.none, true)),
-            0x30: Opcode(bmi, "bmi", 2, .relative),
-            0x31: Opcode(and, "and", 5, .indirect(.y)),
-            0x35: Opcode(and, "and", 4, .zeroPage(.x)),
-            0x36: Opcode(rol, "rol", 6, .zeroPage(.x)),
-            0x38: Opcode(sec, "sec", 2, .implied),
-            0x39: Opcode(and, "and", 4, .absolute(.y, true)),
-            0x3D: Opcode(and, "and", 4, .absolute(.x, true)),
-            0x3E: Opcode(rol, "rol", 7, .absolute(.x, true)),
-            0x40: Opcode(rti, "rti", 6, .implied),
-            0x41: Opcode(eor, "eor", 6, .indirect(.x)),
-            0x45: Opcode(eor, "eor", 3, .zeroPage(.none)),
-            0x46: Opcode(lsr, "lsr", 5, .zeroPage(.none)),
-            0x48: Opcode(pha, "pha", 3, .implied),
-            0x49: Opcode(eor, "eor", 2, .immediate),
-            0x4A: Opcode(lsra, "lsr", 2, .accumulator),
-            0x4C: Opcode(jmp, "jmp", 3, .absolute(.none, false)),
-            0x4D: Opcode(eor, "eor", 4, .absolute(.none, true)),
-            0x4E: Opcode(lsr, "lsr", 6, .absolute(.none, true)),
-            0x50: Opcode(bvc, "bvc", 2, .relative),
-            0x51: Opcode(eor, "eor", 5, .indirect(.y)),
-            0x55: Opcode(eor, "eor", 4, .zeroPage(.x)),
-            0x56: Opcode(lsr, "lsr", 6, .zeroPage(.x)),
-            0x58: Opcode(cli, "cli", 2, .implied),
-            0x59: Opcode(eor, "eor", 4, .absolute(.y, true)),
-            0x5D: Opcode(eor, "eor", 4, .absolute(.x, true)),
-            0x5E: Opcode(lsr, "lsr", 7, .absolute(.x, true)),
-            0x60: Opcode(rts, "rts", 6, .implied),
-            0x61: Opcode(adc, "adc", 6, .indirect(.x)),
-            0x65: Opcode(adc, "adc", 3, .zeroPage(.none)),
-            0x66: Opcode(ror, "ror", 5, .zeroPage(.none)),
-            0x68: Opcode(pla, "pla", 4, .implied),
-            0x69: Opcode(adc, "adc", 2, .immediate),
-            0x6A: Opcode(rora, "ror", 2, .accumulator),
-            0x6C: Opcode(jmp, "jmp", 5, .indirect(.none)),
-            0x6D: Opcode(adc, "adc", 4, .absolute(.none, true)),
-            0x6E: Opcode(ror, "ror", 6, .absolute(.none, true)),
-            0x70: Opcode(bvs, "bvs", 2, .relative),
-            0x71: Opcode(adc, "adc", 5, .indirect(.y)),
-            0x75: Opcode(adc, "adc", 4, .zeroPage(.x)),
-            0x76: Opcode(ror, "ror", 6, .zeroPage(.x)),
-            0x78: Opcode(sei, "sei", 2, .implied),
-            0x79: Opcode(adc, "adc", 4, .absolute(.y, true)),
-            0x7D: Opcode(adc, "adc", 4, .absolute(.x, true)),
-            0x7E: Opcode(ror, "ror", 7, .absolute(.x, true)),
-            0x81: Opcode(sta, "sta", 6, .indirect(.x)),
-            0x84: Opcode(sty, "sty", 3, .zeroPage(.none)),
-            0x85: Opcode(sta, "sta", 3, .zeroPage(.none)),
-            0x86: Opcode(stx, "stx", 3, .zeroPage(.none)),
-            0x88: Opcode(dey, "dey", 2, .implied),
-            0x8A: Opcode(txa, "txa", 2, .implied),
-            0x8C: Opcode(sty, "sty", 4, .absolute(.none, false)),
-            0x8D: Opcode(sta, "sta", 4, .absolute(.none, false)),
-            0x8E: Opcode(stx, "stx", 4, .absolute(.none, false)),
-            0x90: Opcode(bcc, "bcc", 2, .relative),
-            0x91: Opcode(sta, "sta", 6, .indirect(.y)),
-            0x94: Opcode(sty, "sty", 4, .zeroPage(.x)),
-            0x95: Opcode(sta, "sta", 4, .zeroPage(.x)),
-            0x96: Opcode(stx, "stx", 4, .zeroPage(.y)),
-            0x98: Opcode(tya, "tya", 2, .implied),
-            0x99: Opcode(sta, "sta", 5, .absolute(.y, false)),
-            0x9A: Opcode(txs, "txs", 2, .implied),
-            0x9D: Opcode(sta, "sta", 5, .absolute(.x, false)),
-            0xA0: Opcode(ldy, "ldy", 2, .immediate),
-            0xA1: Opcode(lda, "lda", 6, .indirect(.x)),
-            0xA2: Opcode(ldx, "ldx", 2, .immediate),
-            0xA4: Opcode(ldy, "ldy", 3, .zeroPage(.none)),
-            0xA5: Opcode(lda, "lda", 3, .zeroPage(.none)),
-            0xA6: Opcode(ldx, "ldx", 3, .zeroPage(.none)),
-            0xA8: Opcode(tay, "tay", 2, .implied),
-            0xA9: Opcode(lda, "lda", 2, .immediate),
-            0xAA: Opcode(tax, "tax", 2, .implied),
-            0xAC: Opcode(ldy, "ldy", 4, .absolute(.none, true)),
-            0xAD: Opcode(lda, "lda", 4, .absolute(.none, true)),
-            0xAE: Opcode(ldx, "ldx", 4, .absolute(.none, true)),
-            0xB0: Opcode(bcs, "bcs", 2, .relative),
-            0xB1: Opcode(lda, "lda", 5, .indirect(.y)),
-            0xB4: Opcode(ldy, "ldy", 4, .zeroPage(.x)),
-            0xB5: Opcode(lda, "lda", 4, .zeroPage(.x)),
-            0xB6: Opcode(ldx, "ldx", 4, .zeroPage(.y)),
-            0xB8: Opcode(clv, "clv", 2, .implied),
-            0xB9: Opcode(lda, "lda", 4, .absolute(.y, true)),
-            0xBA: Opcode(tsx, "tsx", 2, .implied),
-            0xBC: Opcode(ldy, "ldy", 4, .absolute(.x, true)),
-            0xBD: Opcode(lda, "lda", 4, .absolute(.x, true)),
-            0xBE: Opcode(ldx, "ldx", 4, .absolute(.y, true)),
-            0xC0: Opcode(cpy, "cpy", 2, .immediate),
-            0xC1: Opcode(cmp, "cmp", 6, .indirect(.x)),
-            0xC4: Opcode(cpy, "cpy", 3, .zeroPage(.none)),
-            0xC5: Opcode(cmp, "cmp", 3, .zeroPage(.none)),
-            0xC6: Opcode(dec, "dec", 5, .zeroPage(.none)),
-            0xC8: Opcode(iny, "iny", 2, .implied),
-            0xC9: Opcode(cmp, "cmp", 2, .immediate),
-            0xCA: Opcode(dex, "dex", 2, .implied),
-            0xCC: Opcode(cpy, "cpy", 4, .absolute(.none, true)),
-            0xCD: Opcode(cmp, "cmp", 4, .absolute(.none, true)),
-            0xCE: Opcode(dec, "dec", 6, .absolute(.none, true)),
-            0xD0: Opcode(bne, "bne", 2, .relative),
-            0xD1: Opcode(cmp, "cmp", 5, .indirect(.y)),
-            0xD5: Opcode(cmp, "cmp", 4, .zeroPage(.x)),
-            0xD6: Opcode(dec, "dec", 6, .zeroPage(.x)),
-            0xD8: Opcode(cld, "cld", 2, .implied),
-            0xD9: Opcode(cmp, "cmp", 4, .absolute(.y, true)),
-            0xDD: Opcode(cmp, "cmp", 4, .absolute(.x, true)),
-            0xDE: Opcode(dec, "dec", 7, .absolute(.x, true)),
-            0xE0: Opcode(cpx, "cpx", 2, .immediate),
-            0xE1: Opcode(sbc, "sbc", 6, .indirect(.x)),
-            0xE4: Opcode(cpx, "cpx", 3, .zeroPage(.none)),
-            0xE5: Opcode(sbc, "sbc", 3, .zeroPage(.none)),
-            0xE6: Opcode(inc, "inc", 5, .zeroPage(.none)),
-            0xE8: Opcode(inx, "inx", 2, .implied),
-            0xE9: Opcode(sbc, "sbc", 2, .immediate),
-            0xEA: Opcode(nop, "nop", 2, .implied),
-            0xEC: Opcode(cpx, "cpx", 4, .absolute(.none, true)),
-            0xED: Opcode(sbc, "sbc", 4, .absolute(.none, true)),
-            0xEE: Opcode(inc, "inc", 6, .absolute(.none, true)),
-            0xF0: Opcode(beq, "beq", 2, .relative),
-            0xF1: Opcode(sbc, "sbc", 5, .indirect(.y)),
-            0xF5: Opcode(sbc, "sbc", 4, .zeroPage(.x)),
-            0xF6: Opcode(inc, "inc", 6, .zeroPage(.x)),
-            0xF8: Opcode(sed, "sed", 2, .implied),
-            0xF9: Opcode(sbc, "sbc", 4, .absolute(.y, true)),
-            0xFD: Opcode(sbc, "sbc", 4, .absolute(.x, true)),
-            0xFE: Opcode(inc, "inc", 7, .absolute(.x, true))
+            Opcode(brk, "brk", 7, .implied),                  // 0x00
+            Opcode(ora, "ora", 6, .indirect(.x)),             // 0x01
+            nil,                                              // 0x02
+            nil,                                              // 0x03
+            nil,                                              // 0x04
+            Opcode(ora, "ora", 3, .zeroPage(.none)),          // 0x05
+            Opcode(asl, "asl", 5, .zeroPage(.none)),          // 0x06
+            nil,                                              // 0x07
+            Opcode(php, "php", 3, .implied),                  // 0x08
+            Opcode(ora, "ora", 2, .immediate),                // 0x09
+            Opcode(asla, "asl", 2, .accumulator),             // 0x0A
+            nil,                                              // 0x0B
+            nil,                                              // 0x0C
+            Opcode(ora, "ora", 4, .absolute(.none, true)),    // 0x0D
+            Opcode(asl, "asl", 6, .absolute(.none, true)),    // 0x0E
+            nil,                                              // 0x0F
+            Opcode(bpl, "bpl", 2, .relative),                 // 0x10
+            Opcode(ora, "ora", 5, .indirect(.y)),             // 0x11
+            nil,                                              // 0x12
+            nil,                                              // 0x13
+            nil,                                              // 0x14
+            Opcode(ora, "ora", 4, .zeroPage(.x)),             // 0x15
+            Opcode(asl, "asl", 6, .zeroPage(.x)),             // 0x16
+            nil,                                              // 0x17
+            Opcode(clc, "clc", 2, .implied),                  // 0x18
+            Opcode(ora, "ora", 4, .absolute(.y, true)),       // 0x19
+            nil,                                              // 0x1A
+            nil,                                              // 0x1B
+            nil,                                              // 0x1C
+            Opcode(ora, "ora", 4, .absolute(.x, true)),       // 0x1D
+            Opcode(asl, "asl", 7, .absolute(.x, true)),       // 0x1E
+            nil,                                              // 0x1F
+            Opcode(jsr, "jsr", 6, .absolute(.none, false)),   // 0x20
+            Opcode(and, "and", 6, .indirect(.x)),             // 0x21
+            nil,                                              // 0x22
+            nil,                                              // 0x23
+            Opcode(bit, "bit", 3, .zeroPage(.none)),          // 0x24
+            Opcode(and, "and", 3, .zeroPage(.none)),          // 0x25
+            Opcode(rol, "rol", 5, .zeroPage(.none)),          // 0x26
+            Opcode(plp, "plp", 4, .implied),                  // 0x28
+            Opcode(and, "and", 2, .immediate),                // 0x29
+            Opcode(rola, "rol", 2, .accumulator),             // 0x2A
+            nil,                                              // 0x2B
+            Opcode(bit, "bit", 4, .absolute(.none, true)),    // 0x2C
+            Opcode(and, "and", 2, .absolute(.none, true)),    // 0x2D
+            Opcode(rol, "rol", 6, .absolute(.none, true)),    // 0x2E
+            nil,                                              // 0x2F
+            Opcode(bmi, "bmi", 2, .relative),                 // 0x30
+            Opcode(and, "and", 5, .indirect(.y)),             // 0x31
+            nil,                                              // 0x32
+            nil,                                              // 0x33
+            nil,                                              // 0x34
+            Opcode(and, "and", 4, .zeroPage(.x)),             // 0x35
+            Opcode(rol, "rol", 6, .zeroPage(.x)),             // 0x36
+            nil,                                              // 0x37
+            Opcode(sec, "sec", 2, .implied),                  // 0x38
+            Opcode(and, "and", 4, .absolute(.y, true)),       // 0x39
+            nil,                                              // 0x3A
+            nil,                                              // 0x3B
+            nil,                                              // 0x3C
+            Opcode(and, "and", 4, .absolute(.x, true)),       // 0x3D
+            Opcode(rol, "rol", 7, .absolute(.x, true)),       // 0x3E
+            nil,                                              // 0x3F
+            Opcode(rti, "rti", 6, .implied),                  // 0x40
+            Opcode(eor, "eor", 6, .indirect(.x)),             // 0x41
+            nil,                                              // 0x42
+            nil,                                              // 0x43
+            nil,                                              // 0x44
+            Opcode(eor, "eor", 3, .zeroPage(.none)),          // 0x45
+            Opcode(lsr, "lsr", 5, .zeroPage(.none)),          // 0x46
+            nil,                                              // 0x47
+            Opcode(pha, "pha", 3, .implied),                  // 0x48
+            Opcode(eor, "eor", 2, .immediate),                // 0x49
+            Opcode(lsra, "lsr", 2, .accumulator),             // 0x4A
+            nil,                                              // 0x4B
+            Opcode(jmp, "jmp", 3, .absolute(.none, false)),   // 0x4C
+            Opcode(eor, "eor", 4, .absolute(.none, true)),    // 0x4D
+            Opcode(lsr, "lsr", 6, .absolute(.none, true)),    // 0x4E
+            nil,                                              // 0x4F
+            Opcode(bvc, "bvc", 2, .relative),                 // 0x50
+            Opcode(eor, "eor", 5, .indirect(.y)),             // 0x51
+            nil,                                              // 0x52
+            nil,                                              // 0x53
+            nil,                                              // 0x54
+            Opcode(eor, "eor", 4, .zeroPage(.x)),             // 0x55
+            Opcode(lsr, "lsr", 6, .zeroPage(.x)),             // 0x56
+            nil,                                              // 0x57
+            Opcode(cli, "cli", 2, .implied),                  // 0x58
+            Opcode(eor, "eor", 4, .absolute(.y, true)),       // 0x59
+            nil,                                              // 0x5A
+            nil,                                              // 0x5B
+            nil,                                              // 0x5C
+            Opcode(eor, "eor", 4, .absolute(.x, true)),       // 0x5D
+            Opcode(lsr, "lsr", 7, .absolute(.x, true)),       // 0x5E
+            nil,                                              // 0x5F
+            Opcode(rts, "rts", 6, .implied),                  // 0x60
+            Opcode(adc, "adc", 6, .indirect(.x)),             // 0x61
+            nil,                                              // 0x62
+            nil,                                              // 0x63
+            nil,                                              // 0x64
+            Opcode(adc, "adc", 3, .zeroPage(.none)),          // 0x65
+            Opcode(ror, "ror", 5, .zeroPage(.none)),          // 0x66
+            nil,                                              // 0x67
+            Opcode(pla, "pla", 4, .implied),                  // 0x68
+            Opcode(adc, "adc", 2, .immediate),                // 0x69
+            Opcode(rora, "ror", 2, .accumulator),             // 0x6A
+            nil,                                              // 0x6B
+            Opcode(jmp, "jmp", 5, .indirect(.none)),          // 0x6C
+            Opcode(adc, "adc", 4, .absolute(.none, true)),    // 0x6D
+            Opcode(ror, "ror", 6, .absolute(.none, true)),    // 0x6E
+            nil,                                              // 0x6F
+            Opcode(bvs, "bvs", 2, .relative),                 // 0x70
+            Opcode(adc, "adc", 5, .indirect(.y)),             // 0x71
+            nil,                                              // 0x72
+            nil,                                              // 0x73
+            nil,                                              // 0x74
+            Opcode(adc, "adc", 4, .zeroPage(.x)),             // 0x75
+            Opcode(ror, "ror", 6, .zeroPage(.x)),             // 0x76
+            nil,                                              // 0x77
+            Opcode(sei, "sei", 2, .implied),                  // 0x78
+            Opcode(adc, "adc", 4, .absolute(.y, true)),       // 0x79
+            nil,                                              // 0x7A
+            nil,                                              // 0x7B
+            nil,                                              // 0x7C
+            Opcode(adc, "adc", 4, .absolute(.x, true)),       // 0x7D
+            Opcode(ror, "ror", 7, .absolute(.x, true)),       // 0x7E
+            nil,                                              // 0x7F
+            nil,                                              // 0x80
+            Opcode(sta, "sta", 6, .indirect(.x)),             // 0x81
+            nil,                                              // 0x82
+            nil,                                              // 0x83
+            Opcode(sty, "sty", 3, .zeroPage(.none)),          // 0x84
+            Opcode(sta, "sta", 3, .zeroPage(.none)),          // 0x85
+            Opcode(stx, "stx", 3, .zeroPage(.none)),          // 0x86
+            nil,                                              // 0x87
+            Opcode(dey, "dey", 2, .implied),                  // 0x88
+            nil,                                              // 0x89
+            Opcode(txa, "txa", 2, .implied),                  // 0x8A
+            nil,                                              // 0x8B
+            Opcode(sty, "sty", 4, .absolute(.none, false)),   // 0x8C
+            Opcode(sta, "sta", 4, .absolute(.none, false)),   // 0x8D
+            Opcode(stx, "stx", 4, .absolute(.none, false)),   // 0x8E
+            nil,                                              // 0x8F
+            Opcode(bcc, "bcc", 2, .relative),                 // 0x90
+            Opcode(sta, "sta", 6, .indirect(.y)),             // 0x91
+            nil,                                              // 0x92
+            nil,                                              // 0x93
+            Opcode(sty, "sty", 4, .zeroPage(.x)),             // 0x94
+            Opcode(sta, "sta", 4, .zeroPage(.x)),             // 0x95
+            Opcode(stx, "stx", 4, .zeroPage(.y)),             // 0x96
+            nil,                                              // 0x97
+            Opcode(tya, "tya", 2, .implied),                  // 0x98
+            Opcode(sta, "sta", 5, .absolute(.y, false)),      // 0x99
+            Opcode(txs, "txs", 2, .implied),                  // 0x9A
+            nil,                                              // 0x9B
+            nil,                                              // 0x9C
+            Opcode(sta, "sta", 5, .absolute(.x, false)),      // 0x9D
+            nil,                                              // 0x9E
+            nil,                                              // 0x9F
+            Opcode(ldy, "ldy", 2, .immediate),                // 0xA0
+            Opcode(lda, "lda", 6, .indirect(.x)),             // 0xA1
+            Opcode(ldx, "ldx", 2, .immediate),                // 0xA2
+            nil,                                              // 0xA3
+            Opcode(ldy, "ldy", 3, .zeroPage(.none)),          // 0xA4
+            Opcode(lda, "lda", 3, .zeroPage(.none)),          // 0xA5
+            Opcode(ldx, "ldx", 3, .zeroPage(.none)),          // 0xA6
+            nil,                                              // 0xA7
+            Opcode(tay, "tay", 2, .implied),                  // 0xA8
+            Opcode(lda, "lda", 2, .immediate),                // 0xA9
+            Opcode(tax, "tax", 2, .implied),                  // 0xAA
+            nil,                                              // 0xAB
+            Opcode(ldy, "ldy", 4, .absolute(.none, true)),    // 0xAC
+            Opcode(lda, "lda", 4, .absolute(.none, true)),    // 0xAD
+            Opcode(ldx, "ldx", 4, .absolute(.none, true)),    // 0xAE
+            nil,                                              // 0xAF
+            Opcode(bcs, "bcs", 2, .relative),                 // 0xB0
+            Opcode(lda, "lda", 5, .indirect(.y)),             // 0xB1
+            nil,                                              // 0xB2
+            nil,                                              // 0xB3
+            Opcode(ldy, "ldy", 4, .zeroPage(.x)),             // 0xB4
+            Opcode(lda, "lda", 4, .zeroPage(.x)),             // 0xB5
+            Opcode(ldx, "ldx", 4, .zeroPage(.y)),             // 0xB6
+            nil,                                              // 0xB7
+            Opcode(clv, "clv", 2, .implied),                  // 0xB8
+            Opcode(lda, "lda", 4, .absolute(.y, true)),       // 0xB9
+            Opcode(tsx, "tsx", 2, .implied),                  // 0xBA
+            nil,                                              // 0xBB
+            Opcode(ldy, "ldy", 4, .absolute(.x, true)),       // 0xBC
+            Opcode(lda, "lda", 4, .absolute(.x, true)),       // 0xBD
+            Opcode(ldx, "ldx", 4, .absolute(.y, true)),       // 0xBE
+            nil,                                              // 0xBF
+            Opcode(cpy, "cpy", 2, .immediate),                // 0xC0
+            Opcode(cmp, "cmp", 6, .indirect(.x)),             // 0xC1
+            nil,                                              // 0xC2
+            nil,                                              // 0xC3
+            Opcode(cpy, "cpy", 3, .zeroPage(.none)),          // 0xC4
+            Opcode(cmp, "cmp", 3, .zeroPage(.none)),          // 0xC5
+            Opcode(dec, "dec", 5, .zeroPage(.none)),          // 0xC6
+            nil,                                              // 0xC7
+            Opcode(iny, "iny", 2, .implied),                  // 0xC8
+            Opcode(cmp, "cmp", 2, .immediate),                // 0xC9
+            Opcode(dex, "dex", 2, .implied),                  // 0xCA
+            nil,                                              // 0xCB
+            Opcode(cpy, "cpy", 4, .absolute(.none, true)),    // 0xCC
+            Opcode(cmp, "cmp", 4, .absolute(.none, true)),    // 0xCD
+            Opcode(dec, "dec", 6, .absolute(.none, true)),    // 0xCE
+            nil,                                              // 0xCF
+            Opcode(bne, "bne", 2, .relative),                 // 0xD0
+            Opcode(cmp, "cmp", 5, .indirect(.y)),             // 0xD1
+            nil,                                              // 0xD2
+            nil,                                              // 0xD3
+            nil,                                              // 0xD4
+            Opcode(cmp, "cmp", 4, .zeroPage(.x)),             // 0xD5
+            Opcode(dec, "dec", 6, .zeroPage(.x)),             // 0xD6
+            nil,                                              // 0xD7
+            Opcode(cld, "cld", 2, .implied),                  // 0xD8
+            Opcode(cmp, "cmp", 4, .absolute(.y, true)),       // 0xD9
+            nil,                                              // 0xDA
+            nil,                                              // 0xDB
+            nil,                                              // 0xDC
+            Opcode(cmp, "cmp", 4, .absolute(.x, true)),       // 0xDD
+            Opcode(dec, "dec", 7, .absolute(.x, true)),       // 0xDE
+            nil,                                              // 0xDF
+            Opcode(cpx, "cpx", 2, .immediate),                // 0xE0
+            Opcode(sbc, "sbc", 6, .indirect(.x)),             // 0xE1
+            nil,                                              // 0xE2
+            nil,                                              // 0xE3
+            Opcode(cpx, "cpx", 3, .zeroPage(.none)),          // 0xE4
+            Opcode(sbc, "sbc", 3, .zeroPage(.none)),          // 0xE5
+            Opcode(inc, "inc", 5, .zeroPage(.none)),          // 0xE6
+            nil,                                              // 0xE7
+            Opcode(inx, "inx", 2, .implied),                  // 0xE8
+            Opcode(sbc, "sbc", 2, .immediate),                // 0xE9
+            Opcode(nop, "nop", 2, .implied),                  // 0xEA
+            nil,                                              // 0xEB
+            Opcode(cpx, "cpx", 4, .absolute(.none, true)),    // 0xEC
+            Opcode(sbc, "sbc", 4, .absolute(.none, true)),    // 0xED
+            Opcode(inc, "inc", 6, .absolute(.none, true)),    // 0xEE
+            nil,                                              // 0xEF
+            Opcode(beq, "beq", 2, .relative),                 // 0xF0
+            Opcode(sbc, "sbc", 5, .indirect(.y)),             // 0xF1
+            nil,                                              // 0xF2
+            nil,                                              // 0xF3
+            nil,                                              // 0xF4
+            Opcode(sbc, "sbc", 4, .zeroPage(.x)),             // 0xF5
+            Opcode(inc, "inc", 6, .zeroPage(.x)),             // 0xF6
+            nil,                                              // 0xF7
+            Opcode(sed, "sed", 2, .implied),                  // 0xF8
+            Opcode(sbc, "sbc", 4, .absolute(.y, true)),       // 0xF9
+            nil,                                              // 0xFA
+            nil,                                              // 0xFB
+            nil,                                              // 0xFC
+            Opcode(sbc, "sbc", 4, .absolute(.x, true)),       // 0xFD
+            Opcode(inc, "inc", 7, .absolute(.x, true)),       // 0xFE
+            nil,                                              // 0xFF
         ]
     }
 

@@ -55,4 +55,8 @@ class ConsoleWindow: CenteredWindow {
             self.renderer?.layer.frame = self.contentView!.bounds
         }
     }
+
+    func willTerminate() {
+        SaveManager.save(checksum: self.console.checksum, data: self.console.saveRam)
+    }
 }

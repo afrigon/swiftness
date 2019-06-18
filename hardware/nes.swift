@@ -44,10 +44,14 @@ class NintendoEntertainmentSystem: Console, BusDelegate {
     var needsRender: Bool { return self.ppu.needsRender }
     var framebuffer: UnsafePointer<FrameBuffer> { return self.ppu.frameBuffer }
 
+    var saveRam: UnsafeBufferPointer<Byte> { return UnsafeBufferPointer(start: &self.cartridge.saveRam, count: self.cartridge.saveRam.count) }
+    var checksum: String { return self.cartridge.checksum }
+
     init(load rom: Cartridge) {
         self.cpu = CoreProcessingUnit(using: self.bus)
         self.ppu = PictureProcessingUnit(using: self.bus, mirroring: rom.mirroringPointer)
         self.cartridge = rom
+        self.cartridge.saveRam = SaveManager.load(checksum: rom.checksum, size: rom.saveRamSize)
         self.bus.delegate = self
         self.reset()
     }
