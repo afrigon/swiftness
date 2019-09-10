@@ -104,7 +104,11 @@ class Conductor {
     /// Renders the console's frame buffer to screen.
     /// - Attention: this method should only be called by the loop closure.
     private func render() {
-        guard self.console.needsRender else { return }
+        guard self.console.needsRender else {
+            print("no render")
+            return
+        }
+        print("render")
         autoreleasepool { self.renderer.draw(self.console.framebuffer) }
     }
 }

@@ -38,7 +38,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.options.romURL = URL(string: "file:///Users/frigon/.nes/roms/donkey-kong.nes")
         self.options.romURL = URL(string: "file:///Users/frigon/Downloads/tetris.nes")
         self.options.romURL = URL(string: "file:///Users/frigon/.nes/roms/zelda.nes")
-        self.options.romURL = URL(string: "file:///Users/frigon/Downloads/HackingTime_MontreHack.nes")
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -58,8 +57,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         self.window = ConsoleWindow(NintendoEntertainmentSystem(load: rom))
+
         self.window.title = Bundle.main.infoDictionary?[kCFBundleNameKey as String] as? String ?? "Swiftness"
-        if let filepath = options.romURL { self.window.title += " - \(filepath.lastPathComponent)" }
+        if let filepath = options.romURL {
+            self.window.title += " - \(filepath.lastPathComponent)"
+        }
 
         self.window.windowController?.showWindow(self)
         NSApplication.shared.mainMenu = ConsoleMenu()

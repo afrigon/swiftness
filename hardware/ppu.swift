@@ -310,7 +310,9 @@ class PictureProcessingUnit: BusConnectedComponent {
 
         if self.maskRegister.showBackground {
             if x >= 8 || !self.maskRegister.clipBackground {
-                backgroundColorIndex = Byte((self.shiftRegister >> 32) >> ((7 - self.fineX) * 4) & 0x0F)
+                let value = self.shiftRegister >> 32
+                let shift = ((Byte(7) - self.fineX) * 4) & 0x0F
+                backgroundColorIndex = Byte(value >> shift)
             }
         }
 

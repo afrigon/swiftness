@@ -51,8 +51,9 @@ class ConsoleWindow: CenteredWindow {
 
     override func layoutIfNeeded() {
         super.layoutIfNeeded()
+        
         if self.renderer != nil && self.contentView != nil {
-            self.renderer?.layer.frame = self.contentView!.bounds
+            self.renderer.layer.frame = self.contentView!.bounds
         }
     }
 
