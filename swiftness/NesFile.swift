@@ -55,6 +55,7 @@ class NesFile {
     }
 
     static func parse(data: NSData) -> Cartridge? {
+        let checksum = data.md5sum()
         var headerData = [UInt8](repeating:0, count: Header.size)
         data.getBytes(&headerData, length: Header.size)
         guard let header = Header(headerData) else {
@@ -84,7 +85,7 @@ class NesFile {
             data.getBytes(&chr, range: chrRange)
         }
 
-        return Cartridge(prg: prg, chr: chr, mapperType: mapperType, mirroring: mirroring)
+        return Cartridge(prg: prg, chr: chr, mapperType: mapperType, mirroring: mirroring, checksum: checksum)
     }
 
     static func raw(path: String) -> [Byte] {

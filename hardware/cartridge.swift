@@ -51,14 +51,19 @@ class Cartridge: BusConnectedComponent, MapperDelegate {
 
     private var programRom: [Byte]
     private var characterRom: [Byte]
-    private var saveRam = [Byte](repeating: 0x00, count: 0x2000)
+    var saveRam: [Byte]! = nil
+    var saveRamSize: Int { return 0x2000 }
 
-    init(prg: [Byte], chr: [Byte], mapperType: MapperType, mirroring: Mirroring) {
+    private var _checksum: String
+    var checksum: String { return self._checksum }
+
+    init(prg: [Byte], chr: [Byte], mapperType: MapperType, mirroring: Mirroring, checksum: String) {
         self.programRom = prg
         self.characterRom = chr
         self.mirroring = mirroring
         self.mirroringPointer = UnsafePointer<Mirroring>(&self.mirroring)
         self.mapperType = mapperType
+        self._checksum = checksum
         self.mapper = MapperFactory.create(mapperType, withDelegate: self)
     }
 

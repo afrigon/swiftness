@@ -21,38 +21,34 @@
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //    SOFTWARE.
 //
+
 import Foundation
-import CommonCrypto
 
-extension Data {
-    public func md5sum() -> String {
-        guard self.count > 0 else { return "" }
+class SaveManager {
+    #if os(macOS)
+    static var saveDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
+        .appendingPathComponent(".swiftness", isDirectory: true)
+        .appendingPathComponent("save", isDirectory: true)
+    #elseif os(iOS)
+    static var saveDirectory: URL = FileManager.default.saveURL!
+    #endif
 
-        var digest = [UInt8](repeating: 0, count: Int(CC_MD5_DIGEST_LENGTH))
-        let dataPointer = self.withUnsafeBytes { $0 }
-        CC_MD5(dataPointer.baseAddress!, CC_LONG(self.count), &digest)
-
-        var digestHex = ""
-        for index in 0..<Int(CC_MD5_DIGEST_LENGTH) {
-            digestHex += String(format: "%02x", digest[index])
+    static func save(checksum: String, data: UnsafeBufferPointer<Byte>) {
+        let filepath = SaveManager.saveDirectory.appendingPathComponent(checksum)
+        do {
+            try FileManager.default.createDirectory(at: SaveManager.saveDirectory, withIntermediateDirectories: true, attributes: nil)
+            try NSData(bytes: data.baseAddress, length: data.count).write(to: filepath)
+        } catch {
+            print("Could not write save RAM to \(filepath.absoluteString)")
         }
-
-        return digestHex
     }
-}
 
-extension NSData {
-    public func md5sum() -> String {
-        guard self.count > 0 else { return "" }
-
-        var digest = [UInt8](repeating: 0, count: Int(CC_MD5_DIGEST_LENGTH))
-        CC_MD5(self.bytes, CC_LONG(self.count), &digest)
-
-        var digestHex = ""
-        for index in 0..<Int(CC_MD5_DIGEST_LENGTH) {
-            digestHex += String(format: "%02x", digest[index])
-        }
-
-        return digestHex
+    static func load(checksum: String, size: Int) -> [Byte] {
+        let filepath = SaveManager.saveDirectory.appendingPathComponent(checksum)
+        let data = NSData(contentsOf: filepath)
+        let length = data?.length ?? 0
+        var buffer: [Byte] = [Byte](repeating: 0, count: size)
+        data?.getBytes(&buffer, length: length)
+        return buffer
     }
 }

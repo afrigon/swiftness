@@ -14,9 +14,18 @@ extension FileManager {
         return try? FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
     }
 
+    var libraryURL: URL? {
+        return try? FileManager.default.url(for: .libraryDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+    }
+
     var romsURL: URL? {
         guard let documentURL = self.documentURL else { return nil }
         return documentURL.appendingPathComponent("roms", isDirectory: true)
+    }
+
+    var saveURL: URL? {
+        guard let documentURL = self.documentURL else { return nil }
+        return documentURL.appendingPathComponent("save", isDirectory: true)
     }
 
     func pathFor(rom: String) -> URL? {
@@ -29,6 +38,9 @@ class FileHelper {
     static func initDocuments() throws {
         guard let romsURL = FileManager.default.romsURL else { throw NSError(domain: "", code: 1, userInfo: nil) }
         try FileManager.default.createDirectory(at: romsURL, withIntermediateDirectories: true, attributes: nil)
+
+        guard let saveURL = FileManager.default.saveURL else { throw NSError(domain: "", code: 1, userInfo: nil) }
+        try FileManager.default.createDirectory(at: saveURL, withIntermediateDirectories: true, attributes: nil)
     }
 
     static func openFromInbox(url: URL) throws -> Data {

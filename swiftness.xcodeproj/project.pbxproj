@@ -13,6 +13,9 @@
 		FE0E81E021B3794800FAB227 /* cnrom.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0E81DF21B3794800FAB227 /* cnrom.swift */; };
 		FE0E81E121B3794800FAB227 /* cnrom.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0E81DF21B3794800FAB227 /* cnrom.swift */; };
 		FE0E81E221B3794800FAB227 /* cnrom.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0E81DF21B3794800FAB227 /* cnrom.swift */; };
+		FE1E17BC227F44D300B437BA /* SaveManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1E17BB227F44D300B437BA /* SaveManager.swift */; };
+		FE1E17BD227F766700B437BA /* SaveManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1E17BB227F44D300B437BA /* SaveManager.swift */; };
+		FE1E17BE227F766800B437BA /* SaveManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1E17BB227F44D300B437BA /* SaveManager.swift */; };
 		FE205D0121E7FAE900FFE577 /* nes-tests-roms.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE205D0021E7FAE900FFE577 /* nes-tests-roms.swift */; };
 		FE2219002269D96D0058D195 /* FileHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2218FE2269D1CB0058D195 /* FileHelper.swift */; };
 		FE2219022269E0B20058D195 /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2219012269E0B20058D195 /* Data.swift */; };
@@ -150,6 +153,7 @@
 		9BE2D3152D1BE65DA04EF68A /* Pods-swiftness-osx.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-swiftness-osx.debug.xcconfig"; path = "Pods/Target Support Files/Pods-swiftness-osx/Pods-swiftness-osx.debug.xcconfig"; sourceTree = "<group>"; };
 		EBF26B7DCA7E780A0CD9E9DC /* Pods-swiftness-ios.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-swiftness-ios.release.xcconfig"; path = "Pods/Target Support Files/Pods-swiftness-ios/Pods-swiftness-ios.release.xcconfig"; sourceTree = "<group>"; };
 		FE0E81DF21B3794800FAB227 /* cnrom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = cnrom.swift; sourceTree = "<group>"; };
+		FE1E17BB227F44D300B437BA /* SaveManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveManager.swift; sourceTree = "<group>"; };
 		FE205D0021E7FAE900FFE577 /* nes-tests-roms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "nes-tests-roms.swift"; sourceTree = "<group>"; };
 		FE2218FE2269D1CB0058D195 /* FileHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileHelper.swift; sourceTree = "<group>"; };
 		FE2219012269E0B20058D195 /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
@@ -523,6 +527,7 @@
 				FEA2743E2182014E0072530A /* LogicLoop.swift */,
 				FE53C8112182474F002BD71F /* InputManager.swift */,
 				FEA2743C2181FCCA0072530A /* Renderer.swift */,
+				FE1E17BB227F44D300B437BA /* SaveManager.swift */,
 				FEC79C8821842789006C3096 /* NesFile.swift */,
 				FE82CB41219FD8AD00E08545 /* StartupOptions.swift */,
 				FE50D192226CA42C0009E283 /* Extensions */,
@@ -783,6 +788,7 @@
 				FE53C84A2183FAE4002BD71F /* bus.swift in Sources */,
 				FE53C8472183FAE4002BD71F /* ram.swift in Sources */,
 				FE3F925921859C260000B574 /* mmc3.swift in Sources */,
+				FE1E17BE227F766800B437BA /* SaveManager.swift in Sources */,
 				FE53C84F2183FDCE002BD71F /* InputManager.swift in Sources */,
 				FE53C8432183FAE1002BD71F /* mapper.swift in Sources */,
 				FE53C8462183FAE4002BD71F /* apu.swift in Sources */,
@@ -842,6 +848,7 @@
 				FE8EE53D22698D8A00A319E0 /* Console.swift in Sources */,
 				FEA27421217C91710072530A /* ppu.swift in Sources */,
 				FE53C80A218225C4002BD71F /* CVDisplayLinkLoop.swift in Sources */,
+				FE1E17BC227F44D300B437BA /* SaveManager.swift in Sources */,
 				FEA2740C217C45F70072530A /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -881,6 +888,7 @@
 				FE5673C32267BA1100846420 /* DirectionalPad.swift in Sources */,
 				FE53C8642183FE00002BD71F /* LogicLoop.swift in Sources */,
 				FE5673AD226795E100846420 /* ConsoleView.swift in Sources */,
+				FE1E17BD227F766700B437BA /* SaveManager.swift in Sources */,
 				FEBA1F3F21820D610044DC8B /* AppDelegate.swift in Sources */,
 				FE2219002269D96D0058D195 /* FileHelper.swift in Sources */,
 				FE53C85B2183FDF7002BD71F /* apu.swift in Sources */,

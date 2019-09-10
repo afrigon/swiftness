@@ -30,6 +30,9 @@ protocol Console {
     var needsRender: Bool { get }
     var framebuffer: UnsafePointer<FrameBuffer> { get }
 
+    var saveRam: UnsafeBufferPointer<Byte> { get }
+    var checksum: String { get }
+
     func run(for deltaTime: Double)
     func reset()
     func setInputs(to value: Byte, for player: Controller.Player)

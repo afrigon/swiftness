@@ -70,4 +70,10 @@ class ConsoleViewController: UIViewController {
         self.mainView.gameView.layer.addSublayer(self.renderer.layer)
         self.view.setNeedsLayout()
     }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+
+        SaveManager.save(checksum: self.console.checksum, data: self.console.saveRam)
+    }
 }
