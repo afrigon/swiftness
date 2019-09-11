@@ -30,7 +30,10 @@ class ConsoleWindow: CenteredWindow {
     private let loop = CVDisplayLinkLoop()
     private let renderer: MetalRenderer! = MetalRenderer()
     private let inputManager = InputResponder()
+    private let overlay = OverlayView()
     private static let scale: Int = 3
+
+    private var ellapsedTime: Double = 0
 
     init?(_ console: Console) {
         self.console = console
@@ -41,18 +44,35 @@ class ConsoleWindow: CenteredWindow {
         guard self.renderer != nil else { return nil }
 
         self.conductor = Conductor(use: self.console, drivenBy: self.loop, renderedBy: self.renderer, interactingWith: self.inputManager)
+        self.conductor.onUpdate { deltaTime in
+            self.ellapsedTime += deltaTime
+
+            if self.ellapsedTime > 1 {
+                self.ellapsedTime = 0
+                self.overlay.fpsLabel.stringValue = "\(UInt16(1 / deltaTime))"
+                self.overlay.resizeSubviews(withOldSize: self.overlay.bounds.size)
+            }
+        }
 
         self.inputManager.add(closure: self.conductor.reset, forKey: 15) // reset, key: R
         self.makeFirstResponder(self.inputManager)
 
         self.contentView?.layer?.addSublayer(self.renderer.layer)
+        self.contentView?.addSubview(self.overlay)
+
         self.contentView?.layer?.setNeedsLayout()
     }
 
     override func layoutIfNeeded() {
         super.layoutIfNeeded()
+        
         if self.renderer != nil && self.contentView != nil {
-            self.renderer?.layer.frame = self.contentView!.bounds
+            self.renderer.layer.frame = self.contentView!.bounds
+            self.overlay.frame = self.contentView!.bounds
         }
+    }
+
+    func willTerminate() {
+        SaveManager.save(checksum: self.console.checksum, data: self.console.saveRam)
     }
 }

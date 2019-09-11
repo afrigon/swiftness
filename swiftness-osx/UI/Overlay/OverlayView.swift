@@ -22,6 +22,41 @@
 //    SOFTWARE.
 //
 
-protocol InputManager {
-    var buttons: UInt8 { get }
+import Cocoa
+//import Combine
+
+class OverlayView: NSView {
+ //   @Published var fps: Double = 0
+
+    let fpsLabel = NSTextField()
+
+    init() {
+        super.init(frame: .zero)
+
+        self.fpsLabel.textColor = .yellow
+        self.fpsLabel.backgroundColor = .none
+        self.fpsLabel.font = NSFont(name: "Menlo-Bold", size: 24)
+        self.fpsLabel.isBezeled = false
+        self.fpsLabel.isEditable = false
+
+//        _ = $fps.sink { fps in
+//            self.fpsLabel.stringValue = "\(fps)"
+//        }
+
+        self.addSubview(self.fpsLabel)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func resizeSubviews(withOldSize oldSize: NSSize) {
+        super.resizeSubviews(withOldSize: oldSize)
+
+        self.fpsLabel.sizeToFit()
+        self.fpsLabel.frame = NSRect(x: self.bounds.width - self.fpsLabel.bounds.width - 20,
+                                     y: self.bounds.height - 45,
+                                     width: self.fpsLabel.bounds.width,
+                                     height: self.fpsLabel.bounds.height)
+    }
 }

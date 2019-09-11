@@ -22,6 +22,38 @@
 //    SOFTWARE.
 //
 
-protocol InputManager {
-    var buttons: UInt8 { get }
+import Foundation
+import CommonCrypto
+
+extension Data {
+    public func md5sum() -> String {
+        guard self.count > 0 else { return "" }
+
+        var digest = [UInt8](repeating: 0, count: Int(CC_MD5_DIGEST_LENGTH))
+        let dataPointer = self.withUnsafeBytes { $0 }
+        CC_MD5(dataPointer.baseAddress!, CC_LONG(self.count), &digest)
+
+        var digestHex = ""
+        for index in 0..<Int(CC_MD5_DIGEST_LENGTH) {
+            digestHex += String(format: "%02x", digest[index])
+        }
+
+        return digestHex
+    }
+}
+
+extension NSData {
+    public func md5sum() -> String {
+        guard self.count > 0 else { return "" }
+
+        var digest = [UInt8](repeating: 0, count: Int(CC_MD5_DIGEST_LENGTH))
+        CC_MD5(self.bytes, CC_LONG(self.count), &digest)
+
+        var digestHex = ""
+        for index in 0..<Int(CC_MD5_DIGEST_LENGTH) {
+            digestHex += String(format: "%02x", digest[index])
+        }
+
+        return digestHex
+    }
 }

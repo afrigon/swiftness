@@ -23,6 +23,7 @@
 //
 
 import Cocoa
+import nes
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var options: StartupOptions!
@@ -36,6 +37,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         self.options.romURL = URL(string: "file:///Users/frigon/Downloads/nes/palette.nes")
         self.options.romURL = URL(string: "file:///Users/frigon/.nes/roms/donkey-kong.nes")
+        self.options.romURL = URL(string: "file:///Users/frigon/Downloads/tetris.nes")
         self.options.romURL = URL(string: "file:///Users/frigon/.nes/roms/zelda.nes")
     }
 
@@ -55,11 +57,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        self.window = ConsoleWindow(NintendoEntertainmentSystem(load: rom))
+
+        self.window = ConsoleWindow(NesConsole(rom: rom))
+
         self.window.title = Bundle.main.infoDictionary?[kCFBundleNameKey as String] as? String ?? "Swiftness"
-        if let filepath = options.romURL { self.window.title += " - \(filepath.lastPathComponent)" }
+        if let filepath = options.romURL {
+            self.window.title += " - \(filepath.lastPathComponent)"
+        }
 
         self.window.windowController?.showWindow(self)
         NSApplication.shared.mainMenu = ConsoleMenu()
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        self.window.willTerminate()
     }
 }

@@ -22,6 +22,54 @@
 //    SOFTWARE.
 //
 
-protocol InputManager {
-    var buttons: UInt8 { get }
+import nes
+
+class NesConsole: Console {
+    var console: nes
+
+    var screenWidth: Int {
+        return self.console.screenWidth
+    }
+
+    var screenHeight: Int {
+        return self.console.screenHeight
+    }
+
+    var mainColor: UInt32 {
+        return self.console.mainColor
+    }
+
+    var needsRender: Bool {
+        return self.console.needsRender
+    }
+
+    var framebuffer: UnsafeBufferPointer<UInt8> {
+        return self.console.framebuffer
+    }
+
+    var saveRam: UnsafeBufferPointer<UInt8> {
+        return self.console.saveRam
+    }
+
+    var checksum: String {
+        return self.console.checksum
+    }
+
+    func run(for deltaTime: Double) {
+        self.console.run(for: deltaTime)
+    }
+
+    func reset() {
+        self.console.reset()
+    }
+
+    func setInputs(to value: UInt8, for player: UInt8) {
+        self.console.setInputs(to: value, for: Controller.Player.primary)
+    }
+
+    init(rom: Cartridge) {
+        self.console = nes(load: rom,
+                       saveRam: SaveManager.load(checksum: rom.checksum,
+                                                 size: rom.saveRamSize))
+    }
 }

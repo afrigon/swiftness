@@ -21,22 +21,31 @@
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //    SOFTWARE.
 //
-import Foundation
-import CommonCrypto
 
-extension Data {
-    public func md5sum() -> String {
-        guard self.count > 0 else { return "" }
+class FrameBuffer {
+    var data: [Byte]
+    var size: (width: Int, height: Int)
 
-        var digest = [UInt8](repeating: 0, count: Int(CC_MD5_DIGEST_LENGTH))
-        let dataPointer = self.withUnsafeBytes { $0 }
-        CC_MD5(dataPointer.baseAddress!, CC_LONG(self.count), &digest)
+    convenience init() {
+        self.init(width: nes.screenWidth,
+                  height: nes.screenHeight)
+    }
 
-        var digestHex = ""
-        for index in 0..<Int(CC_MD5_DIGEST_LENGTH) {
-            digestHex += String(format: "%02x", digest[index])
+    init(width: Int, height: Int) {
+        self.size = (width, height)
+        self.data = [Byte](repeating: 0x00, count: 4 * width * height)
+    }
+
+    func set(x: Int, y: Int, color: DWord = 0x000000) {
+        if x < 0 || y < 0 || x >= self.size.width || y >= self.size.height {
+            print("invalid write to framebuffer at (\(x), \(y)) with color #\(color.hex())")
+            return
         }
 
-        return digestHex
+        let index = y * self.size.width * 4 + x * 4
+        self.data[index] = Byte(color & 0xFF)               // R
+        self.data[index + 1] = Byte((color >> 8) & 0xFF)    // G
+        self.data[index + 2] = Byte((color >> 16) & 0xFF)   // B
+        self.data[index + 3] = 0xFF                         // A
     }
 }

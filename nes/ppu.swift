@@ -63,9 +63,12 @@ class PictureProcessingUnit: BusConnectedComponent {
     var needsRender: Bool { get { return self._needsRender } }
     private var _needsRender: Bool = false
 
-    var frameBuffer: UnsafePointer<FrameBuffer> {
+    var frameBuffer: UnsafeBufferPointer<UInt8> {
         self._needsRender = false
-        return UnsafePointer<FrameBuffer>(self.frameBuffers.rendered)
+        return UnsafeBufferPointer(start: &self.frameBuffers.rendered.pointee.data,
+                                   count: 4 *
+                                    self.frameBuffers.rendered.pointee.size.width *
+                                    self.frameBuffers.rendered.pointee.size.height)
     }
     private var frameBufferA = FrameBuffer()
     private var frameBufferB = FrameBuffer()
@@ -310,7 +313,9 @@ class PictureProcessingUnit: BusConnectedComponent {
 
         if self.maskRegister.showBackground {
             if x >= 8 || !self.maskRegister.clipBackground {
-                backgroundColorIndex = Byte((self.shiftRegister >> 32) >> ((7 - self.fineX) * 4) & 0x0F)
+                let value = self.shiftRegister >> 32
+                let shift = (Byte(7) - self.fineX) * 4
+                backgroundColorIndex = Byte(value >> shift & 0x0F)
             }
         }
 

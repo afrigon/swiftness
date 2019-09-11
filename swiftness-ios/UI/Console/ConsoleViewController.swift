@@ -24,7 +24,6 @@
 
 import UIKit
 
-
 class ConsoleViewController: UIViewController {
     private var conductor: Conductor! = nil
     private var console: Console
@@ -69,5 +68,11 @@ class ConsoleViewController: UIViewController {
         self.mainView.screenRatio = CGFloat(self.console.screenHeight) / CGFloat(self.console.screenWidth)
         self.mainView.gameView.layer.addSublayer(self.renderer.layer)
         self.view.setNeedsLayout()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+
+        SaveManager.save(checksum: self.console.checksum, data: self.console.saveRam)
     }
 }

@@ -26,11 +26,14 @@ protocol Console {
     var screenWidth: Int { get }
     var screenHeight: Int { get }
 
-    var mainColor: DWord { get }
+    var mainColor: UInt32 { get }
     var needsRender: Bool { get }
-    var framebuffer: UnsafePointer<FrameBuffer> { get }
+    var framebuffer: UnsafeBufferPointer<UInt8> { get }
+
+    var saveRam: UnsafeBufferPointer<UInt8> { get }
+    var checksum: String { get }
 
     func run(for deltaTime: Double)
     func reset()
-    func setInputs(to value: Byte, for player: Controller.Player)
+    func setInputs(to value: UInt8, for player: UInt8)
 }

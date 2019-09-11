@@ -23,6 +23,7 @@
 //
 
 import Cocoa
+import nes
 
 class InputResponder: NSResponder, InputManager {
     let buttonMap: [UInt16: Controller.Button] = [
@@ -36,7 +37,7 @@ class InputResponder: NSResponder, InputManager {
         45: .select     // n
     ]
     var closures = [UInt16: () -> Void]()
-    var buttons: Byte = 0
+    var buttons: UInt8 = 0
 
     override var acceptsFirstResponder: Bool { return true }
 
