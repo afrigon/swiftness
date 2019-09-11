@@ -24,7 +24,6 @@
 
 import UIKit
 
-
 class ConsoleViewController: UIViewController {
     private var conductor: Conductor! = nil
     private var console: Console

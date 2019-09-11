@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -13,6 +13,13 @@
 		FE0E81E021B3794800FAB227 /* cnrom.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0E81DF21B3794800FAB227 /* cnrom.swift */; };
 		FE0E81E121B3794800FAB227 /* cnrom.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0E81DF21B3794800FAB227 /* cnrom.swift */; };
 		FE0E81E221B3794800FAB227 /* cnrom.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0E81DF21B3794800FAB227 /* cnrom.swift */; };
+		FE1A0B3423278AB0006873ED /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1A0B3323278AB0006873ED /* SceneDelegate.swift */; };
+		FE1A0B3623289961006873ED /* registers.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1A0B3523289961006873ED /* registers.swift */; };
+		FE1A0B37232899EC006873ED /* registers.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1A0B3523289961006873ED /* registers.swift */; };
+		FE1A0B38232899F2006873ED /* registers.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1A0B3523289961006873ED /* registers.swift */; };
+		FE1A0B3A23289A5B006873ED /* interrupt.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1A0B3923289A5B006873ED /* interrupt.swift */; };
+		FE1A0B3B23289AF2006873ED /* interrupt.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1A0B3923289A5B006873ED /* interrupt.swift */; };
+		FE1A0B3C23289AF3006873ED /* interrupt.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1A0B3923289A5B006873ED /* interrupt.swift */; };
 		FE1E17BC227F44D300B437BA /* SaveManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1E17BB227F44D300B437BA /* SaveManager.swift */; };
 		FE1E17BD227F766700B437BA /* SaveManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1E17BB227F44D300B437BA /* SaveManager.swift */; };
 		FE1E17BE227F766800B437BA /* SaveManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1E17BB227F44D300B437BA /* SaveManager.swift */; };
@@ -153,6 +160,9 @@
 		9BE2D3152D1BE65DA04EF68A /* Pods-swiftness-osx.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-swiftness-osx.debug.xcconfig"; path = "Pods/Target Support Files/Pods-swiftness-osx/Pods-swiftness-osx.debug.xcconfig"; sourceTree = "<group>"; };
 		EBF26B7DCA7E780A0CD9E9DC /* Pods-swiftness-ios.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-swiftness-ios.release.xcconfig"; path = "Pods/Target Support Files/Pods-swiftness-ios/Pods-swiftness-ios.release.xcconfig"; sourceTree = "<group>"; };
 		FE0E81DF21B3794800FAB227 /* cnrom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = cnrom.swift; sourceTree = "<group>"; };
+		FE1A0B3323278AB0006873ED /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		FE1A0B3523289961006873ED /* registers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = registers.swift; sourceTree = "<group>"; };
+		FE1A0B3923289A5B006873ED /* interrupt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = interrupt.swift; sourceTree = "<group>"; };
 		FE1E17BB227F44D300B437BA /* SaveManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveManager.swift; sourceTree = "<group>"; };
 		FE205D0021E7FAE900FFE577 /* nes-tests-roms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "nes-tests-roms.swift"; sourceTree = "<group>"; };
 		FE2218FE2269D1CB0058D195 /* FileHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileHelper.swift; sourceTree = "<group>"; };
@@ -393,6 +403,8 @@
 				FEA2741A217C47B50072530A /* cpu.swift */,
 				FE53C82121835789002BD71F /* addressing.swift */,
 				FE53C823218357A7002BD71F /* memory.swift */,
+				FE1A0B3523289961006873ED /* registers.swift */,
+				FE1A0B3923289A5B006873ED /* interrupt.swift */,
 			);
 			path = cpu;
 			sourceTree = "<group>";
@@ -507,6 +519,7 @@
 				FE50D197226DA2250009E283 /* swiftness-ios.entitlements */,
 				FE53C80321821344002BD71F /* main.swift */,
 				FEBA1F3E21820D610044DC8B /* AppDelegate.swift */,
+				FE1A0B3323278AB0006873ED /* SceneDelegate.swift */,
 				FE5673B422679F1600846420 /* CADisplayLinkLoop.swift */,
 				FE5673B62267A0A900846420 /* InputResponder.swift */,
 				FE5673BC2267B57900846420 /* Stylesheet.swift */,
@@ -714,20 +727,15 @@
 			files = (
 			);
 			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${SRCROOT}/Pods/Target Support Files/Pods-swiftness-ios/Pods-swiftness-ios-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/SSZipArchive/SSZipArchive.framework",
+				"${PODS_ROOT}/Target Support Files/Pods-swiftness-ios/Pods-swiftness-ios-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
-			);
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SSZipArchive.framework",
+				"${PODS_ROOT}/Target Support Files/Pods-swiftness-ios/Pods-swiftness-ios-frameworks-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-swiftness-ios/Pods-swiftness-ios-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-swiftness-ios/Pods-swiftness-ios-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		B5FC6FB63CFEBEA88F5CEFB9 /* [CP] Check Pods Manifest.lock */ = {
@@ -788,10 +796,12 @@
 				FE53C84A2183FAE4002BD71F /* bus.swift in Sources */,
 				FE53C8472183FAE4002BD71F /* ram.swift in Sources */,
 				FE3F925921859C260000B574 /* mmc3.swift in Sources */,
+				FE1A0B3C23289AF3006873ED /* interrupt.swift in Sources */,
 				FE1E17BE227F766800B437BA /* SaveManager.swift in Sources */,
 				FE53C84F2183FDCE002BD71F /* InputManager.swift in Sources */,
 				FE53C8432183FAE1002BD71F /* mapper.swift in Sources */,
 				FE53C8462183FAE4002BD71F /* apu.swift in Sources */,
+				FE1A0B38232899F2006873ED /* registers.swift in Sources */,
 				FE0E81E221B3794800FAB227 /* cnrom.swift in Sources */,
 				FE53C8412183FADC002BD71F /* memory.swift in Sources */,
 				FE53C8492183FAE4002BD71F /* cartridge.swift in Sources */,
@@ -842,10 +852,12 @@
 				FEF6F44121BF83F200DE9881 /* NSAttributedString.swift in Sources */,
 				FE0E81E021B3794800FAB227 /* cnrom.swift in Sources */,
 				FE53C80F21823FB1002BD71F /* apu.swift in Sources */,
+				FE1A0B37232899EC006873ED /* registers.swift in Sources */,
 				FEC79C8D21845CF7006C3096 /* mmc3.swift in Sources */,
 				FEE7F73B21CD14CD0005956E /* unrom.swift in Sources */,
 				FE53C81D21834E08002BD71F /* bus.swift in Sources */,
 				FE8EE53D22698D8A00A319E0 /* Console.swift in Sources */,
+				FE1A0B3B23289AF2006873ED /* interrupt.swift in Sources */,
 				FEA27421217C91710072530A /* ppu.swift in Sources */,
 				FE53C80A218225C4002BD71F /* CVDisplayLinkLoop.swift in Sources */,
 				FE1E17BC227F44D300B437BA /* SaveManager.swift in Sources */,
@@ -866,6 +878,7 @@
 				FE82CB6321A00BE700E08545 /* StartupOptions.swift in Sources */,
 				FE5673B72267A0A900846420 /* InputResponder.swift in Sources */,
 				FE53C8622183FE00002BD71F /* Conductor.swift in Sources */,
+				FE1A0B3A23289A5B006873ED /* interrupt.swift in Sources */,
 				FE53C85D2183FDF7002BD71F /* controller.swift in Sources */,
 				FE53C85A2183FDF7002BD71F /* ppu.swift in Sources */,
 				FE53C83F2183FADC002BD71F /* memory.swift in Sources */,
@@ -883,6 +896,7 @@
 				FE53C85C2183FDF7002BD71F /* ram.swift in Sources */,
 				FE5673B3226798E400846420 /* MetalRenderer.swift in Sources */,
 				FE5673BF2267B5C200846420 /* UIColor.swift in Sources */,
+				FE1A0B3623289961006873ED /* registers.swift in Sources */,
 				FE5673B522679F1600846420 /* CADisplayLinkLoop.swift in Sources */,
 				FE53C85E2183FDF7002BD71F /* cartridge.swift in Sources */,
 				FE5673C32267BA1100846420 /* DirectionalPad.swift in Sources */,
@@ -893,6 +907,7 @@
 				FE2219002269D96D0058D195 /* FileHelper.swift in Sources */,
 				FE53C85B2183FDF7002BD71F /* apu.swift in Sources */,
 				FE53C8632183FE00002BD71F /* Renderer.swift in Sources */,
+				FE1A0B3423278AB0006873ED /* SceneDelegate.swift in Sources */,
 				FE3F925721859C260000B574 /* mmc3.swift in Sources */,
 				FE8EE53E22698E2A00A319E0 /* Console.swift in Sources */,
 				FE53C83E2183FADC002BD71F /* addressing.swift in Sources */,
@@ -1021,7 +1036,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -1077,7 +1092,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -1156,7 +1171,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 7LYG6KRX2T;
 				INFOPLIST_FILE = "$(SRCROOT)/swiftness-ios/SupportingFiles/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1180,7 +1195,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 7LYG6KRX2T;
 				INFOPLIST_FILE = "$(SRCROOT)/swiftness-ios/SupportingFiles/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

@@ -25,44 +25,20 @@
 import UIKit
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
-    private var options: StartupOptions!
-    var window: UIWindow?
-
-    override init() {
-        super.init()
-        let arguments = Array(CommandLine.arguments.dropFirst())
-        self.options = StartupOptions.parse(arguments)
-        guard self.options != nil else { exit(0) }
-
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         guard (try? FileHelper.initDocuments()) != nil else {
             // show could not init files or something
-            return
+            return false
         }
+
+        return true
     }
 
     func application(_ application: UIApplication,
-                     didFinishLaunchingWithOptions launchOptions: [
-                        UIApplication.LaunchOptionsKey: Any
-                     ]?) -> Bool {
-        self.window = UIWindow(frame: UIScreen.main.bounds)
-        self.window!.tintColor = .primary
-        self.window!.backgroundColor = .darkBlue
-
-        // should be changed for game browser vc
-        self.window?.rootViewController = UIViewController()
-        self.window?.makeKeyAndVisible()
-
-        return true
-    }
-
-    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-        self.options.romURL = url
-        
-        guard let data = try? FileHelper.open(url: url) else { return false }
-        guard let rom = NesFile.parse(data: NSData(data: data)) else { return false }
-        guard let vc = ConsoleViewController(NintendoEntertainmentSystem(load: rom)) else { return false }
-
-        self.window?.rootViewController?.present(vc, animated: true, completion: nil)
-        return true
+                     configurationForConnecting connectingSceneSession: UISceneSession,
+                     options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+        return UISceneConfiguration(name: "Default Configuration",
+                                    sessionRole: connectingSceneSession.role)
     }
 }
