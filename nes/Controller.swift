@@ -22,13 +22,13 @@
 //    SOFTWARE.
 //
 
-class Controller: BusConnectedComponent {
+public class Controller: BusConnectedComponent {
     private let player: Player
     private var strobe: Byte = 0
     private var index: Byte = 0
     var buttons: Byte = 0
 
-    enum Button: Byte {
+    public enum Button: UInt8 {
         case a = 1
         case b = 2
         case select = 4
@@ -39,7 +39,7 @@ class Controller: BusConnectedComponent {
         case right = 128
     }
 
-    enum Player: UInt8 {
+    public enum Player: UInt8 {
         case primary = 1, secondary = 2
     }
 

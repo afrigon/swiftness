@@ -89,7 +89,7 @@ class Conductor {
     /// Copies the input manager state to the console.
     /// - Attention: this method should only be called by the loop closure.
     private func processInput() {
-        self.console.setInputs(to: self.inputManager.buttons, for: .primary)
+        self.console.setInputs(to: self.inputManager.buttons, for: 1)
     }
 
     /// Runs the actual emulation of the console.
@@ -105,6 +105,11 @@ class Conductor {
     /// - Attention: this method should only be called by the loop closure.
     private func render() {
         guard self.console.needsRender else { return }
-        autoreleasepool { self.renderer.draw(self.console.framebuffer) }
+        
+        autoreleasepool {
+            self.renderer.draw(self.console.framebuffer,
+                               width: self.console.screenWidth,
+                               height: self.console.screenHeight)
+        }
     }
 }

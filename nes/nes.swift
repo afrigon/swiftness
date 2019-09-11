@@ -22,7 +22,7 @@
 //    SOFTWARE.
 //
 
-class NintendoEntertainmentSystem: Console, BusDelegate {
+public class nes: BusDelegate {
     static let screenWidth: Int = 256
     static let screenHeight: Int = 240
 
@@ -37,32 +37,35 @@ class NintendoEntertainmentSystem: Console, BusDelegate {
 
     private var deficitCycles: Int64 = 0
 
-    var screenWidth: Int { return NintendoEntertainmentSystem.screenWidth }
-    var screenHeight: Int { return NintendoEntertainmentSystem.screenHeight }
+    public var saveRam: UnsafeBufferPointer<UInt8> {
+        return UnsafeBufferPointer(start: &self.cartridge.saveRam,
+                                   count: self.cartridge.saveRam.count)
+    }
+    public var checksum: String { return self.cartridge.checksum }
 
-    var mainColor: DWord { return self.ppu.mainColor }
-    var needsRender: Bool { return self.ppu.needsRender }
-    var framebuffer: UnsafePointer<FrameBuffer> { return self.ppu.frameBuffer }
+    public var screenWidth: Int { return nes.screenWidth }
+    public var screenHeight: Int { return nes.screenHeight }
 
-    var saveRam: UnsafeBufferPointer<Byte> { return UnsafeBufferPointer(start: &self.cartridge.saveRam, count: self.cartridge.saveRam.count) }
-    var checksum: String { return self.cartridge.checksum }
+    public var mainColor: UInt32 { return self.ppu.mainColor }
+    public var needsRender: Bool { return self.ppu.needsRender }
+    public var framebuffer: UnsafeBufferPointer<UInt8> { return self.ppu.frameBuffer }
 
-    init(load rom: Cartridge) {
+    public init(load rom: Cartridge, saveRam: [UInt8]) {
         self.cpu = CoreProcessingUnit(using: self.bus)
         self.ppu = PictureProcessingUnit(using: self.bus, mirroring: rom.mirroringPointer)
         self.cartridge = rom
-        self.cartridge.saveRam = SaveManager.load(checksum: rom.checksum, size: rom.saveRamSize)
+        self.cartridge.saveRam = saveRam
         self.bus.delegate = self
         self.reset()
     }
 
-    func reset() {
+    public func reset() {
         // reset mapper
         self.ppu.reset()
         self.cpu.requestInterrupt(type: .reset)
     }
 
-    func setInputs(to value: Byte, for player: Controller.Player = .primary) {
+    public func setInputs(to value: UInt8, for player: Controller.Player = .primary) {
         switch player {
         case .primary: self.controller1.buttons = value
         case .secondary: self.controller2.buttons = value
@@ -81,7 +84,7 @@ class NintendoEntertainmentSystem: Console, BusDelegate {
         return cpuCycle
     }
 
-    func run(for deltaTime: Double) {
+    public func run(for deltaTime: Double) {
         var cycles: Int64 = Int64(self.cpu.frequency * deltaTime) + self.deficitCycles
 
         while cycles > 0 {

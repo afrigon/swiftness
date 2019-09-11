@@ -22,43 +22,30 @@
 //    SOFTWARE.
 //
 
-import XCTest
-@testable import swiftness_osx
+class FrameBuffer {
+    var data: [Byte]
+    var size: (width: Int, height: Int)
 
-class NintendoEntertainmentSystemTestsRoms: XCTestCase {
-    private var nes: NintendoEntertainmentSystem!
-
-    override func setUp() {
-        self.nes = nil
+    convenience init() {
+        self.init(width: nes.screenWidth,
+                  height: nes.screenHeight)
     }
 
-    func testInstructions() {
-//        let bundle = Bundle(for: type(of: self))
-//        let path = bundle.path(forResource: "cpu-instructions-tests", ofType: "nes")!
-//        guard let program = NesFile.load(path: path) else {
-//            return
-//        }
-//        self.nes = NintendoEntertainmentSystem(load: program)
-//
-//        self.nes.disableGraphics = true
-//        self.nes.stepFrame(60)
-//        while self.nes.bus.readByte(at: 0x6000) == 0x80 {
-//            self.nes.stepFrame()
-//        }
-//        let result = self.stringSRAM()
-//
-//        XCTAssert(self.nes.bus.readByte(at: 0x6000) == 0, result)
+    init(width: Int, height: Int) {
+        self.size = (width, height)
+        self.data = [Byte](repeating: 0x00, count: 4 * width * height)
     }
 
-//    func stringSRAM() -> String {
-//        var i: Word = 0x6004
-//        var value: Byte = 0
-//        var string = ""
-//        repeat {
-//            value = self.nes.bus.readByte(at: i)
-//            string += String(Character(UnicodeScalar(value)))
-//            i++
-//        } while (value != 0)
-//        return string
-//    }
+    func set(x: Int, y: Int, color: DWord = 0x000000) {
+        if x < 0 || y < 0 || x >= self.size.width || y >= self.size.height {
+            print("invalid write to framebuffer at (\(x), \(y)) with color #\(color.hex())")
+            return
+        }
+
+        let index = y * self.size.width * 4 + x * 4
+        self.data[index] = Byte(color & 0xFF)               // R
+        self.data[index + 1] = Byte((color >> 8) & 0xFF)    // G
+        self.data[index + 2] = Byte((color >> 16) & 0xFF)   // B
+        self.data[index + 3] = 0xFF                         // A
+    }
 }

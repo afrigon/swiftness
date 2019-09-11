@@ -49,50 +49,6 @@ extension Array {
     }
 }
 
-extension String {
-    public func frontPad(with char: Character, toLength length: Int) -> String {
-        let paddingLength = length - self.count
-        guard paddingLength >= 0 else { return self }
-        return String(repeating: char, count: paddingLength) + self
-    }
-}
-
-extension Bool {
-    init<AnyInt: BinaryInteger>(_ number: AnyInt) {
-        self.init(number != 0)
-    }
-}
-
-extension Int {
-    static postfix func ++ (value: inout Int) { value &+= 1 }
-    static postfix func -- (value: inout Int) { value &-= 1 }
-}
-
-extension Int8 {
-    static postfix func ++ (value: inout Int8) { value &+= 1 }
-    static postfix func -- (value: inout Int8) { value &-= 1 }
-}
-
-extension Int16 {
-    static postfix func ++ (value: inout Int16) { value &+= 1 }
-    static postfix func -- (value: inout Int16) { value &-= 1 }
-}
-
-extension Int32 {
-    static postfix func ++ (value: inout Int32) { value &+= 1 }
-    static postfix func -- (value: inout Int32) { value &-= 1 }
-}
-
-extension Int64 {
-    static postfix func ++ (value: inout Int64) { value &+= 1 }
-    static postfix func -- (value: inout Int64) { value &-= 1 }
-}
-
-extension UInt {
-    static postfix func ++ (value: inout UInt) { value &+= 1 }
-    static postfix func -- (value: inout UInt) { value &-= 1 }
-}
-
 extension UInt8 {
     init(_ value: Bool) { self = value ? 1 : 0 }
 

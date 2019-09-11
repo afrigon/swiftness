@@ -22,6 +22,10 @@
 //    SOFTWARE.
 //
 
-protocol InputManager {
-    var buttons: UInt8 { get }
+extension String {
+    public func frontPad(with char: Character, toLength length: Int) -> String {
+        let paddingLength = length - self.count
+        guard paddingLength >= 0 else { return self }
+        return String(repeating: char, count: paddingLength) + self
+    }
 }

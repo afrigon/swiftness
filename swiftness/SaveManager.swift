@@ -33,7 +33,7 @@ class SaveManager {
     static var saveDirectory: URL = FileManager.default.saveURL!
     #endif
 
-    static func save(checksum: String, data: UnsafeBufferPointer<Byte>) {
+    static func save(checksum: String, data: UnsafeBufferPointer<UInt8>) {
         let filepath = SaveManager.saveDirectory.appendingPathComponent(checksum)
         do {
             try FileManager.default.createDirectory(at: SaveManager.saveDirectory, withIntermediateDirectories: true, attributes: nil)
@@ -43,11 +43,11 @@ class SaveManager {
         }
     }
 
-    static func load(checksum: String, size: Int) -> [Byte] {
+    static func load(checksum: String, size: Int) -> [UInt8] {
         let filepath = SaveManager.saveDirectory.appendingPathComponent(checksum)
         let data = NSData(contentsOf: filepath)
         let length = data?.length ?? 0
-        var buffer: [Byte] = [Byte](repeating: 0, count: size)
+        var buffer: [UInt8] = [UInt8](repeating: 0, count: size)
         data?.getBytes(&buffer, length: length)
         return buffer
     }

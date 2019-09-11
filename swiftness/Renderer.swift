@@ -22,34 +22,34 @@
 //    SOFTWARE.
 //
 
-class FrameBuffer {
-    var data: [Byte]
-    var size: (width: Int, height: Int)
-
-    convenience init() {
-        self.init(width: NintendoEntertainmentSystem.screenWidth,
-                  height: NintendoEntertainmentSystem.screenHeight)
-    }
-
-    init(width: Int, height: Int) {
-        self.size = (width, height)
-        self.data = [Byte](repeating: 0x00, count: 4 * width * height)
-    }
-
-    func set(x: Int, y: Int, color: DWord = 0x000000) {
-        if x < 0 || y < 0 || x >= self.size.width || y >= self.size.height {
-            print("invalid write to framebuffer at (\(x), \(y)) with color #\(color.hex())")
-            return
-        }
-
-        let index = y * self.size.width * 4 + x * 4
-        self.data[index] = Byte(color & 0xFF)               // R
-        self.data[index + 1] = Byte((color >> 8) & 0xFF)    // G
-        self.data[index + 2] = Byte((color >> 16) & 0xFF)   // B
-        self.data[index + 3] = 0xFF                         // A
-    }
-}
+//class FrameBuffer {
+//    var data: [Byte]
+//    var size: (width: Int, height: Int)
+//
+//    convenience init() {
+//        self.init(width: NintendoEntertainmentSystem.screenWidth,
+//                  height: NintendoEntertainmentSystem.screenHeight)
+//    }
+//
+//    init(width: Int, height: Int) {
+//        self.size = (width, height)
+//        self.data = [Byte](repeating: 0x00, count: 4 * width * height)
+//    }
+//
+//    func set(x: Int, y: Int, color: DWord = 0x000000) {
+//        if x < 0 || y < 0 || x >= self.size.width || y >= self.size.height {
+//            print("invalid write to framebuffer at (\(x), \(y)) with color #\(color.hex())")
+//            return
+//        }
+//
+//        let index = y * self.size.width * 4 + x * 4
+//        self.data[index] = Byte(color & 0xFF)               // R
+//        self.data[index + 1] = Byte((color >> 8) & 0xFF)    // G
+//        self.data[index + 2] = Byte((color >> 16) & 0xFF)   // B
+//        self.data[index + 3] = 0xFF                         // A
+//    }
+//}
 
 protocol Renderer {
-    func draw(_ image: UnsafePointer<FrameBuffer>)
+    func draw(_ image: UnsafeBufferPointer<UInt8>, width: Int, height: Int)
 }

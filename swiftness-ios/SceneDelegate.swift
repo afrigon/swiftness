@@ -23,6 +23,7 @@
 //
 
 import UIKit
+import nes
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private var options: StartupOptions!
@@ -58,6 +59,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         guard let data = try? FileHelper.open(url: url) else { return }
         guard let rom = NesFile.parse(data: NSData(data: data)) else { return }
+        
         guard let vc = ConsoleViewController(NintendoEntertainmentSystem(load: rom)) else { return }
 
         vc.modalPresentationStyle = .fullScreen

@@ -23,6 +23,7 @@
 //
 
 import Cocoa
+import nes
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var options: StartupOptions!
@@ -56,7 +57,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        self.window = ConsoleWindow(NintendoEntertainmentSystem(load: rom))
+
+        self.window = ConsoleWindow(NesConsole(rom: rom))
 
         self.window.title = Bundle.main.infoDictionary?[kCFBundleNameKey as String] as? String ?? "Swiftness"
         if let filepath = options.romURL {
