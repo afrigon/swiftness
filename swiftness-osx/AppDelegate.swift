@@ -37,8 +37,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         self.options.romURL = URL(string: "file:///Users/frigon/Downloads/nes/palette.nes")
         self.options.romURL = URL(string: "file:///Users/frigon/.nes/roms/donkey-kong.nes")
-        self.options.romURL = URL(string: "file:///Users/frigon/Downloads/tetris.nes")
+        
         self.options.romURL = URL(string: "file:///Users/frigon/.nes/roms/zelda.nes")
+        self.options.romURL = URL(string: "file:///Users/frigon/.nes/roms/lesbian-tennis.nes")
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {

@@ -38,7 +38,7 @@ class CoreProcessingUnit {
     private weak var bus: Bus!
 
     private var regs: Registers = Registers()
-    private var opcodes: [Byte: Opcode]! = nil
+    private var opcodes: [Opcode]! = nil
 
     private var pendingInterrupt: InterruptType?
     private var additionalCycles: UInt8 = 0
@@ -49,159 +49,264 @@ class CoreProcessingUnit {
 
     init(using bus: Bus) {
         self.bus = bus
-
+        
         self.opcodes = [
-            0x00: Opcode(closure: brk, name: "brk", cycles: 7, addressingMode: .implied),
-            0x01: Opcode(closure: ora, name: "ora", cycles: 6, addressingMode: .indirect(.x)),
-            0x05: Opcode(closure: ora, name: "ora", cycles: 3, addressingMode: .zeroPage(.none)),
-            0x06: Opcode(closure: asl, name: "asl", cycles: 5, addressingMode: .zeroPage(.none)),
-            0x08: Opcode(closure: php, name: "php", cycles: 3, addressingMode: .implied),
-            0x09: Opcode(closure: ora, name: "ora", cycles: 2, addressingMode: .immediate),
-            0x0A: Opcode(closure: asla, name: "asl", cycles: 2, addressingMode: .accumulator),
-            0x0D: Opcode(closure: ora, name: "ora", cycles: 4, addressingMode: .absolute(.none, true)),
-            0x0E: Opcode(closure: asl, name: "asl", cycles: 6, addressingMode: .absolute(.none, true)),
-            0x10: Opcode(closure: bpl, name: "bpl", cycles: 2, addressingMode: .relative),
-            0x11: Opcode(closure: ora, name: "ora", cycles: 5, addressingMode: .indirect(.y)),
-            0x15: Opcode(closure: ora, name: "ora", cycles: 4, addressingMode: .zeroPage(.x)),
-            0x16: Opcode(closure: asl, name: "asl", cycles: 6, addressingMode: .zeroPage(.x)),
-            0x18: Opcode(closure: clc, name: "clc", cycles: 2, addressingMode: .implied),
-            0x19: Opcode(closure: ora, name: "ora", cycles: 4, addressingMode: .absolute(.y, true)),
-            0x1D: Opcode(closure: ora, name: "ora", cycles: 4, addressingMode: .absolute(.x, true)),
-            0x1E: Opcode(closure: asl, name: "asl", cycles: 7, addressingMode: .absolute(.x, true)),
-            0x20: Opcode(closure: jsr, name: "jsr", cycles: 6, addressingMode: .absolute(.none, false)),
-            0x21: Opcode(closure: and, name: "and", cycles: 6, addressingMode: .indirect(.x)),
-            0x24: Opcode(closure: bit, name: "bit", cycles: 3, addressingMode: .zeroPage(.none)),
-            0x25: Opcode(closure: and, name: "and", cycles: 3, addressingMode: .zeroPage(.none)),
-            0x26: Opcode(closure: rol, name: "rol", cycles: 5, addressingMode: .zeroPage(.none)),
-            0x28: Opcode(closure: plp, name: "plp", cycles: 4, addressingMode: .implied),
-            0x29: Opcode(closure: and, name: "and", cycles: 2, addressingMode: .immediate),
-            0x2A: Opcode(closure: rola, name: "rol", cycles: 2, addressingMode: .accumulator),
-            0x2C: Opcode(closure: bit, name: "bit", cycles: 4, addressingMode: .absolute(.none, true)),
-            0x2D: Opcode(closure: and, name: "and", cycles: 2, addressingMode: .absolute(.none, true)),
-            0x2E: Opcode(closure: rol, name: "rol", cycles: 6, addressingMode: .absolute(.none, true)),
-            0x30: Opcode(closure: bmi, name: "bmi", cycles: 2, addressingMode: .relative),
-            0x31: Opcode(closure: and, name: "and", cycles: 5, addressingMode: .indirect(.y)),
-            0x35: Opcode(closure: and, name: "and", cycles: 4, addressingMode: .zeroPage(.x)),
-            0x36: Opcode(closure: rol, name: "rol", cycles: 6, addressingMode: .zeroPage(.x)),
-            0x38: Opcode(closure: sec, name: "sec", cycles: 2, addressingMode: .implied),
-            0x39: Opcode(closure: and, name: "and", cycles: 4, addressingMode: .absolute(.y, true)),
-            0x3D: Opcode(closure: and, name: "and", cycles: 4, addressingMode: .absolute(.x, true)),
-            0x3E: Opcode(closure: rol, name: "rol", cycles: 7, addressingMode: .absolute(.x, true)),
-            0x40: Opcode(closure: rti, name: "rti", cycles: 6, addressingMode: .implied),
-            0x41: Opcode(closure: eor, name: "eor", cycles: 6, addressingMode: .indirect(.x)),
-            0x45: Opcode(closure: eor, name: "eor", cycles: 3, addressingMode: .zeroPage(.none)),
-            0x46: Opcode(closure: lsr, name: "lsr", cycles: 5, addressingMode: .zeroPage(.none)),
-            0x48: Opcode(closure: pha, name: "pha", cycles: 3, addressingMode: .implied),
-            0x49: Opcode(closure: eor, name: "eor", cycles: 2, addressingMode: .immediate),
-            0x4A: Opcode(closure: lsra, name: "lsr", cycles: 2, addressingMode: .accumulator),
-            0x4C: Opcode(closure: jmp, name: "jmp", cycles: 3, addressingMode: .absolute(.none, false)),
-            0x4D: Opcode(closure: eor, name: "eor", cycles: 4, addressingMode: .absolute(.none, true)),
-            0x4E: Opcode(closure: lsr, name: "lsr", cycles: 6, addressingMode: .absolute(.none, true)),
-            0x50: Opcode(closure: bvc, name: "bvc", cycles: 2, addressingMode: .relative),
-            0x51: Opcode(closure: eor, name: "eor", cycles: 5, addressingMode: .indirect(.y)),
-            0x55: Opcode(closure: eor, name: "eor", cycles: 4, addressingMode: .zeroPage(.x)),
-            0x56: Opcode(closure: lsr, name: "lsr", cycles: 6, addressingMode: .zeroPage(.x)),
-            0x58: Opcode(closure: cli, name: "cli", cycles: 2, addressingMode: .implied),
-            0x59: Opcode(closure: eor, name: "eor", cycles: 4, addressingMode: .absolute(.y, true)),
-            0x5D: Opcode(closure: eor, name: "eor", cycles: 4, addressingMode: .absolute(.x, true)),
-            0x5E: Opcode(closure: lsr, name: "lsr", cycles: 7, addressingMode: .absolute(.x, true)),
-            0x60: Opcode(closure: rts, name: "rts", cycles: 6, addressingMode: .implied),
-            0x61: Opcode(closure: adc, name: "adc", cycles: 6, addressingMode: .indirect(.x)),
-            0x65: Opcode(closure: adc, name: "adc", cycles: 3, addressingMode: .zeroPage(.none)),
-            0x66: Opcode(closure: ror, name: "ror", cycles: 5, addressingMode: .zeroPage(.none)),
-            0x68: Opcode(closure: pla, name: "pla", cycles: 4, addressingMode: .implied),
-            0x69: Opcode(closure: adc, name: "adc", cycles: 2, addressingMode: .immediate),
-            0x6A: Opcode(closure: rora, name: "ror", cycles: 2, addressingMode: .accumulator),
-            0x6C: Opcode(closure: jmp, name: "jmp", cycles: 5, addressingMode: .indirect(.none)),
-            0x6D: Opcode(closure: adc, name: "adc", cycles: 4, addressingMode: .absolute(.none, true)),
-            0x6E: Opcode(closure: ror, name: "ror", cycles: 6, addressingMode: .absolute(.none, true)),
-            0x70: Opcode(closure: bvs, name: "bvs", cycles: 2, addressingMode: .relative),
-            0x71: Opcode(closure: adc, name: "adc", cycles: 5, addressingMode: .indirect(.y)),
-            0x75: Opcode(closure: adc, name: "adc", cycles: 4, addressingMode: .zeroPage(.x)),
-            0x76: Opcode(closure: ror, name: "ror", cycles: 6, addressingMode: .zeroPage(.x)),
-            0x78: Opcode(closure: sei, name: "sei", cycles: 2, addressingMode: .implied),
-            0x79: Opcode(closure: adc, name: "adc", cycles: 4, addressingMode: .absolute(.y, true)),
-            0x7D: Opcode(closure: adc, name: "adc", cycles: 4, addressingMode: .absolute(.x, true)),
-            0x7E: Opcode(closure: ror, name: "ror", cycles: 7, addressingMode: .absolute(.x, true)),
-            0x81: Opcode(closure: sta, name: "sta", cycles: 6, addressingMode: .indirect(.x)),
-            0x84: Opcode(closure: sty, name: "sty", cycles: 3, addressingMode: .zeroPage(.none)),
-            0x85: Opcode(closure: sta, name: "sta", cycles: 3, addressingMode: .zeroPage(.none)),
-            0x86: Opcode(closure: stx, name: "stx", cycles: 3, addressingMode: .zeroPage(.none)),
-            0x88: Opcode(closure: dey, name: "dey", cycles: 2, addressingMode: .implied),
-            0x8A: Opcode(closure: txa, name: "txa", cycles: 2, addressingMode: .implied),
-            0x8C: Opcode(closure: sty, name: "sty", cycles: 4, addressingMode: .absolute(.none, false)),
-            0x8D: Opcode(closure: sta, name: "sta", cycles: 4, addressingMode: .absolute(.none, false)),
-            0x8E: Opcode(closure: stx, name: "stx", cycles: 4, addressingMode: .absolute(.none, false)),
-            0x90: Opcode(closure: bcc, name: "bcc", cycles: 2, addressingMode: .relative),
-            0x91: Opcode(closure: sta, name: "sta", cycles: 6, addressingMode: .indirect(.y)),
-            0x94: Opcode(closure: sty, name: "sty", cycles: 4, addressingMode: .zeroPage(.x)),
-            0x95: Opcode(closure: sta, name: "sta", cycles: 4, addressingMode: .zeroPage(.x)),
-            0x96: Opcode(closure: stx, name: "stx", cycles: 4, addressingMode: .zeroPage(.y)),
-            0x98: Opcode(closure: tya, name: "tya", cycles: 2, addressingMode: .implied),
-            0x99: Opcode(closure: sta, name: "sta", cycles: 5, addressingMode: .absolute(.y, false)),
-            0x9A: Opcode(closure: txs, name: "txs", cycles: 2, addressingMode: .implied),
-            0x9D: Opcode(closure: sta, name: "sta", cycles: 5, addressingMode: .absolute(.x, false)),
-            0xA0: Opcode(closure: ldy, name: "ldy", cycles: 2, addressingMode: .immediate),
-            0xA1: Opcode(closure: lda, name: "lda", cycles: 6, addressingMode: .indirect(.x)),
-            0xA2: Opcode(closure: ldx, name: "ldx", cycles: 2, addressingMode: .immediate),
-            0xA4: Opcode(closure: ldy, name: "ldy", cycles: 3, addressingMode: .zeroPage(.none)),
-            0xA5: Opcode(closure: lda, name: "lda", cycles: 3, addressingMode: .zeroPage(.none)),
-            0xA6: Opcode(closure: ldx, name: "ldx", cycles: 3, addressingMode: .zeroPage(.none)),
-            0xA8: Opcode(closure: tay, name: "tay", cycles: 2, addressingMode: .implied),
-            0xA9: Opcode(closure: lda, name: "lda", cycles: 2, addressingMode: .immediate),
-            0xAA: Opcode(closure: tax, name: "tax", cycles: 2, addressingMode: .implied),
-            0xAC: Opcode(closure: ldy, name: "ldy", cycles: 4, addressingMode: .absolute(.none, true)),
-            0xAD: Opcode(closure: lda, name: "lda", cycles: 4, addressingMode: .absolute(.none, true)),
-            0xAE: Opcode(closure: ldx, name: "ldx", cycles: 4, addressingMode: .absolute(.none, true)),
-            0xB0: Opcode(closure: bcs, name: "bcs", cycles: 2, addressingMode: .relative),
-            0xB1: Opcode(closure: lda, name: "lda", cycles: 5, addressingMode: .indirect(.y)),
-            0xB4: Opcode(closure: ldy, name: "ldy", cycles: 4, addressingMode: .zeroPage(.x)),
-            0xB5: Opcode(closure: lda, name: "lda", cycles: 4, addressingMode: .zeroPage(.x)),
-            0xB6: Opcode(closure: ldx, name: "ldx", cycles: 4, addressingMode: .zeroPage(.y)),
-            0xB8: Opcode(closure: clv, name: "clv", cycles: 2, addressingMode: .implied),
-            0xB9: Opcode(closure: lda, name: "lda", cycles: 4, addressingMode: .absolute(.y, true)),
-            0xBA: Opcode(closure: tsx, name: "tsx", cycles: 2, addressingMode: .implied),
-            0xBC: Opcode(closure: ldy, name: "ldy", cycles: 4, addressingMode: .absolute(.x, true)),
-            0xBD: Opcode(closure: lda, name: "lda", cycles: 4, addressingMode: .absolute(.x, true)),
-            0xBE: Opcode(closure: ldx, name: "ldx", cycles: 4, addressingMode: .absolute(.y, true)),
-            0xC0: Opcode(closure: cpy, name: "cpy", cycles: 2, addressingMode: .immediate),
-            0xC1: Opcode(closure: cmp, name: "cmp", cycles: 6, addressingMode: .indirect(.x)),
-            0xC4: Opcode(closure: cpy, name: "cpy", cycles: 3, addressingMode: .zeroPage(.none)),
-            0xC5: Opcode(closure: cmp, name: "cmp", cycles: 3, addressingMode: .zeroPage(.none)),
-            0xC6: Opcode(closure: dec, name: "dec", cycles: 5, addressingMode: .zeroPage(.none)),
-            0xC8: Opcode(closure: iny, name: "iny", cycles: 2, addressingMode: .implied),
-            0xC9: Opcode(closure: cmp, name: "cmp", cycles: 2, addressingMode: .immediate),
-            0xCA: Opcode(closure: dex, name: "dex", cycles: 2, addressingMode: .implied),
-            0xCC: Opcode(closure: cpy, name: "cpy", cycles: 4, addressingMode: .absolute(.none, true)),
-            0xCD: Opcode(closure: cmp, name: "cmp", cycles: 4, addressingMode: .absolute(.none, true)),
-            0xCE: Opcode(closure: dec, name: "dec", cycles: 6, addressingMode: .absolute(.none, true)),
-            0xD0: Opcode(closure: bne, name: "bne", cycles: 2, addressingMode: .relative),
-            0xD1: Opcode(closure: cmp, name: "cmp", cycles: 5, addressingMode: .indirect(.y)),
-            0xD5: Opcode(closure: cmp, name: "cmp", cycles: 4, addressingMode: .zeroPage(.x)),
-            0xD6: Opcode(closure: dec, name: "dec", cycles: 6, addressingMode: .zeroPage(.x)),
-            0xD8: Opcode(closure: cld, name: "cld", cycles: 2, addressingMode: .implied),
-            0xD9: Opcode(closure: cmp, name: "cmp", cycles: 4, addressingMode: .absolute(.y, true)),
-            0xDD: Opcode(closure: cmp, name: "cmp", cycles: 4, addressingMode: .absolute(.x, true)),
-            0xDE: Opcode(closure: dec, name: "dec", cycles: 7, addressingMode: .absolute(.x, true)),
-            0xE0: Opcode(closure: cpx, name: "cpx", cycles: 2, addressingMode: .immediate),
-            0xE1: Opcode(closure: sbc, name: "sbc", cycles: 6, addressingMode: .indirect(.x)),
-            0xE4: Opcode(closure: cpx, name: "cpx", cycles: 3, addressingMode: .zeroPage(.none)),
-            0xE5: Opcode(closure: sbc, name: "sbc", cycles: 3, addressingMode: .zeroPage(.none)),
-            0xE6: Opcode(closure: inc, name: "inc", cycles: 5, addressingMode: .zeroPage(.none)),
-            0xE8: Opcode(closure: inx, name: "inx", cycles: 2, addressingMode: .implied),
-            0xE9: Opcode(closure: sbc, name: "sbc", cycles: 2, addressingMode: .immediate),
-            0xEA: Opcode(closure: nop, name: "nop", cycles: 2, addressingMode: .implied),
-            0xEC: Opcode(closure: cpx, name: "cpx", cycles: 4, addressingMode: .absolute(.none, true)),
-            0xED: Opcode(closure: sbc, name: "sbc", cycles: 4, addressingMode: .absolute(.none, true)),
-            0xEE: Opcode(closure: inc, name: "inc", cycles: 6, addressingMode: .absolute(.none, true)),
-            0xF0: Opcode(closure: beq, name: "beq", cycles: 2, addressingMode: .relative),
-            0xF1: Opcode(closure: sbc, name: "sbc", cycles: 5, addressingMode: .indirect(.y)),
-            0xF5: Opcode(closure: sbc, name: "sbc", cycles: 4, addressingMode: .zeroPage(.x)),
-            0xF6: Opcode(closure: inc, name: "inc", cycles: 6, addressingMode: .zeroPage(.x)),
-            0xF8: Opcode(closure: sed, name: "sed", cycles: 2, addressingMode: .implied),
-            0xF9: Opcode(closure: sbc, name: "sbc", cycles: 4, addressingMode: .absolute(.y, true)),
-            0xFD: Opcode(closure: sbc, name: "sbc", cycles: 4, addressingMode: .absolute(.x, true)),
-            0xFE: Opcode(closure: inc, name: "inc", cycles: 7, addressingMode: .absolute(.x, true))
+            Opcode(closure: brk, name: "brk", cycles: 7, addressingMode: .implied),                 // 0x00
+            Opcode(closure: ora, name: "ora", cycles: 6, addressingMode: .indirect(.x)),            // 0x01
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x02
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x03
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x04
+            Opcode(closure: ora, name: "ora", cycles: 3, addressingMode: .zeroPage(.none)),         // 0x05
+            Opcode(closure: asl, name: "asl", cycles: 5, addressingMode: .zeroPage(.none)),         // 0x06
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x07
+            Opcode(closure: php, name: "php", cycles: 3, addressingMode: .implied),                 // 0x08
+            Opcode(closure: ora, name: "ora", cycles: 2, addressingMode: .immediate),               // 0x09
+            Opcode(closure: asla, name: "asl", cycles: 2, addressingMode: .accumulator),            // 0x0A
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x0B
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x0C
+            Opcode(closure: ora, name: "ora", cycles: 4, addressingMode: .absolute(.none, true)),   // 0x0D
+            Opcode(closure: asl, name: "asl", cycles: 6, addressingMode: .absolute(.none, true)),   // 0x0E
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x0F
+            Opcode(closure: bpl, name: "bpl", cycles: 2, addressingMode: .relative),                // 0x10
+            Opcode(closure: ora, name: "ora", cycles: 5, addressingMode: .indirect(.y)),            // 0x11
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x12
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x13
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x14
+            Opcode(closure: ora, name: "ora", cycles: 4, addressingMode: .zeroPage(.x)),            // 0x15
+            Opcode(closure: asl, name: "asl", cycles: 6, addressingMode: .zeroPage(.x)),            // 0x16
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x17
+            Opcode(closure: clc, name: "clc", cycles: 2, addressingMode: .implied),                 // 0x18
+            Opcode(closure: ora, name: "ora", cycles: 4, addressingMode: .absolute(.y, true)),      // 0x19
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x1A
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x1B
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x1C
+            Opcode(closure: ora, name: "ora", cycles: 4, addressingMode: .absolute(.x, true)),      // 0x1D
+            Opcode(closure: asl, name: "asl", cycles: 7, addressingMode: .absolute(.x, true)),      // 0x1E
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x1F
+            Opcode(closure: jsr, name: "jsr", cycles: 6, addressingMode: .absolute(.none, false)),  // 0x20
+            Opcode(closure: and, name: "and", cycles: 6, addressingMode: .indirect(.x)),            // 0x21
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x22
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x23
+            Opcode(closure: bit, name: "bit", cycles: 3, addressingMode: .zeroPage(.none)),         // 0x24
+            Opcode(closure: and, name: "and", cycles: 3, addressingMode: .zeroPage(.none)),         // 0x25
+            Opcode(closure: rol, name: "rol", cycles: 5, addressingMode: .zeroPage(.none)),         // 0x26
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x27
+            Opcode(closure: plp, name: "plp", cycles: 4, addressingMode: .implied),                 // 0x28
+            Opcode(closure: and, name: "and", cycles: 2, addressingMode: .immediate),               // 0x29
+            Opcode(closure: rola, name: "rol", cycles: 2, addressingMode: .accumulator),            // 0x2A
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x2B
+            Opcode(closure: bit, name: "bit", cycles: 4, addressingMode: .absolute(.none, true)),   // 0x2C
+            Opcode(closure: and, name: "and", cycles: 2, addressingMode: .absolute(.none, true)),   // 0x2D
+            Opcode(closure: rol, name: "rol", cycles: 6, addressingMode: .absolute(.none, true)),   // 0x2E
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x2F
+            Opcode(closure: bmi, name: "bmi", cycles: 2, addressingMode: .relative),                // 0x30
+            Opcode(closure: and, name: "and", cycles: 5, addressingMode: .indirect(.y)),            // 0x31
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x32
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x33
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x34
+            Opcode(closure: and, name: "and", cycles: 4, addressingMode: .zeroPage(.x)),            // 0x35
+            Opcode(closure: rol, name: "rol", cycles: 6, addressingMode: .zeroPage(.x)),            // 0x36
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x37
+            Opcode(closure: sec, name: "sec", cycles: 2, addressingMode: .implied),                 // 0x38
+            Opcode(closure: and, name: "and", cycles: 4, addressingMode: .absolute(.y, true)),      // 0x39
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x3A
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x3B
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x3C
+            Opcode(closure: and, name: "and", cycles: 4, addressingMode: .absolute(.x, true)),      // 0x3D
+            Opcode(closure: rol, name: "rol", cycles: 7, addressingMode: .absolute(.x, true)),      // 0x3E
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x3F
+            Opcode(closure: rti, name: "rti", cycles: 6, addressingMode: .implied),                 // 0x40
+            Opcode(closure: eor, name: "eor", cycles: 6, addressingMode: .indirect(.x)),            // 0x41
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x42
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x43
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x44
+            Opcode(closure: eor, name: "eor", cycles: 3, addressingMode: .zeroPage(.none)),         // 0x45
+            Opcode(closure: lsr, name: "lsr", cycles: 5, addressingMode: .zeroPage(.none)),         // 0x46
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x47
+            Opcode(closure: pha, name: "pha", cycles: 3, addressingMode: .implied),                 // 0x48
+            Opcode(closure: eor, name: "eor", cycles: 2, addressingMode: .immediate),               // 0x49
+            Opcode(closure: lsra, name: "lsr", cycles: 2, addressingMode: .accumulator),            // 0x4A
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x4B
+            Opcode(closure: jmp, name: "jmp", cycles: 3, addressingMode: .absolute(.none, false)),  // 0x4C
+            Opcode(closure: eor, name: "eor", cycles: 4, addressingMode: .absolute(.none, true)),   // 0x4D
+            Opcode(closure: lsr, name: "lsr", cycles: 6, addressingMode: .absolute(.none, true)),   // 0x4E
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x4F
+            Opcode(closure: bvc, name: "bvc", cycles: 2, addressingMode: .relative),                // 0x50
+            Opcode(closure: eor, name: "eor", cycles: 5, addressingMode: .indirect(.y)),            // 0x51
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x52
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x53
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x54
+            Opcode(closure: eor, name: "eor", cycles: 4, addressingMode: .zeroPage(.x)),            // 0x55
+            Opcode(closure: lsr, name: "lsr", cycles: 6, addressingMode: .zeroPage(.x)),            // 0x56
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x57
+            Opcode(closure: cli, name: "cli", cycles: 2, addressingMode: .implied),                 // 0x58
+            Opcode(closure: eor, name: "eor", cycles: 4, addressingMode: .absolute(.y, true)),      // 0x59
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x5A
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x5B
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x5C
+            Opcode(closure: eor, name: "eor", cycles: 4, addressingMode: .absolute(.x, true)),      // 0x5D
+            Opcode(closure: lsr, name: "lsr", cycles: 7, addressingMode: .absolute(.x, true)),      // 0x5E
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x5F
+            Opcode(closure: rts, name: "rts", cycles: 6, addressingMode: .implied),                 // 0x60
+            Opcode(closure: adc, name: "adc", cycles: 6, addressingMode: .indirect(.x)),            // 0x61
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x62
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x63
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x64
+            Opcode(closure: adc, name: "adc", cycles: 3, addressingMode: .zeroPage(.none)),         // 0x65
+            Opcode(closure: ror, name: "ror", cycles: 5, addressingMode: .zeroPage(.none)),         // 0x66
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x67
+            Opcode(closure: pla, name: "pla", cycles: 4, addressingMode: .implied),                 // 0x68
+            Opcode(closure: adc, name: "adc", cycles: 2, addressingMode: .immediate),               // 0x69
+            Opcode(closure: rora, name: "ror", cycles: 2, addressingMode: .accumulator),            // 0x6A
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x6B
+            Opcode(closure: jmp, name: "jmp", cycles: 5, addressingMode: .indirect(.none)),         // 0x6C
+            Opcode(closure: adc, name: "adc", cycles: 4, addressingMode: .absolute(.none, true)),   // 0x6D
+            Opcode(closure: ror, name: "ror", cycles: 6, addressingMode: .absolute(.none, true)),   // 0x6E
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x6F
+            Opcode(closure: bvs, name: "bvs", cycles: 2, addressingMode: .relative),                // 0x70
+            Opcode(closure: adc, name: "adc", cycles: 5, addressingMode: .indirect(.y)),            // 0x71
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x72
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x73
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x74
+            Opcode(closure: adc, name: "adc", cycles: 4, addressingMode: .zeroPage(.x)),            // 0x75
+            Opcode(closure: ror, name: "ror", cycles: 6, addressingMode: .zeroPage(.x)),            // 0x76
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x77
+            Opcode(closure: sei, name: "sei", cycles: 2, addressingMode: .implied),                 // 0x78
+            Opcode(closure: adc, name: "adc", cycles: 4, addressingMode: .absolute(.y, true)),      // 0x79
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x7A
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x7B
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x7C
+            Opcode(closure: adc, name: "adc", cycles: 4, addressingMode: .absolute(.x, true)),      // 0x7D
+            Opcode(closure: ror, name: "ror", cycles: 7, addressingMode: .absolute(.x, true)),      // 0x7E
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x7F
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x80
+            Opcode(closure: sta, name: "sta", cycles: 6, addressingMode: .indirect(.x)),            // 0x81
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x82
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x83
+            Opcode(closure: sty, name: "sty", cycles: 3, addressingMode: .zeroPage(.none)),         // 0x84
+            Opcode(closure: sta, name: "sta", cycles: 3, addressingMode: .zeroPage(.none)),         // 0x85
+            Opcode(closure: stx, name: "stx", cycles: 3, addressingMode: .zeroPage(.none)),         // 0x86
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x87
+            Opcode(closure: dey, name: "dey", cycles: 2, addressingMode: .implied),                 // 0x88
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x89
+            Opcode(closure: txa, name: "txa", cycles: 2, addressingMode: .implied),                 // 0x8A
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x8B
+            Opcode(closure: sty, name: "sty", cycles: 4, addressingMode: .absolute(.none, false)),  // 0x8C
+            Opcode(closure: sta, name: "sta", cycles: 4, addressingMode: .absolute(.none, false)),  // 0x8D
+            Opcode(closure: stx, name: "stx", cycles: 4, addressingMode: .absolute(.none, false)),  // 0x8E
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x8F
+            Opcode(closure: bcc, name: "bcc", cycles: 2, addressingMode: .relative),                // 0x90
+            Opcode(closure: sta, name: "sta", cycles: 6, addressingMode: .indirect(.y)),            // 0x91
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x92
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x93
+            Opcode(closure: sty, name: "sty", cycles: 4, addressingMode: .zeroPage(.x)),            // 0x94
+            Opcode(closure: sta, name: "sta", cycles: 4, addressingMode: .zeroPage(.x)),            // 0x95
+            Opcode(closure: stx, name: "stx", cycles: 4, addressingMode: .zeroPage(.y)),            // 0x96
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x97
+            Opcode(closure: tya, name: "tya", cycles: 2, addressingMode: .implied),                 // 0x98
+            Opcode(closure: sta, name: "sta", cycles: 5, addressingMode: .absolute(.y, false)),     // 0x99
+            Opcode(closure: txs, name: "txs", cycles: 2, addressingMode: .implied),                 // 0x9A
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x9B
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x9C
+            Opcode(closure: sta, name: "sta", cycles: 5, addressingMode: .absolute(.x, false)),     // 0x9D
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x9E
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0x9F
+            Opcode(closure: ldy, name: "ldy", cycles: 2, addressingMode: .immediate),               // 0xA0
+            Opcode(closure: lda, name: "lda", cycles: 6, addressingMode: .indirect(.x)),            // 0xA1
+            Opcode(closure: ldx, name: "ldx", cycles: 2, addressingMode: .immediate),               // 0xA2
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xA3
+            Opcode(closure: ldy, name: "ldy", cycles: 3, addressingMode: .zeroPage(.none)),         // 0xA4
+            Opcode(closure: lda, name: "lda", cycles: 3, addressingMode: .zeroPage(.none)),         // 0xA5
+            Opcode(closure: ldx, name: "ldx", cycles: 3, addressingMode: .zeroPage(.none)),         // 0xA6
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xA7
+            Opcode(closure: tay, name: "tay", cycles: 2, addressingMode: .implied),                 // 0xA8
+            Opcode(closure: lda, name: "lda", cycles: 2, addressingMode: .immediate),               // 0xA9
+            Opcode(closure: tax, name: "tax", cycles: 2, addressingMode: .implied),                 // 0xAA
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xAB
+            Opcode(closure: ldy, name: "ldy", cycles: 4, addressingMode: .absolute(.none, true)),   // 0xAC
+            Opcode(closure: lda, name: "lda", cycles: 4, addressingMode: .absolute(.none, true)),   // 0xAD
+            Opcode(closure: ldx, name: "ldx", cycles: 4, addressingMode: .absolute(.none, true)),   // 0xAE
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xAF
+            Opcode(closure: bcs, name: "bcs", cycles: 2, addressingMode: .relative),                // 0xB0
+            Opcode(closure: lda, name: "lda", cycles: 5, addressingMode: .indirect(.y)),            // 0xB1
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xB2
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xB3
+            Opcode(closure: ldy, name: "ldy", cycles: 4, addressingMode: .zeroPage(.x)),            // 0xB4
+            Opcode(closure: lda, name: "lda", cycles: 4, addressingMode: .zeroPage(.x)),            // 0xB5
+            Opcode(closure: ldx, name: "ldx", cycles: 4, addressingMode: .zeroPage(.y)),            // 0xB6
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xB7
+            Opcode(closure: clv, name: "clv", cycles: 2, addressingMode: .implied),                 // 0xB8
+            Opcode(closure: lda, name: "lda", cycles: 4, addressingMode: .absolute(.y, true)),      // 0xB9
+            Opcode(closure: tsx, name: "tsx", cycles: 2, addressingMode: .implied),                 // 0xBA
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xBB
+            Opcode(closure: ldy, name: "ldy", cycles: 4, addressingMode: .absolute(.x, true)),      // 0xBC
+            Opcode(closure: lda, name: "lda", cycles: 4, addressingMode: .absolute(.x, true)),      // 0xBD
+            Opcode(closure: ldx, name: "ldx", cycles: 4, addressingMode: .absolute(.y, true)),      // 0xBE
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xBF
+            Opcode(closure: cpy, name: "cpy", cycles: 2, addressingMode: .immediate),               // 0xC0
+            Opcode(closure: cmp, name: "cmp", cycles: 6, addressingMode: .indirect(.x)),            // 0xC1
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xC2
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xC3
+            Opcode(closure: cpy, name: "cpy", cycles: 3, addressingMode: .zeroPage(.none)),         // 0xC4
+            Opcode(closure: cmp, name: "cmp", cycles: 3, addressingMode: .zeroPage(.none)),         // 0xC5
+            Opcode(closure: dec, name: "dec", cycles: 5, addressingMode: .zeroPage(.none)),         // 0xC6
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xC7
+            Opcode(closure: iny, name: "iny", cycles: 2, addressingMode: .implied),                 // 0xC8
+            Opcode(closure: cmp, name: "cmp", cycles: 2, addressingMode: .immediate),               // 0xC9
+            Opcode(closure: dex, name: "dex", cycles: 2, addressingMode: .implied),                 // 0xCA
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xCB
+            Opcode(closure: cpy, name: "cpy", cycles: 4, addressingMode: .absolute(.none, true)),   // 0xCC
+            Opcode(closure: cmp, name: "cmp", cycles: 4, addressingMode: .absolute(.none, true)),   // 0xCD
+            Opcode(closure: dec, name: "dec", cycles: 6, addressingMode: .absolute(.none, true)),   // 0xCE
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xCF
+            Opcode(closure: bne, name: "bne", cycles: 2, addressingMode: .relative),                // 0xD0
+            Opcode(closure: cmp, name: "cmp", cycles: 5, addressingMode: .indirect(.y)),            // 0xD1
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xD2
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xD3
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xD4
+            Opcode(closure: cmp, name: "cmp", cycles: 4, addressingMode: .zeroPage(.x)),            // 0xD5
+            Opcode(closure: dec, name: "dec", cycles: 6, addressingMode: .zeroPage(.x)),            // 0xD6
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xD7
+            Opcode(closure: cld, name: "cld", cycles: 2, addressingMode: .implied),                 // 0xD8
+            Opcode(closure: cmp, name: "cmp", cycles: 4, addressingMode: .absolute(.y, true)),      // 0xD9
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xDA
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xDB
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xDC
+            Opcode(closure: cmp, name: "cmp", cycles: 4, addressingMode: .absolute(.x, true)),      // 0xDD
+            Opcode(closure: dec, name: "dec", cycles: 7, addressingMode: .absolute(.x, true)),      // 0xDE
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xDF
+            Opcode(closure: cpx, name: "cpx", cycles: 2, addressingMode: .immediate),               // 0xE0
+            Opcode(closure: sbc, name: "sbc", cycles: 6, addressingMode: .indirect(.x)),            // 0xE1
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xE2
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xE3
+            Opcode(closure: cpx, name: "cpx", cycles: 3, addressingMode: .zeroPage(.none)),         // 0xE4
+            Opcode(closure: sbc, name: "sbc", cycles: 3, addressingMode: .zeroPage(.none)),         // 0xE5
+            Opcode(closure: inc, name: "inc", cycles: 5, addressingMode: .zeroPage(.none)),         // 0xE6
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xE7
+            Opcode(closure: inx, name: "inx", cycles: 2, addressingMode: .implied),                 // 0xE8
+            Opcode(closure: sbc, name: "sbc", cycles: 2, addressingMode: .immediate),               // 0xE9
+            Opcode(closure: nop, name: "nop", cycles: 2, addressingMode: .implied),                 // 0xEA
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xEB
+            Opcode(closure: cpx, name: "cpx", cycles: 4, addressingMode: .absolute(.none, true)),   // 0xEC
+            Opcode(closure: sbc, name: "sbc", cycles: 4, addressingMode: .absolute(.none, true)),   // 0xED
+            Opcode(closure: inc, name: "inc", cycles: 6, addressingMode: .absolute(.none, true)),   // 0xEE
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xEF
+            Opcode(closure: beq, name: "beq", cycles: 2, addressingMode: .relative),                // 0xF0
+            Opcode(closure: sbc, name: "sbc", cycles: 5, addressingMode: .indirect(.y)),            // 0xF1
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xF2
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xF3
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xF4
+            Opcode(closure: sbc, name: "sbc", cycles: 4, addressingMode: .zeroPage(.x)),            // 0xF5
+            Opcode(closure: inc, name: "inc", cycles: 6, addressingMode: .zeroPage(.x)),            // 0xF6
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xF7
+            Opcode(closure: sed, name: "sed", cycles: 2, addressingMode: .implied),                 // 0xF8
+            Opcode(closure: sbc, name: "sbc", cycles: 4, addressingMode: .absolute(.y, true)),      // 0xF9
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xFA
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xFB
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xFC
+            Opcode(closure: sbc, name: "sbc", cycles: 4, addressingMode: .absolute(.x, true)),      // 0xFD
+            Opcode(closure: inc, name: "inc", cycles: 7, addressingMode: .absolute(.x, true)),      // 0xFE
+            Opcode(closure: bad, name: "(bad)", cycles: 0, addressingMode: .implied),               // 0xFF
         ]
     }
 
@@ -230,11 +335,8 @@ class CoreProcessingUnit {
 
         let opcodeHex: Byte = self.bus.readByte(at: regs.pc)
         regs.pc++
-
-        guard let opcode: Opcode = self.opcodes[opcodeHex] else {
-            fatalError("Unknown opcode used (outside of the 151 available)")
-        }
-
+        
+        let opcode = self.opcodes[opcodeHex]
         let operand: Operand = self.buildOperand(using: opcode.addressingMode)
         opcode.closure(operand)
 
@@ -342,6 +444,7 @@ class CoreProcessingUnit {
     }
 
     // OPCODES IMPLEMENTATION
+    private func bad(_ operand: Operand) { fatalError("unknown opcode") }
     private func nop(_ operand: Operand) {}
 
     // Math

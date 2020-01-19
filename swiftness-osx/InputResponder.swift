@@ -50,7 +50,7 @@ class InputResponder: NSResponder, InputManager {
     }
 
     override func keyDown(with event: NSEvent) {
-        print(event.keyCode)
+        //print(event.keyCode)
 
         if let button = self.buttonMap[event.keyCode] {
             self.buttons |= button.rawValue
