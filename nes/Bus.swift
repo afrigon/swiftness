@@ -59,6 +59,24 @@ class Bus {
 
         delegate.bus(bus: self, didSendWriteSignalAt: address, data: data, rom: rom)
     }
+
+    func readWord(at address: Word) -> Word {
+        return self.readByte(at: address).asWord() + self.readByte(at: address + 1).asWord() << 8
+    }
+
+    func writeWord(_ data: Word, at address: Word) {
+        self.writeByte(data.rightByte(), at: address)
+        self.writeByte(data.leftByte(), at: address + 1)
+    }
+
+    func readWordGlitched(at address: Word) -> Word {
+        // 6502 hardware bug, instead of reading from 0xC0FF/0xC100 it reads from 0xC0FF/0xC000
+        if address.rightByte() == 0xFF {
+            return self.readByte(at: address).asWord() + self.readByte(at: address & 0xFF00).asWord() << 8
+        }
+
+        return self.readWord(at: address)
+    }
 }
 
 protocol BusDelegate: AnyObject {

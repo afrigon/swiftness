@@ -9,11 +9,11 @@
 /* Begin PBXBuildFile section */
 		0300FFBA3164D978A062A2FB /* Pods_swiftness_ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21FD55B33CB75B830719ABBB /* Pods_swiftness_ios.framework */; };
 		1C94EC179528359AF146F674 /* Pods_swiftness_osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C95F1DFA365713039CA618F /* Pods_swiftness_osx.framework */; };
+		FE084A20232B7A1000806B1D /* NesConsole.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE20B27E2328B98900EC6E9E /* NesConsole.swift */; };
 		FE1A0B3423278AB0006873ED /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1A0B3323278AB0006873ED /* SceneDelegate.swift */; };
 		FE1E17BC227F44D300B437BA /* SaveManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1E17BB227F44D300B437BA /* SaveManager.swift */; };
 		FE1E17BD227F766700B437BA /* SaveManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1E17BB227F44D300B437BA /* SaveManager.swift */; };
 		FE20B2382328B51300EC6E9E /* Addressing.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE20B2022328AB8F00EC6E9E /* Addressing.swift */; };
-		FE20B2392328B51300EC6E9E /* Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE20B2032328AB8F00EC6E9E /* Memory.swift */; };
 		FE20B23A2328B51300EC6E9E /* Registers.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE20B2042328AB8F00EC6E9E /* Registers.swift */; };
 		FE20B23B2328B51300EC6E9E /* Interrupt.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE20B2052328AB8F00EC6E9E /* Interrupt.swift */; };
 		FE20B23C2328B51300EC6E9E /* cpu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE20B2062328AB8F00EC6E9E /* cpu.swift */; };
@@ -50,7 +50,6 @@
 		FE20B2682328B57F00EC6E9E /* String+Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE20B2252328AD9800EC6E9E /* String+Helper.swift */; };
 		FE20B2692328B57F00EC6E9E /* FrameBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE20B2272328AE1300EC6E9E /* FrameBuffer.swift */; };
 		FE20B26A2328B58200EC6E9E /* Addressing.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE20B2022328AB8F00EC6E9E /* Addressing.swift */; };
-		FE20B26B2328B58200EC6E9E /* Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE20B2032328AB8F00EC6E9E /* Memory.swift */; };
 		FE20B26C2328B58200EC6E9E /* Registers.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE20B2042328AB8F00EC6E9E /* Registers.swift */; };
 		FE20B26D2328B58200EC6E9E /* Interrupt.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE20B2052328AB8F00EC6E9E /* Interrupt.swift */; };
 		FE20B26E2328B58200EC6E9E /* cpu.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE20B2062328AB8F00EC6E9E /* cpu.swift */; };
@@ -62,6 +61,8 @@
 		FE20B27B2328B86100EC6E9E /* Data+Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE20B2792328B86100EC6E9E /* Data+Helper.swift */; };
 		FE20B27F2328B98900EC6E9E /* NesConsole.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE20B27E2328B98900EC6E9E /* NesConsole.swift */; };
 		FE20B2822328D6B400EC6E9E /* OverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE20B2812328D6B400EC6E9E /* OverlayView.swift */; };
+		FE20B2982329B7FE00EC6E9E /* NesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE20B2972329B7FE00EC6E9E /* NesTests.swift */; };
+		FE20B29A2329B7FE00EC6E9E /* libnes.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FE20B2512328B57000EC6E9E /* libnes.a */; };
 		FE2219002269D96D0058D195 /* FileHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2218FE2269D1CB0058D195 /* FileHelper.swift */; };
 		FE22192B2269F4030058D195 /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE22192A2269F4030058D195 /* Request.swift */; };
 		FE3AE29B226794950072BB53 /* ConsoleViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE3AE29A226794950072BB53 /* ConsoleViewController.swift */; };
@@ -105,6 +106,16 @@
 		FEF6F44121BF83F200DE9881 /* NSAttributedString.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF6F44021BF83F200DE9881 /* NSAttributedString.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		FE20B29B2329B7FE00EC6E9E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FEA27400217C45F70072530A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FE20B2502328B57000EC6E9E;
+			remoteInfo = "nes-macOS";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		FE20B22F2328B4C700EC6E9E /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -142,7 +153,6 @@
 		FE20B1FF2328AB8F00EC6E9E /* apu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = apu.swift; sourceTree = "<group>"; };
 		FE20B2002328AB8F00EC6E9E /* Controller.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Controller.swift; sourceTree = "<group>"; };
 		FE20B2022328AB8F00EC6E9E /* Addressing.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Addressing.swift; sourceTree = "<group>"; };
-		FE20B2032328AB8F00EC6E9E /* Memory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Memory.swift; sourceTree = "<group>"; };
 		FE20B2042328AB8F00EC6E9E /* Registers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Registers.swift; sourceTree = "<group>"; };
 		FE20B2052328AB8F00EC6E9E /* Interrupt.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Interrupt.swift; sourceTree = "<group>"; };
 		FE20B2062328AB8F00EC6E9E /* cpu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = cpu.swift; sourceTree = "<group>"; };
@@ -165,6 +175,9 @@
 		FE20B2792328B86100EC6E9E /* Data+Helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+Helper.swift"; sourceTree = "<group>"; };
 		FE20B27E2328B98900EC6E9E /* NesConsole.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NesConsole.swift; sourceTree = "<group>"; };
 		FE20B2812328D6B400EC6E9E /* OverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayView.swift; sourceTree = "<group>"; };
+		FE20B2952329B7FE00EC6E9E /* NesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FE20B2972329B7FE00EC6E9E /* NesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NesTests.swift; sourceTree = "<group>"; };
+		FE20B2992329B7FE00EC6E9E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FE2218FE2269D1CB0058D195 /* FileHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileHelper.swift; sourceTree = "<group>"; };
 		FE2219092269EFFD0058D195 /* QuickLook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickLook.framework; path = System/Library/Frameworks/QuickLook.framework; sourceTree = SDKROOT; };
 		FE22192A2269F4030058D195 /* Request.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
@@ -223,6 +236,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FE20B2922329B7FE00EC6E9E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FE20B29A2329B7FE00EC6E9E /* libnes.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FEA27405217C45F70072530A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -272,7 +293,6 @@
 			isa = PBXGroup;
 			children = (
 				FE20B2022328AB8F00EC6E9E /* Addressing.swift */,
-				FE20B2032328AB8F00EC6E9E /* Memory.swift */,
 				FE20B2042328AB8F00EC6E9E /* Registers.swift */,
 				FE20B2052328AB8F00EC6E9E /* Interrupt.swift */,
 				FE20B2062328AB8F00EC6E9E /* cpu.swift */,
@@ -318,6 +338,23 @@
 				FE20B2812328D6B400EC6E9E /* OverlayView.swift */,
 			);
 			path = Overlay;
+			sourceTree = "<group>";
+		};
+		FE20B2962329B7FE00EC6E9E /* NesTests */ = {
+			isa = PBXGroup;
+			children = (
+				FE20B2972329B7FE00EC6E9E /* NesTests.swift */,
+				FE20B2A22329B86900EC6E9E /* SupportingFiles */,
+			);
+			path = NesTests;
+			sourceTree = "<group>";
+		};
+		FE20B2A22329B86900EC6E9E /* SupportingFiles */ = {
+			isa = PBXGroup;
+			children = (
+				FE20B2992329B7FE00EC6E9E /* Info.plist */,
+			);
+			path = SupportingFiles;
 			sourceTree = "<group>";
 		};
 		FE3AE29C226794BF0072BB53 /* UI */ = {
@@ -468,6 +505,7 @@
 				FEA2740A217C45F70072530A /* swiftness-osx */,
 				FEBA1F3D21820D610044DC8B /* swiftness-ios */,
 				FE9B2BC62328AA6E009E6A1C /* nes */,
+				FE20B2962329B7FE00EC6E9E /* NesTests */,
 				FEA27409217C45F70072530A /* Products */,
 				1D5ADE9A69BBE1CE0F4A2B6A /* Pods */,
 				E923D3BBEFC3CC2156BBEDA4 /* Frameworks */,
@@ -481,6 +519,7 @@
 				FEBA1F3C21820D610044DC8B /* swiftness-ios.app */,
 				FE20B2312328B4C700EC6E9E /* libnes.a */,
 				FE20B2512328B57000EC6E9E /* libnes.a */,
+				FE20B2952329B7FE00EC6E9E /* NesTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -490,7 +529,6 @@
 			children = (
 				FEA274332180CB970072530A /* main.swift */,
 				FEA2740B217C45F70072530A /* AppDelegate.swift */,
-				FE20B27E2328B98900EC6E9E /* NesConsole.swift */,
 				FE53C807218224C5002BD71F /* MetalRenderer.swift */,
 				FEA2742F218085510072530A /* Shader.metal */,
 				FE53C809218225C4002BD71F /* CVDisplayLinkLoop.swift */,
@@ -530,6 +568,7 @@
 				FEA2743E2182014E0072530A /* LogicLoop.swift */,
 				FE53C8112182474F002BD71F /* InputManager.swift */,
 				FEA2743C2181FCCA0072530A /* Renderer.swift */,
+				FE20B27E2328B98900EC6E9E /* NesConsole.swift */,
 				FE1E17BB227F44D300B437BA /* SaveManager.swift */,
 				FE82CB41219FD8AD00E08545 /* StartupOptions.swift */,
 			);
@@ -582,6 +621,24 @@
 			productName = "nes-macOS";
 			productReference = FE20B2512328B57000EC6E9E /* libnes.a */;
 			productType = "com.apple.product-type.library.static";
+		};
+		FE20B2942329B7FE00EC6E9E /* NesTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FE20B29D2329B7FE00EC6E9E /* Build configuration list for PBXNativeTarget "NesTests" */;
+			buildPhases = (
+				FE20B2912329B7FE00EC6E9E /* Sources */,
+				FE20B2922329B7FE00EC6E9E /* Frameworks */,
+				FE20B2932329B7FE00EC6E9E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FE20B29C2329B7FE00EC6E9E /* PBXTargetDependency */,
+			);
+			name = NesTests;
+			productName = NesTests;
+			productReference = FE20B2952329B7FE00EC6E9E /* NesTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		FEA27407217C45F70072530A /* swiftness-osx */ = {
 			isa = PBXNativeTarget;
@@ -637,6 +694,9 @@
 					FE20B2502328B57000EC6E9E = {
 						CreatedOnToolsVersion = 11.0;
 					};
+					FE20B2942329B7FE00EC6E9E = {
+						CreatedOnToolsVersion = 11.0;
+					};
 					FEA27407217C45F70072530A = {
 						CreatedOnToolsVersion = 10.0;
 						LastSwiftMigration = 1020;
@@ -672,11 +732,19 @@
 				FEBA1F3B21820D610044DC8B /* swiftness-ios */,
 				FE20B2302328B4C700EC6E9E /* nes-iOS */,
 				FE20B2502328B57000EC6E9E /* nes-macOS */,
+				FE20B2942329B7FE00EC6E9E /* NesTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		FE20B2932329B7FE00EC6E9E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FEA27406217C45F70072530A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -777,7 +845,6 @@
 				FE20B27A2328B86100EC6E9E /* Data+Helper.swift in Sources */,
 				FE20B2432328B51D00EC6E9E /* Bus.swift in Sources */,
 				FE20B23E2328B51D00EC6E9E /* mmc1.swift in Sources */,
-				FE20B2392328B51300EC6E9E /* Memory.swift in Sources */,
 				FE20B24A2328B51D00EC6E9E /* Bool+Helper.swift in Sources */,
 				FE20B2462328B51D00EC6E9E /* ppu.swift in Sources */,
 				FE20B23B2328B51300EC6E9E /* Interrupt.swift in Sources */,
@@ -809,7 +876,6 @@
 				FE20B2672328B57F00EC6E9E /* Bool+Helper.swift in Sources */,
 				FE20B26C2328B58200EC6E9E /* Registers.swift in Sources */,
 				FE20B25F2328B57F00EC6E9E /* apu.swift in Sources */,
-				FE20B26B2328B58200EC6E9E /* Memory.swift in Sources */,
 				FE20B2632328B57F00EC6E9E /* ppu.swift in Sources */,
 				FE20B26D2328B58200EC6E9E /* Interrupt.swift in Sources */,
 				FE20B2662328B57F00EC6E9E /* Integer+Helper.swift in Sources */,
@@ -818,6 +884,14 @@
 				FE20B2652328B57F00EC6E9E /* nes.swift in Sources */,
 				FE20B2602328B57F00EC6E9E /* Bus.swift in Sources */,
 				FE20B25A2328B57F00EC6E9E /* unrom.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FE20B2912329B7FE00EC6E9E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FE20B2982329B7FE00EC6E9E /* NesTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -872,6 +946,7 @@
 				FE1E17BD227F766700B437BA /* SaveManager.swift in Sources */,
 				FEBA1F3F21820D610044DC8B /* AppDelegate.swift in Sources */,
 				FE2219002269D96D0058D195 /* FileHelper.swift in Sources */,
+				FE084A20232B7A1000806B1D /* NesConsole.swift in Sources */,
 				FE53C8632183FE00002BD71F /* Renderer.swift in Sources */,
 				FE1A0B3423278AB0006873ED /* SceneDelegate.swift in Sources */,
 				FE8EE53E22698E2A00A319E0 /* Console.swift in Sources */,
@@ -879,6 +954,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		FE20B29C2329B7FE00EC6E9E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FE20B2502328B57000EC6E9E /* nes-macOS */;
+			targetProxy = FE20B29B2329B7FE00EC6E9E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		FEBA1F4721820D620044DC8B /* LaunchScreen.storyboard */ = {
@@ -947,6 +1030,44 @@
 				PRODUCT_NAME = nes;
 				SKIP_INSTALL = YES;
 				SWIFT_ENFORCE_EXCLUSIVE_ACCESS = none;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		FE20B29E2329B7FE00EC6E9E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 7LYG6KRX2T;
+				INFOPLIST_FILE = NesTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				PRODUCT_BUNDLE_IDENTIFIER = com.frigstudio.NesTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		FE20B29F2329B7FE00EC6E9E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 7LYG6KRX2T;
+				INFOPLIST_FILE = NesTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				PRODUCT_BUNDLE_IDENTIFIER = com.frigstudio.NesTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -1193,6 +1314,15 @@
 			buildConfigurations = (
 				FE20B2582328B57000EC6E9E /* Debug */,
 				FE20B2592328B57000EC6E9E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FE20B29D2329B7FE00EC6E9E /* Build configuration list for PBXNativeTarget "NesTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FE20B29E2329B7FE00EC6E9E /* Debug */,
+				FE20B29F2329B7FE00EC6E9E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

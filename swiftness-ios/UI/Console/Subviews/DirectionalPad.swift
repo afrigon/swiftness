@@ -23,6 +23,7 @@
 //
 
 import UIKit
+import nes
 
 class DirectionalPad: UIView {
     var buttonDown: ((Controller.Button) -> Void)!

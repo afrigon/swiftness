@@ -22,31 +22,20 @@
 //    SOFTWARE.
 //
 
-import UIKit
+import XCTest
 import nes
 
-class InputResponder: InputManager {
-    var buttons: UInt8 = 0
-
-    func button(for type: Controller.Button) -> ControllerButton {
-        let button = ControllerButton(type: type)
-        button.buttonDown = self.buttonDown
-        button.buttonUp = self.buttonUp
-        return button
+class NesTests: XCTestCase {
+    override func setUp() {
+        // Put setup code here. This method is called before the invocation of each test method in the class.
     }
 
-    func directionalPad() -> DirectionalPad {
-        let dpad = DirectionalPad()
-        dpad.buttonDown = self.buttonDown
-        dpad.buttonUp = self.buttonUp
-        return dpad
+    override func tearDown() {
+        // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
-    func buttonDown(_ type: Controller.Button) {
-        self.buttons |= type.rawValue
-    }
-
-    func buttonUp(_ type: Controller.Button) {
-        self.buttons &= ~type.rawValue
+    func testExample() {
+        // This is an example of a functional test case.
+        // Use XCTAssert and related functions to verify your tests produce the correct results.
     }
 }

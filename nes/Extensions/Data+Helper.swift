@@ -23,37 +23,52 @@
 //
 
 import Foundation
+import CryptoKit
 import CommonCrypto
 
+
 extension Data {
-    public func md5sum() -> String {
+    public func hash() -> String {
         guard self.count > 0 else { return "" }
 
-        var digest = [UInt8](repeating: 0, count: Int(CC_MD5_DIGEST_LENGTH))
-        let dataPointer = self.withUnsafeBytes { $0 }
-        CC_MD5(dataPointer.baseAddress!, CC_LONG(self.count), &digest)
+        // TODO: update to remove this stupidity
+        if #available(OSX 10.15, *) {
+            return SHA256.hash(data: self).compactMap {
+                String(format: "%02x", $0)
+            }.joined()
+        } else {
+            var digest = [UInt8](repeating: 0, count: Int(CC_MD5_DIGEST_LENGTH))
+            let dataPointer = self.withUnsafeBytes { $0 }
+            CC_MD5(dataPointer.baseAddress!, CC_LONG(self.count), &digest)
 
-        var digestHex = ""
-        for index in 0..<Int(CC_MD5_DIGEST_LENGTH) {
-            digestHex += String(format: "%02x", digest[index])
+            var digestHex = ""
+            for index in 0..<Int(CC_MD5_DIGEST_LENGTH) {
+                digestHex += String(format: "%02x", digest[index])
+            }
+            
+            return digestHex
         }
-
-        return digestHex
     }
 }
 
 extension NSData {
-    public func md5sum() -> String {
+    public func hash() -> String {
         guard self.count > 0 else { return "" }
+        
+        if #available(OSX 10.15, *) {
+            return SHA256.hash(data: self).compactMap {
+                String(format: "%02x", $0)
+            }.joined()
+        } else {
+            var digest = [UInt8](repeating: 0, count: Int(CC_MD5_DIGEST_LENGTH))
+            CC_MD5(self.bytes, CC_LONG(self.count), &digest)
 
-        var digest = [UInt8](repeating: 0, count: Int(CC_MD5_DIGEST_LENGTH))
-        CC_MD5(self.bytes, CC_LONG(self.count), &digest)
-
-        var digestHex = ""
-        for index in 0..<Int(CC_MD5_DIGEST_LENGTH) {
-            digestHex += String(format: "%02x", digest[index])
+            var digestHex = ""
+            for index in 0..<Int(CC_MD5_DIGEST_LENGTH) {
+                digestHex += String(format: "%02x", digest[index])
+            }
+            
+            return digestHex
         }
-
-        return digestHex
     }
 }

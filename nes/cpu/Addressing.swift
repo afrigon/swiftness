@@ -45,96 +45,96 @@ enum AddressingMode {
     }
 }
 
-protocol OperandBuilder {
-    func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand
-}
+//protocol OperandBuilder {
+//    func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand
+//}
+//
+//class EmptyOperandBuilder: OperandBuilder {
+//    func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand { return Operand() }
+//}
 
-class EmptyOperandBuilder: OperandBuilder {
-    func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand { return Operand() }
-}
-
-class AlteredOperandBuilder: OperandBuilder {   // Abstract
-    let alteration: AddressingMode.Alteration
-    init(_ alteration: AddressingMode.Alteration = .none) { self.alteration = alteration }
-    func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand { return Operand() }
-}
-
-class ZeroPageAddressingOperandBuilder: AlteredOperandBuilder {
-    override func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand {
-        let alterationValue: Byte = self.alteration != .none ? (self.alteration == .x ? regs.x : regs.y) : 0
-        var operand = Operand()
-        operand.address = (memory.readByte(at: regs.pc).asWord() + alterationValue) & 0xFF
-        operand.value = memory.readByte(at: operand.address).asWord()
-        regs.pc++
-        return operand
-    }
-}
-
-class AbsoluteAddressingOperandBuilder: AlteredOperandBuilder {
-    let shouldFetchValue: Bool
-
-    init(_ alteration: AddressingMode.Alteration, _ shouldFetchValue: Bool = true) {
-        self.shouldFetchValue = shouldFetchValue
-        super.init(alteration)
-    }
-
-    override func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand {
-        let alterationValue: Byte = self.alteration != .none ? (self.alteration == .x ? regs.x : regs.y) : 0
-        var operand = Operand()
-        operand.address = memory.readWord(at: regs.pc) + alterationValue
-        if self.shouldFetchValue { operand.value = memory.readByte(at: operand.address).asWord() }
-        regs.pc += 2
-        operand.additionalCycles = self.alteration == .none
-            ? 0
-            : UInt8(operand.address.isAtSamePage(than: operand.address - (self.alteration == .x
-                ? regs.x
-                : regs.y)))
-        return operand
-    }
-}
-
-class RelativeAddressingOperandBuilder: OperandBuilder {
-    func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand {
-        var operand = Operand()
-
-        // transform the relative address into an absolute address
-        let value = memory.readByte(at: regs.pc)
-        regs.pc++
-        operand.address = regs.pc
-        if value.isSignBitOn() {
-            operand.address -= Word(128 - value & 0b01111111)
-        } else {
-            operand.address += value.asWord() & 0b01111111
-        }
-
-        operand.additionalCycles = UInt8(regs.pc.isAtSamePage(than: operand.address))
-        return operand
-    }
-}
-
-class ImmediateAddressingOperandBuilder: OperandBuilder {
-    func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand {
-        var operand = Operand()
-        operand.value = memory.readByte(at: regs.pc).asWord()
-        regs.pc++
-        return operand
-    }
-}
-
-class IndirectAddressingMode: AlteredOperandBuilder {
-    override func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand {
-        let addressPointer: Word = ((self.alteration == .none
-            ? memory.readWord(at: regs.pc)
-            : memory.readByte(at: regs.pc).asWord())
-        + (self.alteration == .x ? regs.x.asWord() : 0))
-        & (self.alteration == .none ? 0xFFFF : 0xFF)
-
-        var operand = Operand()
-        operand.address = memory.readWordGlitched(at: addressPointer) &+ (self.alteration == .y ? regs.y : 0)
-        operand.value = memory.readByte(at: operand.address).asWord()
-
-        regs.pc += self.alteration == .none ? 2 : 1
-        operand.additionalCycles = self.alteration == .y ? UInt8(operand.address.isAtSamePage(than: operand.address &- regs.y)) : 0
-        return operand
-    }
-}
+//class AlteredOperandBuilder: OperandBuilder {   // Abstract
+//    let alteration: AddressingMode.Alteration
+//    init(_ alteration: AddressingMode.Alteration = .none) { self.alteration = alteration }
+//    func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand { return Operand() }
+//}
+//
+//class ZeroPageAddressingOperandBuilder: AlteredOperandBuilder {
+//    override func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand {
+//        let alterationValue: Byte = self.alteration != .none ? (self.alteration == .x ? regs.x : regs.y) : 0
+//        var operand = Operand()
+//        operand.address = (memory.readByte(at: regs.pc).asWord() + alterationValue) & 0xFF
+//        operand.value = memory.readByte(at: operand.address).asWord()
+//        regs.pc++
+//        return operand
+//    }
+//}
+//
+//class AbsoluteAddressingOperandBuilder: AlteredOperandBuilder {
+//    let shouldFetchValue: Bool
+//
+//    init(_ alteration: AddressingMode.Alteration, _ shouldFetchValue: Bool = true) {
+//        self.shouldFetchValue = shouldFetchValue
+//        super.init(alteration)
+//    }
+//
+//    override func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand {
+//        let alterationValue: Byte = self.alteration != .none ? (self.alteration == .x ? regs.x : regs.y) : 0
+//        var operand = Operand()
+//        operand.address = memory.readWord(at: regs.pc) + alterationValue
+//        if self.shouldFetchValue { operand.value = memory.readByte(at: operand.address).asWord() }
+//        regs.pc += 2
+//        operand.additionalCycles = self.alteration == .none
+//            ? 0
+//            : UInt8(operand.address.isAtSamePage(than: operand.address - (self.alteration == .x
+//                ? regs.x
+//                : regs.y)))
+//        return operand
+//    }
+//}
+//
+//class RelativeAddressingOperandBuilder: OperandBuilder {
+//    func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand {
+//        var operand = Operand()
+//
+//        // transform the relative address into an absolute address
+//        let value = memory.readByte(at: regs.pc)
+//        regs.pc++
+//        operand.address = regs.pc
+//        if value.isSignBitOn() {
+//            operand.address -= Word(128 - value & 0b01111111)
+//        } else {
+//            operand.address += value.asWord() & 0b01111111
+//        }
+//
+//        operand.additionalCycles = UInt8(regs.pc.isAtSamePage(than: operand.address))
+//        return operand
+//    }
+//}
+//
+//class ImmediateAddressingOperandBuilder: OperandBuilder {
+//    func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand {
+//        var operand = Operand()
+//        operand.value = memory.readByte(at: regs.pc).asWord()
+//        regs.pc++
+//        return operand
+//    }
+//}
+//
+//class IndirectAddressingMode: AlteredOperandBuilder {
+//    override func evaluate(_ regs: inout Registers, _ memory: CoreProcessingUnitMemory) -> Operand {
+//        let addressPointer: Word = ((self.alteration == .none
+//            ? memory.readWord(at: regs.pc)
+//            : memory.readByte(at: regs.pc).asWord())
+//        + (self.alteration == .x ? regs.x.asWord() : 0))
+//        & (self.alteration == .none ? 0xFFFF : 0xFF)
+//
+//        var operand = Operand()
+//        operand.address = memory.readWordGlitched(at: addressPointer) &+ (self.alteration == .y ? regs.y : 0)
+//        operand.value = memory.readByte(at: operand.address).asWord()
+//
+//        regs.pc += self.alteration == .none ? 2 : 1
+//        operand.additionalCycles = self.alteration == .y ? UInt8(operand.address.isAtSamePage(than: operand.address &- regs.y)) : 0
+//        return operand
+//    }
+//}
