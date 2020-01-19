@@ -23,7 +23,7 @@
 //
 
 struct Opcode {
-    let closure: (inout Operand) -> Void
+    let closure: (Operand) -> Void
     let name: String
     let cycles: UInt8
     let addressingMode: AddressingMode
@@ -32,26 +32,23 @@ struct Opcode {
 struct Operand {
     var value: Word = 0x0000
     var address: Word = 0x0000
-    var additionalCycles: UInt8 = 0
 }
 
 class CoreProcessingUnit {
     private weak var bus: Bus!
 
-    private let memory: CoreProcessingUnitMemory
-    private let stack: Stack
     private var regs: Registers = Registers()
     private var opcodes: [Byte: Opcode]! = nil
-    private var interruptRequest: InterruptType?
+
+    private var pendingInterrupt: InterruptType?
+    private var additionalCycles: UInt8 = 0
+    private var stallCycles: UInt16 = 0
+    private var totalCycles: UInt64 = 0
 
     let frequency: Double = 1789773
-    var stallCycles: UInt16 = 0
-    var totalCycles: UInt64 = 0
 
     init(using bus: Bus) {
         self.bus = bus
-        self.memory = CoreProcessingUnitMemory(using: bus)
-        self.stack = Stack(using: self.bus, sp: &self.regs.sp)
 
         self.opcodes = [
             0x00: Opcode(closure: brk, name: "brk", cycles: 7, addressingMode: .implied),
@@ -208,9 +205,13 @@ class CoreProcessingUnit {
         ]
     }
 
+    func stall(for cycles: UInt16) {
+        self.stallCycles += cycles + UInt16(self.totalCycles % 2 != 0 ? 1 : 0)
+    }
+
     func requestInterrupt(type: InterruptType) {
         guard type != .irq || self.regs.p.isNotSet(.interrupt) else { return }
-        self.interruptRequest = type
+        self.pendingInterrupt = type
     }
 
     @discardableResult
@@ -221,42 +222,63 @@ class CoreProcessingUnit {
             return 1
         }
 
-        if let interrupt = self.interruptRequest {
+        if let interrupt = self.pendingInterrupt {
             let cycles = self.interrupt(type: interrupt)
-            self.totalCycles &+= UInt64(cycles)
-            return  cycles
+            self.totalCycles += UInt64(cycles)
+            return cycles
         }
 
-        let opcodeHex: Byte = self.memory.readByte(at: regs.pc)
+        let opcodeHex: Byte = self.bus.readByte(at: regs.pc)
         regs.pc++
 
         guard let opcode: Opcode = self.opcodes[opcodeHex] else {
             fatalError("Unknown opcode used (outside of the 151 available)")
         }
 
-        var operand: Operand = self.buildOperand(using: opcode.addressingMode)
-        opcode.closure(&operand)
+        let operand: Operand = self.buildOperand(using: opcode.addressingMode)
+        opcode.closure(operand)
 
-        let cycles = opcode.cycles + operand.additionalCycles
-        self.totalCycles &+= UInt64(cycles)
+        let cycles = opcode.cycles + self.additionalCycles
+        self.additionalCycles = 0
+        self.totalCycles += UInt64(cycles)
+
         return cycles
     }
 
     @discardableResult
     private func interrupt(type: InterruptType) -> UInt8 {
-        self.interruptRequest = nil
+        self.pendingInterrupt = nil
 
         if type == .reset {
             self.regs.sp = 0xFD
         } else {
-            self.stack.pushWord(data: self.regs.pc)
-            self.stack.pushByte(data: self.regs.p.value | Flag.alwaysOne.rawValue)
+            self.pushWord(data: self.regs.pc)
+            self.pushByte(data: self.regs.p.value | Flag.alwaysOne.rawValue)
         }
 
         self.regs.p.set(.interrupt)
-        self.regs.pc = memory.readWord(at: type.address)
+        self.regs.pc = self.bus.readWord(at: type.address)
 
         return 7
+    }
+
+    private func pushByte(data: Byte) {
+        self.bus.writeByte(data, at: self.regs.sp.asWord() + 0x100)
+        self.regs.sp--
+    }
+
+    private func popByte() -> Byte {
+        self.regs.sp++
+        return self.bus.readByte(at: self.regs.sp.asWord() + 0x100)
+    }
+
+    private func pushWord(data: Word) {
+        self.pushByte(data: data.leftByte())
+        self.pushByte(data: data.rightByte())
+    }
+
+    private func popWord() -> Word {
+        return self.popByte().asWord() + self.popByte().asWord() << 8
     }
 
     private func buildOperand(using addressingMode: AddressingMode) -> Operand {
@@ -264,17 +286,17 @@ class CoreProcessingUnit {
         case .zeroPage(let alteration):
             let alterationValue: Byte = alteration != .none ? (alteration == .x ? regs.x : regs.y) : 0
             var operand = Operand()
-            operand.address = (self.memory.readByte(at: regs.pc).asWord() + alterationValue) & 0xFF
-            operand.value = self.memory.readByte(at: operand.address).asWord()
+            operand.address = (self.bus.readByte(at: regs.pc).asWord() + alterationValue) & 0xFF
+            operand.value = self.bus.readByte(at: operand.address).asWord()
             regs.pc++
             return operand
         case .absolute(let alteration, let shouldFetchValue):
             let alterationValue: Byte = alteration != .none ? (alteration == .x ? regs.x : regs.y) : 0
             var operand = Operand()
-            operand.address = self.memory.readWord(at: regs.pc) + alterationValue
-            if shouldFetchValue { operand.value = self.memory.readByte(at: operand.address).asWord() }
+            operand.address = self.bus.readWord(at: regs.pc) + alterationValue
+            if shouldFetchValue { operand.value = self.bus.readByte(at: operand.address).asWord() }
             regs.pc += 2
-            operand.additionalCycles = alteration == .none
+            self.additionalCycles = alteration == .none
                 ? 0
                 : UInt8(operand.address.isAtSamePage(than: operand.address - (alteration == .x
                     ? regs.x
@@ -284,7 +306,7 @@ class CoreProcessingUnit {
             var operand = Operand()
 
             // transform the relative address into an absolute address
-            let value = self.memory.readByte(at: regs.pc)
+            let value = self.bus.readByte(at: regs.pc)
             regs.pc++
             operand.address = regs.pc
             if value.isSignBitOn() {
@@ -293,25 +315,25 @@ class CoreProcessingUnit {
                 operand.address += value.asWord() & 0b01111111
             }
 
-            operand.additionalCycles = UInt8(regs.pc.isAtSamePage(than: operand.address))
+            self.additionalCycles = UInt8(regs.pc.isAtSamePage(than: operand.address))
             return operand
         case .indirect(let alteration):
             let addressPointer: Word = ((alteration == .none
-                ? self.memory.readWord(at: regs.pc)
-                : self.memory.readByte(at: regs.pc).asWord())
+                ? self.bus.readWord(at: regs.pc)
+                : self.bus.readByte(at: regs.pc).asWord())
                 + (alteration == .x ? regs.x.asWord() : 0))
                 & (alteration == .none ? 0xFFFF : 0xFF)
 
             var operand = Operand()
-            operand.address = self.memory.readWordGlitched(at: addressPointer) &+ (alteration == .y ? regs.y : 0)
-            operand.value = self.memory.readByte(at: operand.address).asWord()
+            operand.address = self.bus.readWordGlitched(at: addressPointer) &+ (alteration == .y ? regs.y : 0)
+            operand.value = self.bus.readByte(at: operand.address).asWord()
 
             regs.pc += alteration == .none ? 2 : 1
-            operand.additionalCycles = alteration == .y ? UInt8(operand.address.isAtSamePage(than: operand.address &- regs.y)) : 0
+            self.additionalCycles = alteration == .y ? UInt8(operand.address.isAtSamePage(than: operand.address &- regs.y)) : 0
             return operand
         case .immediate:
             var operand = Operand()
-            operand.value = self.memory.readByte(at: regs.pc).asWord()
+            operand.value = self.bus.readByte(at: regs.pc).asWord()
             regs.pc++
             return operand
         case .implied, .accumulator: fallthrough
@@ -320,15 +342,15 @@ class CoreProcessingUnit {
     }
 
     // OPCODES IMPLEMENTATION
-    private func nop(_ operand: inout Operand) {}
+    private func nop(_ operand: Operand) {}
 
     // Math
-    private func inx(_ operand: inout Operand) { regs.x++; regs.p.updateFor(regs.x) }
-    private func iny(_ operand: inout Operand) { regs.y++; regs.p.updateFor(regs.y) }
-    private func dex(_ operand: inout Operand) { regs.x--; regs.p.updateFor(regs.x) }
-    private func dey(_ operand: inout Operand) { regs.y--; regs.p.updateFor(regs.y) }
+    private func inx(_ operand: Operand) { regs.x++; regs.p.updateFor(regs.x) }
+    private func iny(_ operand: Operand) { regs.y++; regs.p.updateFor(regs.y) }
+    private func dex(_ operand: Operand) { regs.x--; regs.p.updateFor(regs.x) }
+    private func dey(_ operand: Operand) { regs.y--; regs.p.updateFor(regs.y) }
 
-    private func adc(_ operand: inout Operand) {
+    private func adc(_ operand: Operand) {
         let result: Word = regs.a &+ operand.value &+ regs.p.valueOf(.carry)
         regs.p.set(.carry, if: result.overflowsByte())
         regs.p.set(.overflow, if: Bool(~(regs.a ^ operand.value) & Word(regs.a ^ result) & Word(Flag.negative.rawValue)))
@@ -336,7 +358,7 @@ class CoreProcessingUnit {
         regs.p.updateFor(regs.a)
     }
 
-    private func sbc(_ operand: inout Operand) {
+    private func sbc(_ operand: Operand) {
         let result: Word = regs.a &- operand.value &- (1 - regs.p.valueOf(.carry))
         regs.p.set(.carry, if: !result.overflowsByte())
         regs.p.set(.overflow, if: Bool((regs.a ^ operand.value) & Word(regs.a ^ result) & Word(Flag.negative.rawValue)))
@@ -344,78 +366,78 @@ class CoreProcessingUnit {
         regs.p.updateFor(regs.a)
     }
 
-    private func inc(_ operand: inout Operand) {
+    private func inc(_ operand: Operand) {
         let result: Byte = operand.value.rightByte() &+ 1
-        memory.writeByte(result, at: operand.address)
+        self.bus.writeByte(result, at: operand.address)
         regs.p.updateFor(result)
     }
 
-    private func dec(_ operand: inout Operand) {
+    private func dec(_ operand: Operand) {
         let result: Byte = operand.value.rightByte() &- 1
-        memory.writeByte(result, at: operand.address)
+        self.bus.writeByte(result, at: operand.address)
         regs.p.updateFor(result)
     }
 
     // Bitwise
-    private func and(_ operand: inout Operand) { regs.a &= Byte(operand.value); regs.p.updateFor(regs.a) }
-    private func eor(_ operand: inout Operand) { regs.a ^= Byte(operand.value); regs.p.updateFor(regs.a) }
-    private func ora(_ operand: inout Operand) { regs.a |= Byte(operand.value); regs.p.updateFor(regs.a) }
+    private func and(_ operand: Operand) { regs.a &= Byte(operand.value); regs.p.updateFor(regs.a) }
+    private func eor(_ operand: Operand) { regs.a ^= Byte(operand.value); regs.p.updateFor(regs.a) }
+    private func ora(_ operand: Operand) { regs.a |= Byte(operand.value); regs.p.updateFor(regs.a) }
 
-    private func bit(_ operand: inout Operand) {
+    private func bit(_ operand: Operand) {
         regs.p.set(.zero, if: !Bool(regs.a & Byte(operand.value)))
         regs.p.set(.overflow, if: Bool(Flag.overflow.rawValue & Byte(operand.value)))
         regs.p.set(.negative, if: Bool(Flag.negative.rawValue & Byte(operand.value)))
     }
 
-    private func asl(_ operand: inout Operand) {
+    private func asl(_ operand: Operand) {
         regs.p.set(.carry, if: operand.value.rightByte().isMostSignificantBitOn())
         let result: Byte = operand.value.rightByte() << 1
         regs.p.updateFor(result)
-        memory.writeByte(result, at: operand.address)
+        self.bus.writeByte(result, at: operand.address)
     }
 
-    private func lsr(_ operand: inout Operand) {
+    private func lsr(_ operand: Operand) {
         regs.p.set(.carry, if: operand.value.rightByte().isLeastSignificantBitOn())
         let result: Byte = operand.value.rightByte() >> 1
         regs.p.updateFor(result)
-        memory.writeByte(result, at: operand.address)
+        self.bus.writeByte(result, at: operand.address)
     }
 
-    private func rol(_ operand: inout Operand) {
+    private func rol(_ operand: Operand) {
         let result: Word = operand.value << 1 | Word(regs.p.valueOf(.carry))
         regs.p.set(.carry, if: Bool(result & 0x100))
-        memory.writeByte(result.rightByte(), at: operand.address)
+        self.bus.writeByte(result.rightByte(), at: operand.address)
         regs.p.updateFor(result)
     }
 
-    private func ror(_ operand: inout Operand) {
+    private func ror(_ operand: Operand) {
         let carry: Byte = regs.p.valueOf(.carry)
         regs.p.set(.carry, if: operand.value.isLeastSignificantBitOn())
         let result: Byte = operand.value.rightByte() >> 1 | carry << 7
         regs.p.updateFor(result)
-        memory.writeByte(result, at: operand.address)
+        self.bus.writeByte(result, at: operand.address)
     }
 
-    private func asla(_ operand: inout Operand) {
+    private func asla(_ operand: Operand) {
         regs.p.set(.carry, if: regs.a.isMostSignificantBitOn())
         regs.a <<= 1
         regs.p.updateFor(regs.a)
     }
 
-    private func lsra(_ operand: inout Operand) {
+    private func lsra(_ operand: Operand) {
         regs.p.set(.carry, if: regs.a.isLeastSignificantBitOn())
         regs.a >>= 1
         regs.p.updateFor(regs.a)
     }
 
-    private func rola(_ operand: inout Operand) {
+    private func rola(_ operand: Operand) {
         let carry: Byte = regs.p.valueOf(.carry)
         regs.p.set(.carry, if: regs.a.isSignBitOn())
         regs.a = regs.a << 1 | carry
         regs.p.updateFor(regs.a)
     }
 
-    private func rora(_ operand: inout Operand) {
+    private func rora(_ operand: Operand) {
         let carry: Byte = regs.p.valueOf(.carry)
         regs.p.set(.carry, if: regs.a.isLeastSignificantBitOn())
         regs.a = regs.a >> 1 | carry << 7
@@ -423,83 +445,83 @@ class CoreProcessingUnit {
     }
 
     // flags
-    private func clc(_ operand: inout Operand) { regs.p.unset(.carry) }
-    private func cld(_ operand: inout Operand) { regs.p.unset(.decimal) }
-    private func cli(_ operand: inout Operand) { regs.p.unset(.interrupt) }
-    private func clv(_ operand: inout Operand) { regs.p.unset(.overflow) }
-    private func sec(_ operand: inout Operand) { regs.p.set(.carry) }
-    private func sed(_ operand: inout Operand) { regs.p.set(.decimal) }
-    private func sei(_ operand: inout Operand) { regs.p.set(.interrupt) }
+    private func clc(_ operand: Operand) { regs.p.unset(.carry) }
+    private func cld(_ operand: Operand) { regs.p.unset(.decimal) }
+    private func cli(_ operand: Operand) { regs.p.unset(.interrupt) }
+    private func clv(_ operand: Operand) { regs.p.unset(.overflow) }
+    private func sec(_ operand: Operand) { regs.p.set(.carry) }
+    private func sed(_ operand: Operand) { regs.p.set(.decimal) }
+    private func sei(_ operand: Operand) { regs.p.set(.interrupt) }
 
     // comparison
     private func compare(_ register: Byte, _ value: Word) {
         regs.p.updateFor(register &- value.rightByte())
         regs.p.set(.carry, if: register >= value)
     }
-    private func cmp(_ operand: inout Operand) { compare(regs.a, operand.value) }
-    private func cpx(_ operand: inout Operand) { compare(regs.x, operand.value) }
-    private func cpy(_ operand: inout Operand) { compare(regs.y, operand.value) }
+    private func cmp(_ operand: Operand) { compare(regs.a, operand.value) }
+    private func cpx(_ operand: Operand) { compare(regs.x, operand.value) }
+    private func cpy(_ operand: Operand) { compare(regs.y, operand.value) }
 
     // branches
-    private func branch(to operand: inout Operand, if condition: Bool) {
+    private func branch(to operand: Operand, if condition: Bool) {
         guard condition else {
-            operand.additionalCycles = 0
+            self.additionalCycles = 0
             return
         }
 
         regs.pc = operand.address
-        operand.additionalCycles++
+        self.additionalCycles++
     }
-    private func beq(_ operand: inout Operand) { branch(to: &operand, if: regs.p.isSet(.zero)) }
-    private func bne(_ operand: inout Operand) { branch(to: &operand, if: !regs.p.isSet(.zero)) }
-    private func bmi(_ operand: inout Operand) { branch(to: &operand, if: regs.p.isSet(.negative)) }
-    private func bpl(_ operand: inout Operand) { branch(to: &operand, if: !regs.p.isSet(.negative)) }
-    private func bcs(_ operand: inout Operand) { branch(to: &operand, if: regs.p.isSet(.carry)) }
-    private func bcc(_ operand: inout Operand) { branch(to: &operand, if: !regs.p.isSet(.carry)) }
-    private func bvs(_ operand: inout Operand) { branch(to: &operand, if: regs.p.isSet(.overflow)) }
-    private func bvc(_ operand: inout Operand) { branch(to: &operand, if: !regs.p.isSet(.overflow)) }
+    private func beq(_ operand: Operand) { branch(to: operand, if: regs.p.isSet(.zero)) }
+    private func bne(_ operand: Operand) { branch(to: operand, if: !regs.p.isSet(.zero)) }
+    private func bmi(_ operand: Operand) { branch(to: operand, if: regs.p.isSet(.negative)) }
+    private func bpl(_ operand: Operand) { branch(to: operand, if: !regs.p.isSet(.negative)) }
+    private func bcs(_ operand: Operand) { branch(to: operand, if: regs.p.isSet(.carry)) }
+    private func bcc(_ operand: Operand) { branch(to: operand, if: !regs.p.isSet(.carry)) }
+    private func bvs(_ operand: Operand) { branch(to: operand, if: regs.p.isSet(.overflow)) }
+    private func bvc(_ operand: Operand) { branch(to: operand, if: !regs.p.isSet(.overflow)) }
 
     // jump
-    private func jmp(_ operand: inout Operand) { regs.pc = operand.address }
+    private func jmp(_ operand: Operand) { regs.pc = operand.address }
 
     // subroutines
-    private func jsr(_ operand: inout Operand) { stack.pushWord(data: regs.pc &- 1); regs.pc = operand.address }
-    private func rts(_ operand: inout Operand) { regs.pc = stack.popWord() &+ 1 }
+    private func jsr(_ operand: Operand) { self.pushWord(data: regs.pc &- 1); regs.pc = operand.address }
+    private func rts(_ operand: Operand) { regs.pc = self.popWord() &+ 1 }
 
     // interruptions
-    private func rti(_ operand: inout Operand) {
-        regs.p &= stack.popByte() | Flag.alwaysOne.rawValue
-        regs.pc = stack.popWord()
+    private func rti(_ operand: Operand) {
+        regs.p &= self.popByte() | Flag.alwaysOne.rawValue
+        regs.pc = self.popWord()
     }
 
-    private func brk(_ operand: inout Operand) {
+    private func brk(_ operand: Operand) {
         self.regs.p.set(.breaks)
         self.interrupt(type: .irq)
     }
 
     // stack
-    private func pha(_ operand: inout Operand) { stack.pushByte(data: regs.a) }
-    private func php(_ operand: inout Operand) { stack.pushByte(data: regs.p.value | (.alwaysOne | .breaks)) }
-    private func pla(_ operand: inout Operand) { regs.a = stack.popByte(); regs.p.updateFor(regs.a) }
-    private func plp(_ operand: inout Operand) { regs.p &= stack.popByte() & ~Flag.breaks.rawValue | Flag.alwaysOne.rawValue }
+    private func pha(_ operand: Operand) { self.pushByte(data: regs.a) }
+    private func php(_ operand: Operand) { self.pushByte(data: regs.p.value | (.alwaysOne | .breaks)) }
+    private func pla(_ operand: Operand) { regs.a = self.popByte(); regs.p.updateFor(regs.a) }
+    private func plp(_ operand: Operand) { regs.p &= self.popByte() & ~Flag.breaks.rawValue | Flag.alwaysOne.rawValue }
 
     // loading
     private func load(_ a: inout Byte, _ operand: Word) { a = operand.rightByte(); regs.p.updateFor(a) }
-    private func lda(_ operand: inout Operand) { self.load(&regs.a, operand.value) }
-    private func ldx(_ operand: inout Operand) { self.load(&regs.x, operand.value) }
-    private func ldy(_ operand: inout Operand) { self.load(&regs.y, operand.value) }
+    private func lda(_ operand: Operand) { self.load(&regs.a, operand.value) }
+    private func ldx(_ operand: Operand) { self.load(&regs.x, operand.value) }
+    private func ldy(_ operand: Operand) { self.load(&regs.y, operand.value) }
 
     // storing
-    private func sta(_ operand: inout Operand) { memory.writeByte(regs.a, at: operand.address) }
-    private func stx(_ operand: inout Operand) { memory.writeByte(regs.x, at: operand.address) }
-    private func sty(_ operand: inout Operand) { memory.writeByte(regs.y, at: operand.address) }
+    private func sta(_ operand: Operand) { self.bus.writeByte(regs.a, at: operand.address) }
+    private func stx(_ operand: Operand) { self.bus.writeByte(regs.x, at: operand.address) }
+    private func sty(_ operand: Operand) { self.bus.writeByte(regs.y, at: operand.address) }
 
     // transfering
     private func transfer(_ a: inout Byte, _ b: Byte) { a = b; regs.p.updateFor(a) }
-    private func tax(_ operand: inout Operand) { self.transfer(&regs.x, regs.a) }
-    private func txa(_ operand: inout Operand) { self.transfer(&regs.a, regs.x) }
-    private func tay(_ operand: inout Operand) { self.transfer(&regs.y, regs.a) }
-    private func tya(_ operand: inout Operand) { self.transfer(&regs.a, regs.y) }
-    private func tsx(_ operand: inout Operand) { self.transfer(&regs.x, regs.sp) }
-    private func txs(_ operand: inout Operand) { regs.sp = regs.x }
+    private func tax(_ operand: Operand) { self.transfer(&regs.x, regs.a) }
+    private func txa(_ operand: Operand) { self.transfer(&regs.a, regs.x) }
+    private func tay(_ operand: Operand) { self.transfer(&regs.y, regs.a) }
+    private func tya(_ operand: Operand) { self.transfer(&regs.a, regs.y) }
+    private func tsx(_ operand: Operand) { self.transfer(&regs.x, regs.sp) }
+    private func txs(_ operand: Operand) { regs.sp = regs.x }
 }

@@ -33,7 +33,7 @@ public class nes: BusDelegate {
     private let controller1 = Controller(.primary)
     private let controller2 = Controller(.secondary)
     private let cartridge: Cartridge
-    let bus = Bus()
+    private let bus = Bus()
 
     private var deficitCycles: Int64 = 0
 
@@ -50,7 +50,7 @@ public class nes: BusDelegate {
     public var needsRender: Bool { return self.ppu.needsRender }
     public var framebuffer: UnsafeBufferPointer<UInt8> { return self.ppu.frameBuffer }
 
-    public init(load rom: Cartridge, saveRam: [UInt8]) {
+    public init(load rom: Cartridge, saveRam: [UInt8] = []) {
         self.cpu = CoreProcessingUnit(using: self.bus)
         self.ppu = PictureProcessingUnit(using: self.bus, mirroring: rom.mirroringPointer)
         self.cartridge = rom
@@ -99,7 +99,7 @@ public class nes: BusDelegate {
     }
 
     func bus(bus: Bus, didBlockFor cycles: UInt16) {
-        self.cpu.stallCycles += cycles + UInt16(self.cpu.totalCycles % 2 != 0 ? 1 : 0)
+        self.cpu.stall(for: cycles)
     }
 
     func bus(bus: Bus, didSendReadSignalAt address: Word, rom: Bool = false) -> Byte {

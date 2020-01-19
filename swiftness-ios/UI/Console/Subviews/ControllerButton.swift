@@ -23,6 +23,7 @@
 //
 
 import UIKit
+import nes
 
 class ControllerButton: UIView {
     var buttonDown: ((Controller.Button) -> Void)!

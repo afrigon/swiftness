@@ -46,16 +46,16 @@ public class NesFile {
         static var size: Int = 16
     }
 
-    private static func validateMagic(a: UInt8, b: UInt8, c: UInt8, d: UInt8) -> Bool {
+    public static func validateMagic(a: UInt8, b: UInt8, c: UInt8, d: UInt8) -> Bool {
         return UInt32(a) << 24 | UInt32(b) << 16 | UInt32(c) << 8 | UInt32(d) == 0x4E45531A // NES^
     }
 
-    private static func validateMagic(_ data: Data) -> Bool {
+    public static func validateMagic(_ data: Data) -> Bool {
         return data.count >= 4 && NesFile.validateMagic(a: data[0], b: data[1], c: data[2], d: data[3])
     }
 
     public static func parse(data: NSData) -> Cartridge? {
-        let checksum = data.md5sum()
+        let checksum = data.shasum()
         var headerData = [UInt8](repeating:0, count: Header.size)
         data.getBytes(&headerData, length: Header.size)
         guard let header = Header(headerData) else {

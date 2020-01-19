@@ -47,6 +47,16 @@
                ReferencedContainer = "container:swiftness.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "FE20B2862329B79F00EC6E9E"
+               BuildableName = "SwiftnessTests.xctest"
+               BlueprintName = "SwiftnessTests"
+               ReferencedContainer = "container:swiftness.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
