@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import SSZipArchive
+import ZIPFoundation
 import nes
 
 extension FileManager {
@@ -48,7 +48,7 @@ class FileHelper {
         var filesURL: [URL]! = [url]
         if url.pathExtension.lowercased() == "zip" {
             let extractedURL = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString)")
-            try SSZipArchive.unzipFile(atPath: url.path, toDestination: extractedURL.path, overwrite: true, password: nil)
+            try FileManager.default.unzipItem(at: url, to: extractedURL)
             filesURL = try? FileManager.default.contentsOfDirectory(at: extractedURL, includingPropertiesForKeys: nil)
             if filesURL == nil { filesURL = [] }
             filesURL.append(extractedURL)

@@ -27,14 +27,14 @@ import nes
 
 class InputResponder: NSResponder, InputManager {
     let buttonMap: [UInt16: Controller.Button] = [
-        6: .a,          // z
-        7: .b,          // x
-        126: .up,       // up arrow
-        125: .down,     // down arrow
-        123: .left,     // left arrow
-        124: .right,    // right arrow
-        46: .start,     // m
-        45: .select     // n
+        6: .select,   // z
+        7: .start,    // x
+        13: .up,      // w
+        1: .down,     // s
+        0: .left,     // a
+        2: .right,    // d
+        46: .b,       // m
+        45: .a        // n
     ]
     var closures = [UInt16: () -> Void]()
     var buttons: UInt8 = 0
