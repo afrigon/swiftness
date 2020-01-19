@@ -7,7 +7,7 @@
 		<key>NesTests.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>9</integer>
+			<integer>5</integer>
 		</dict>
 		<key>aggregate-test.xcscheme</key>
 		<dict>
@@ -17,12 +17,12 @@
 		<key>nes-iOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>10</integer>
+			<integer>6</integer>
 		</dict>
 		<key>nes-macOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>8</integer>
+			<integer>4</integer>
 		</dict>
 		<key>swift-nes.xcscheme</key>
 		<dict>
