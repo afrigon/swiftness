@@ -55,7 +55,7 @@ public class NesFile {
     }
 
     public static func parse(data: NSData) -> Cartridge? {
-        let checksum = data.shasum()
+        let checksum = data.hash()
         var headerData = [UInt8](repeating:0, count: Header.size)
         data.getBytes(&headerData, length: Header.size)
         guard let header = Header(headerData) else {

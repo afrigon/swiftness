@@ -60,7 +60,7 @@ class FileHelper {
             guard NesFile.validateMagic(magic) else { continue }
 
             guard let data = try? Data(contentsOf: fileURL) else { continue }
-            guard (try? FileHelper.copyToRoms(src: fileURL, filename: data.shasum())) != nil else { continue }
+            guard (try? FileHelper.copyToRoms(src: fileURL, filename: data.hash())) != nil else { continue }
             return data
         }
 
